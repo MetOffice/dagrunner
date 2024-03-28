@@ -12,7 +12,7 @@ This demonstrates:
 - Defining a custom processing module (i.e. plugin).
 - Execution with our chosen scheduler.
 
-### Definning a custom processing step
+### Definning a custom processing module (plugin)
 
 First, ensure that 'dagrunner' is on the PYTHONPATH.
 
@@ -91,8 +91,9 @@ This 'callable' can be a python module dot path, callable function or even a cla
 ### Execute our graph with our chosen scheduler
 
 Here we provide our edges and settings (nodes) and choose the 'single-threaded' scheduler.
-We could have constructed the networkx.DiGraph ourselves and passed this instead.  Alternatively, as with the 'plugins',
-we could also have provided a python dot module path to our networkx graph or callable that generates it.
+
+We could have constructed the `networkx.DiGraph` ourselves and passed this instead (in fact that would be preferrable).  Alternatively, as with the 'plugins',
+we could also have provided a python dot module path to our networkx graph or to a callable that returns it.
 ```python
 from dagrunner.execute_graph import ExecuteGraph
 graph = ExecuteGraph((EDGES, SETTINGS), num_workers=None, scheduler="single-threaded", verbose=True)
