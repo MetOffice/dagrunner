@@ -12,6 +12,7 @@ import warnings
 from functools import partial
 
 import importlib
+import networkx as nx
 
 import dask
 from dask.core import get_deps
@@ -87,16 +88,35 @@ def _attempt_visualise_graph(graph, graph_output):
         warnings.warn(f"{err}. Skipping execution graph visualisation.")
 
 
-def _get_networkx(config_dot_path):
-    parts = config_dot_path.split('.')
-    module = importlib.import_module('.'.join(parts[:-1]))
-    networkx_graph = parts[-1]
-    nxgraph = getattr(module, networkx_graph)
+def _process_nodes(node):
+    """Filter missing attributes and copy properties over as attributes."""
+    return {k: v for k, v in vars(node).items() if v is not None}
+
+
+def _get_networkx(networkx_graph):
+    if isinstance(networkx_graph, nx.DiGraph) or callable(networkx_graph):
+        return networkx_graph
+    elif isinstance(networkx_graph, str):
+        parts = networkx_graph.split('.')
+        module = importlib.import_module('.'.join(parts[:-1]))
+        networkx_graph = parts[-1]
+        nxgraph = getattr(module, networkx_graph)
+    elif callable(networkx_graph):
+        nxgraph = networkx_graph()
+    else:
+        try:
+            edges, nodes = networkx_graph
+            nodes = ({k: nodes[k] | _process_nodes(k) for k in nodes.keys()}.items())
+            nxgraph = nx.DiGraph()
+            nxgraph.add_edges_from(edges)
+            nxgraph.add_nodes_from(nodes)
+        except ValueError:
+            raise ValueError(f"Not recognosed 'networkx_graph' parameter, see ExecuteGraph docstring.")
     return nxgraph
 
 
 class ExecuteGraph:
-    def __init__(self, networkx_graph_dot_path: str,
+    def __init__(self, networkx_graph: str,
                  plugin_executor: callable = plugin_executor,
                  scheduler: str = "processes",
                  num_workers: int = 1,
@@ -108,8 +128,10 @@ class ExecuteGraph:
         Execute a networkx graph using a chosen scheduler.
 
         Args:
-            networkx_graph_dot_path (networkx.DiGraph or str):
-                A networkx graph or the dot path to a networkx configuration to execute.
+            networkx_graph (networkx.DiGraph, callable or str):
+                A networkx graph; dot path to a networkx graph or callable that returns 
+                one (str); tuple representing (edges, nodes) or callable object that
+                returns a networkx.
             scheduler (str):
                 Accepted values include "ray", "multiprocessing" and those recognised
                 by dask: "threads", "processes" and "single-threaded" (useful for debugging).
@@ -129,7 +151,7 @@ class ExecuteGraph:
                 Typical examples include 'verbose', 'dry-run' etc.  Note that
                 verbose and dry-run are common to all workflows and to have explicit arguments above.
         """
-        nxgraph = _get_networkx(networkx_graph_dot_path)
+        self._nxgraph = _get_networkx(networkx_graph)
         self._plugin_executor = plugin_executor
         if scheduler not in SCHEDULERS:
             raise ValueError(f"scheduler '{scheduler}' not recognised, please choose from {list(SCHEDULERS.keys())}")
@@ -137,9 +159,13 @@ class ExecuteGraph:
         self._num_workers = num_workers
         self._profiler_output = profiler_filepath
         self._kwargs = kwargs | {"verbose": verbose, "dry_run": dry_run}
-        self._exec_graph = self._process_graph(nxgraph)
+        self._exec_graph = self._process_graph()
 
-    def _process_graph(self, nxgraph):
+    @property
+    def nxgraph(self):
+        return self._nxgraph
+
+    def _process_graph(self):
         """
         Create flattened dictionary describing the relationship between each of our nodes.
         Here we wrap our nodes to ensure common parameters are share accross all
@@ -152,14 +178,14 @@ class ExecuteGraph:
             **self._kwargs,
         )
 
-        if callable(nxgraph):
-            nxgraph = nxgraph()
+        if callable(self._nxgraph):
+            self._nxgraph = self._nxgraph()
 
         exec_graph = {}
-        for node_id, properties in nxgraph.nodes(data=True):
+        for node_id, properties in self._nxgraph.nodes(data=True):
             key = node_id
             quoted_key = ObjectAsStr(node_id)
-            args = list(nxgraph.predecessors(node_id))
+            args = list(self._nxgraph.predecessors(node_id))
             kwargs = properties
             exec_graph[key] = (apply, executor, args, kwargs)
 
