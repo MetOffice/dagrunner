@@ -3,7 +3,7 @@
 This file is part of 'dagrunner' and is released under the BSD 3-Clause license.
 See LICENSE in the root of the repository for full licensing details.
 
-## Example usage
+## Example library usage
 
 Let's demonstrate defining a graph where each node has an associated ID.  Our task is then to concatenate this node ID as a string with its dependencies.
 This demonstrates:
@@ -153,4 +153,4 @@ ProcessID(*['1_2', '3_4'], **{'id': 5})
 result: '1_2_3_4_5'
 Run-time: 20.03338298993185s
 ```
-We can see that the 'result' of the two end of execution branches (for each leadtime), demonstrate the concatenation of leadtimes.
+We can see that the 'result' of the two end of execution branches (for each leadtime), demonstrate the concatenation of node IDs.
