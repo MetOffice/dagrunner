@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dagrunner"
+version = "0.0.1"
+description = "Directed acyclic graph (DAG) runner and tools"
+authors = [
+  {name = "Carwyn Pelley", email = "carwyn.pelley@metoffice.gov.uk"},
+  {name = "UK Met Office"},
+]
+maintainers = [
+  {name = "Carwyn Pelley", email = "carwyn.pelley@metoffice.gov.uk"}
+]
+readme = "README.md"
+license = {file = "LICENSE"}
+
+[project.urls]
+Repository = "https://github.com/MetOffice/dagrunner"
+
+[project.scripts]
+dagrunner-execute-graph = "dagrunner.execute_graph:main"
