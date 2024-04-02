@@ -3,6 +3,26 @@
 This file is part of 'dagrunner' and is released under the BSD 3-Clause license.
 See LICENSE in the root of the repository for full licensing details.
 
+## Installation
+
+The package is pip installable.  Note that dependencies are expected to be installed via conda (at this time).
+```
+pip install .
+```
+
+or to specify a custom path for the installation of scripts:
+
+(uninstall: `pip uninstall dagrunner`)
+
+This will make a script available to the PATH: `dagrunner-execute-graph`
+
+## Example execution of a networkx graph via `dagrunner-execute-graph`
+
+```
+usage: dagrunner-execute-graph [-h] [--scheduler SCHEDULER] [--num-workers NUM_WORKERS] [--profiler-filepath PROFILER_FILEPATH] [--dry-run] [--verbose] networkx-graph
+```
+see `dagrunner-execute-graph --help` for more information.
+
 ## Example library usage
 
 Let's demonstrate defining a graph where each node has an associated ID.  Our task is then to concatenate this node ID as a string with its dependencies.

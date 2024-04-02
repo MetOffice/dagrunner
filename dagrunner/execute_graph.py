@@ -41,7 +41,22 @@ class SkipBranch(Exception):
 
 
 def plugin_executor(*args, call=None, verbose=False, dry_run=False, **kwargs):
-    # args = [getattr(obj, "original_object", obj) for obj in args]
+    """
+    Executes a plugin function or method with the provided arguments and keyword arguments.
+
+    Args:
+        *args: Positional arguments to be passed to the plugin function or method.
+        call: A tuple containing the callable object or python dot path to one, and its keyword arguments.
+        verbose: A boolean indicating whether to print verbose output.
+        dry_run: A boolean indicating whether to perform a dry run without executing the plugin.
+        **kwargs: Keyword arguments to be passed to the plugin function or method (common to all plugins).
+
+    Returns:
+        The result of executing the plugin function or method.
+
+    Raises:
+        ValueError: If the `call` argument is not provided.
+    """
     args = [arg for arg in args if arg is not None]  # supporting plugins that have no return
     if call is None:
         raise ValueError("call is a required argument")
@@ -94,6 +109,22 @@ def _process_nodes(node):
 
 
 def _get_networkx(networkx_graph):
+    """
+    Converts the input `networkx_graph` into a NetworkX DiGraph object.
+
+    Args:
+        networkx_graph (networkx.DiGraph, callable or str):
+            A networkx graph; dot path to a networkx graph or callable that returns 
+            one (str); tuple representing (edges, nodes) or callable object that
+            returns a networkx.
+
+    Returns:
+        nxgraph (networkx.DiGraph): The NetworkX DiGraph object.
+
+    Raises:
+        ValueError: If the `networkx_graph` parameter is not recognized.
+
+    """
     if isinstance(networkx_graph, nx.DiGraph) or callable(networkx_graph):
         return networkx_graph
     elif isinstance(networkx_graph, str):
@@ -111,7 +142,7 @@ def _get_networkx(networkx_graph):
             nxgraph.add_edges_from(edges)
             nxgraph.add_nodes_from(nodes)
         except ValueError:
-            raise ValueError(f"Not recognosed 'networkx_graph' parameter, see ExecuteGraph docstring.")
+            raise ValueError(f"Not recognised 'networkx_graph' parameter, see ExecuteGraph docstring.")
     return nxgraph
 
 
@@ -206,12 +237,20 @@ class ExecuteGraph:
         return res
 
 
-if __name__ == "__main__":
+def main():
+    """
+    Entry point of the program.
+    Parses command line arguments and executes the graph using the ExecuteGraph class.
+    """
     parser = function_to_argparse(ExecuteGraph, exclude=["plugin_executor", "**kwargs"])
     args = parser.parse_args()
     args = vars(args)
-    # positional argument '-' aren't converted to '_' by argparse.
+    # positional arguments with '-' aren't converted to '_' by argparse.
     args = {key.replace("-", "_"): value for key, value in args.items()}
     if args.get('verbose', False):
         print(f"CLI call arguments: {args}")
     ExecuteGraph(**args)()
+
+
+if __name__ == "__main__":
+    main()
