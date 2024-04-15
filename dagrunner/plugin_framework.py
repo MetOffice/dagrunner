@@ -28,6 +28,21 @@ class NodeAwarePlugin(ABC):
 
 class Shell(Plugin):
     def __call__(self, *args, verbose=False, **kwargs):
+        """
+        Execute a subprocess command.
+
+        Args:
+            *args: The command to be executed.
+            verbose (bool): Whether to display verbose output (default: False).
+            **kwargs: Additional keyword arguments to be passed to subprocess.run.
+
+        Returns:
+            CompletedProcess: An object representing the completed process.
+
+        Raises:
+            CalledProcessError: If the command returns a non-zero exit status.
+
+        """
         return subprocess.run(*args, **kwargs, shell=True, check=True)
 
 
@@ -80,6 +95,11 @@ class DataPolling(Plugin):
 
 class Input(NodeAwarePlugin):
     def __call__(self, *args, filepath=None, verbose=False, **kwargs):
+        """
+        Given a filepath, expand it and return this as a string
+
+        Expand the provided filepath using the keyword arguments and environment variables.
+        """
         if args:
             raise ValueError("Input plugin does not accept positional arguments")
         target_fmt = filepath.format
