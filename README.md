@@ -5,18 +5,16 @@ See LICENSE in the root of the repository for full licensing details.
 
 ## Installation
 
-The package is pip installable.  Note that dependencies are expected to be installed via conda (at this time).
+The package is [pip](https://pip.pypa.io/en/stable/) installable.  Note that dependencies are expected to be installed via conda (at this time).
 ```
 pip install .
 ```
 
-or to specify a custom path for the installation of scripts:
-
 (uninstall: `pip uninstall dagrunner`)
 
-This will make a script available to the PATH: `dagrunner-execute-graph`
+This will also make an executable script available to the PATH: `dagrunner-execute-graph`
 
-## Example execution of a networkx graph via `dagrunner-execute-graph`
+## Execution of a networkx graph using `dagrunner-execute-graph` script
 
 ```
 usage: dagrunner-execute-graph [-h] [--scheduler SCHEDULER] [--num-workers NUM_WORKERS] [--profiler-filepath PROFILER_FILEPATH] [--dry-run] [--verbose] networkx-graph
@@ -25,18 +23,19 @@ see `dagrunner-execute-graph --help` for more information.
 
 ## Example library usage
 
-Let's demonstrate defining a graph where each node has an associated ID.  Our task is then to concatenate this node ID as a string with its dependencies.
+Let's demonstrate defining a graph, where in our simple example we define each node with an associated ID.  Our task is then to concatenate this node ID as a string with its dependencies.
+
 This demonstrates:
-- Passing data in memory.
-- Basic graph generation.
 - Defining a custom processing module (i.e. plugin).
+- Basic graph generation.
+- Passing data in memory.
 - Execution with our chosen scheduler.
 
-### Definning a custom processing module (plugin)
+### Defining a custom processing module (plugin)
 
-First, ensure that 'dagrunner' is on the PYTHONPATH.
+First, ensure that 'dagrunner' is on the `PYTHONPATH` (i.e. [installation](#installation)).
 
-Now let's subclass the abstract 'Plugin' class from dagrunner.
+Now let's subclass the abstract 'Plugin' class from `dagrunner` and define a processing module that accepts an 'id' as argument and concatenates this together with the node ID (result returned) of dependent (predecessor) nodes.
 
 ```python
 from dagrunner.plugin_framework import Plugin
@@ -50,11 +49,11 @@ class ProcessID(Plugin):
         return concat_arg_id
 ```
 
-### Define our graph 'nodes'
+### Define our graph 'nodes' container
 
 Our node could represent any range of properties but for the purpose of this example we will define only 'step' and 'leadtime' properties.
-Also we could define any object to represent a 'node' but commonly used objects for this purpose include dataclasses and namedtuples.
-For the sake of visualisation, we define a `__str__` too.
+Also we could define any object to represent a 'node' but commonly used objects for this purpose include [dataclasses](https://docs.python.org/3/library/dataclasses.html#dataclasses.dataclass) and [namedtuples](https://docs.python.org/3/library/collections.html#collections.namedtuple).
+For the sake of graph visualisation, we will define a `__str__` special method too.
 
 ```python
 from dataclasses import dataclass
@@ -105,14 +104,14 @@ for leadtime in leadtimes:
         }
 ```
 We see that the processing step callable is provided via the 'call' of the node attribute dictionary.
-It's value is (callable, callable_keyword_arguments).
+It's value is `(callable, callable_keyword_arguments)`.
 This 'callable' can be a python module dot path, callable function or even a class.
 
 ### Execute our graph with our chosen scheduler
 
 Here we provide our edges and settings (nodes) and choose the 'single-threaded' scheduler.
 
-We could have constructed the `networkx.DiGraph` ourselves and passed this instead (in fact that would be preferrable).  Alternatively, as with the 'plugins',
+We could have constructed the `networkx.DiGraph` ourselves and passed this instead (in fact that would be preferable).  Alternatively, as with the 'plugins',
 we could also have provided a python dot module path to our networkx graph or to a callable that returns it.
 ```python
 from dagrunner.execute_graph import ExecuteGraph
@@ -126,7 +125,7 @@ nx.draw(graph.nxgraph, with_labels=True)
 ```
 ![image](https://github.com/MetOffice/dagrunner/assets/2071643/de103edd-16c9-487a-bf22-3d50d81c908c)
 
-Now, finally execute it:
+Now, finally, let's execute it:
 ```python
 graph()
 ```
@@ -173,4 +172,5 @@ ProcessID(*['1_2', '3_4'], **{'id': 5})
 result: '1_2_3_4_5'
 Run-time: 20.03338298993185s
 ```
-We can see that the 'result' of the two end of execution branches (for each leadtime), demonstrate the concatenation of node IDs.
+We can see that the 'result' of the two execution branches (each leadtime), demonstrates the concatenation of node IDs.
+That is, the concatenation of node ID strings passed between nodes in the execution graph.
