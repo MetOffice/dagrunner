@@ -1,3 +1,9 @@
+# Dagrunner
+
+Dagrunner serves as a Directed Acyclic Graph (DAG) runner, primarily designed to ensure a clear distinction between a project's graph definition (typically in native networkx format) and its execution method. In essence, Dagrunner offers various schedulers for executing the graph, but it firmly separates these operational concepts from the scientific configuration or recipe, i.e., the graph itself. Consequently, while Dagrunner currently provides convenient scheduling options, it remains adaptable to future changes or alternative solutions, ensuring that the scientific configuration can persist regardless of the technologies or tools employed, whether Dagrunner is utilized or not.
+
+## License/copyright
+
 (C) Crown Copyright, Met Office. All rights reserved.
 
 This file is part of 'dagrunner' and is released under the BSD 3-Clause license.
@@ -109,10 +115,11 @@ This 'callable' can be a python module dot path, callable function or even a cla
 
 ### Execute our graph with our chosen scheduler
 
+For the execution of our graph, we will make use of the built-in generic `ExecuteGraph` class.
+This class accepts graphs taking the form of a python dot module path to a networkx, a `networkx.DiGraph` object or a tuple containing `(edges, nodes)`.  In our simple example here, we will pass our edges and nodes above so that `ExecuteGraph` can construct our networkx graph for us.
+
 Here we provide our edges and settings (nodes) and choose the 'single-threaded' scheduler.
 
-We could have constructed the `networkx.DiGraph` ourselves and passed this instead (in fact that would be preferable).  Alternatively, as with the 'plugins',
-we could also have provided a python dot module path to our networkx graph or to a callable that returns it.
 ```python
 from dagrunner.execute_graph import ExecuteGraph
 graph = ExecuteGraph((EDGES, SETTINGS), num_workers=None, scheduler="single-threaded", verbose=True)
@@ -174,3 +181,83 @@ Run-time: 20.03338298993185s
 ```
 We can see that the 'result' of the two execution branches (each leadtime), demonstrates the concatenation of node IDs.
 That is, the concatenation of node ID strings passed between nodes in the execution graph.
+
+## Customising graph generation and its execution
+
+### Customise graph construction
+
+Graph construction is owned by the you, the user (project) that utilises **dagrunner**.
+We saw how to execute our graph in our [example](#execute-our-graph-with-our-chosen-scheduler).  This `ExecuteGraph` class provides a means to customise what graph we actually execute by providing the means to pass it a **callable** which returns a networkx graph.
+As mentioned previously, this can be a python dot module path or the object itself.
+
+Typical uses include delaying the construction of your networkx graph until it is actually executed.  However, this offset complete flexibility for you to customise graph construction to your individual projects needs.
+
+Note that modifying graph construction is an added complication and should not be considered only where it is deemed absolutely necessary beyond the simple usecase (lazy construction).
+
+#### example lazy graph construction
+
+Let's say we define our edges and settings in the above [example](#example-library-usage) in a module accessed by 'node-edge-module-dot-path', a python module dot path.  In this case, containing `EDGES` and `SETTINGS` objects.
+We can then define a callable which is responsible for generating a networkx graph for these (when called).
+
+```python
+from importlib import import_module
+import networkx as nx
+
+def filter_missing(node):
+    return {k: v for k, v in vars(node).items() if v is not None}
+
+def gen_networkx(config_dot_path):
+    edges = []
+    nodes = []
+    config_subpkg = import_module(f"{config_dot_path}")
+    for module in config_subpkg.__all__:
+        print(f"config_dot_path: {config_dot_path}, module: {module}")
+        mod = import_module(f"{config_dot_path}.{module}")
+        edges.extend(mod.EDGES)
+        nodes.extend({k: mod.SETTINGS[k] | filter_missing(k) for k in mod.SETTINGS.keys()}.items())
+    graph = nx.DiGraph()
+    graph.add_edges_from(edges)
+    graph.add_nodes_from(nodes)
+    return graph
+
+GRAPH = lambda: gen_networkx("<node-edge-module-dot-path>")
+```
+We can now provide a python module dot path to this graph object to the `dagrunner-execute-graph` script.  The networkx graph will then be constructed when dagrunner internally calls it before its execution.
+
+### Customise node execution
+
+The `ExecuteGraph` class provides a means to provides a means to provide a custom 'plugin_executor' (rather than to use the built-in).
+
+The 'plugin_executor' is what wraps every 'node' and is responsible for understanding how to 'execute' the particular node it wraps.  For example, the built-in plugin-executor defines the contract we utilise in our example graph above, where 'call' takes the form `(callable object or python dot path to callable, callable keyword arguments)`.  For each node, this plugin executor then calls the underlying processing module (plugin) with its provided arguments (as per 'call').
+
+#### an example extended 'plugin-executor'
+
+```python
+from dagrunner.execute_graph import ExecuteGraph, plugin_executor
+
+def custom_plugin_executor(*args, call=None, verbose=False, dry_run=False, **kwargs):
+    # do something custom
+    return plugin_executor(*args, call=call, verbose=verbose, dry_run=dry_run, **kwargs)
+```
+
+Now, let's execute our graph with our customised execution function.
+```python
+ExecuteGraph(..., plugin_executor=custom_plugin_executor, ...)
+```
+Note that you may choose to subclass `ExecuteGraph` and or write a custom commandline script to call it, depending on your requirements.
+
+## Processing modules (aka plugins)
+
+Dagrunner concerns itself with graph execution and does not strictly require processing modules (plugins) to take any particular form.  That is, you may or may not choose to use or subclass the plugins provided by dagrunner.
+However, for convenience, dagrunner does define some plugins which fall into two broad categories, as defined by two abstract classes.  One is the basic 'Plugin' which defines a reasonable standard UI.  The other is 'NodeAwarePlugin'.  This is identical to the basic 'Plugin' but additionally triggers the the built-in plugin-executor function to pass your plugin all of its node parameters (i.e. extend the keyword arguments with node properties in its call).  That is, making the plugin we define 'node aware'.
+
+Plugins included:
+- `Plugin`: Abstract class on which to define other plugins.
+- `NodeAwarePlugin`: Abstract class on which to define 'node aware' plugins.
+- `Shell(Plugin)`: Execute a subprocess command.
+- `DataPolling(Plugin)`: Poll for availability of files.
+- `Input(NodeAwarePlugin)`: Given a filepath, expand it using keyword argument, environment variables and any node properties provided.
+
+## Schedulers
+
+The `dagrunner-execute-graph` script exposes a scheduler argument for specifying our preferred scheduler.  Schedulers include [dask](https://www.dask.org/), [ray](https://docs.ray.io/en/latest/ray-more-libs/dask-on-ray.html) and multiprocessing async scheduler (in-house scheduler utilising python built-in [multiprocessing](https://docs.python.org/3/library/multiprocessing.html) library).  See command help for further details.
