@@ -41,13 +41,6 @@ class SkipBranch(Exception):
     pass
 
 
-def _filter_arguments(func, kwargs):
-    # Get the parameters of the function
-    params = inspect.signature(func).parameters
-    valid_kwargs = {k: v for k, v in kwargs.items() if k in params}
-    return valid_kwargs
-
-
 def plugin_executor(*args, call=None, verbose=False, dry_run=False, common_kwargs=None, **node_properties):
     """
     Executes a plugin function or method with the provided arguments and keyword arguments.
@@ -59,7 +52,7 @@ def plugin_executor(*args, call=None, verbose=False, dry_run=False, common_kwarg
         dry_run: A boolean indicating whether to perform a dry run without executing the plugin.
         common_kwargs: A dictionary of optional keyword arguments to apply to all applicable plugins.
             That is, being passed to the plugin call if such keywords are expected from the plugin.
-            This is a useful alternative to global variables.
+            This is a useful alternative to global or environment variable usage.
         **node_properties: Node properties.  These will be passed to 'node-aware' plugins.
 
     Returns:
@@ -74,8 +67,8 @@ def plugin_executor(*args, call=None, verbose=False, dry_run=False, common_kwarg
     if verbose:
        print(f"args: {args}")
        print(f"call: {call}")
-
     callable_obj, callable_kwargs = call
+
     if isinstance(callable_obj, str):
         # import callable if a string is provided
         module_name, function_name = callable_obj.rsplit('.', 1)
@@ -92,7 +85,8 @@ def plugin_executor(*args, call=None, verbose=False, dry_run=False, common_kwarg
                 callable_kwargs["node_properties"] = node_properties
             callable_obj = callable_obj()
             call_msg = "()"
-        callable_kwargs = _filter_arguments(callable_obj, common_kwargs | callable_kwargs)
+        callable_kwargs = callable_kwargs | {key: value for key, value in common_kwargs.items() if key in callable_kwargs}  # based on overriding arguments
+        #callable_kwargs = callable_kwargs | {key: value for key, value in common_kwargs.items() if key in inspect.signature(callable_obj).parameters}  # based on function signature
 
         if verbose:
             print(f"{obj_name}{call_msg}(*{args}, **{callable_kwargs})")
