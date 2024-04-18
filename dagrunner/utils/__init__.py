@@ -57,13 +57,14 @@ class TimeIt:
 
 
 def _extract_arguments_and_descriptions(docstring):
-    pattern = r'(:param|:keyword) (\w+):(.+?)(?=\n\s*(?::\s*(?:\w+:)?/|:)|$)'
+    docstring = docstring.replace('\\*', '*')
+    pattern = r'(:param|:keyword) (\*{0,2}\w+):(.+?)(?=\n\s*(?::\s*(?:\w+:)?/|:)|$)'
     matches = re.findall(pattern, docstring, re.DOTALL)
     arguments_and_descriptions = {}
 
     for match in matches:
         directive, argument_name, description = match
-        argument_name = argument_name.strip()
+        argument_name = argument_name.strip().replace('*', '')
         description = description.strip()
         arguments_and_descriptions[argument_name] = ' '.join(map(str.strip, description.split('\n')))
 
@@ -83,6 +84,14 @@ def _docstring_parse(obj):
     arg_mapping = _extract_arguments_and_descriptions(doc)
     intro_lines = re.search(r'^(.*?)(?=:param|:keyword|\Z)', doc, re.DOTALL).group(1).strip()
     return intro_lines, arg_mapping,
+
+
+class KeyValueAction(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        key, value = values
+        if not hasattr(namespace, self.dest) or getattr(namespace, self.dest) is None:
+            setattr(namespace, self.dest, {})
+        getattr(namespace, self.dest)[key] = value
 
 
 # TODO: Support for *args and **kwargs
@@ -110,16 +119,16 @@ def function_to_argparse(func, parser=None, exclude=None):
     sig = inspect.signature(func)
     singature_param = list(sig.parameters.items())[1:] if is_method else sig.parameters.items()
     for name, param in singature_param:
-        if param.kind == inspect.Parameter.VAR_KEYWORD or param.kind == inspect.Parameter.VAR_POSITIONAL:
+        if param.kind == inspect.Parameter.VAR_POSITIONAL:
             print(f"'function_to_argparse' parameter expansion '{param}' not supported yet")
             continue
-        if name in exclude:
-            continue
+        # if name in exclude:
+        #     continue
 
         arg_name = name.replace("_", "-")
         arg_type = param.annotation
         arg_default = param.default if param.default is not param.empty else None
-        arg_optional = "optional" in arg_mapping[name].lower() if name in arg_mapping else False
+        arg_optional = "optional" in arg_mapping[name].lower() if name in arg_mapping else arg_default is not None
         arg_kwargs = dict(type=arg_type, default=arg_default, help=arg_mapping[name] if name in arg_mapping else None)
         if arg_type is bool:
             arg_kwargs.update(dict(action=f"store_{str(not arg_default).lower()}"))
@@ -128,8 +137,15 @@ def function_to_argparse(func, parser=None, exclude=None):
             arg_num = "*" if arg_optional else "+"
             arg_kwargs.update(dict(nargs=arg_num))
             arg_kwargs["type"] = str
+        elif param.kind == inspect.Parameter.VAR_KEYWORD:
+            arg_kwargs.pop("type")
+            arg_kwargs["nargs"] = 2
+            arg_kwargs["action"] = KeyValueAction
+            arg_kwargs["metavar"] = ("key", "value")
+            arg_kwargs["help"] += '\n Key-value pair argument.'
+            arg_optional = True
 
-        if param.default is not param.empty:
+        if param.default is not param.empty or param.kind == inspect.Parameter.VAR_KEYWORD:
             # is a keywarg
             arg_kwargs["dest"] = name
             arg_kwargs["required"] = not arg_optional

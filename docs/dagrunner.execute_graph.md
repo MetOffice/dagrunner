@@ -9,7 +9,7 @@
 ### Call Signature:
 
 ```python
-ExecuteGraph(networkx_graph: str, plugin_executor: <built-in function callable> = <function plugin_executor at 0x7ff38bf8ab90>, scheduler: str = 'processes', num_workers: int = 1, profiler_filepath: str = None, dry_run: bool = False, verbose: bool = False, **kwargs)
+ExecuteGraph(networkx_graph: str, plugin_executor: <built-in function callable> = <function plugin_executor at 0x7ff0e42c2b00>, scheduler: str = 'processes', num_workers: int = 1, profiler_filepath: str = None, dry_run: bool = False, verbose: bool = False, **kwargs)
 ```
 
 see [NodeAwarePlugin](dagrunner.plugin_framework.md#NodeAwarePlugin)

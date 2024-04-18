@@ -21,7 +21,8 @@ def get_obj_module_dot_path(obj):
 
 def gen_obj_link(obj):
     module_path = get_obj_module_dot_path(obj)
-    return f"see [{obj.__name__}]({module_path}.md#{obj.__name__})\n\n"
+    obname = obj.__name__
+    return f"[{module_path}]({module_path}.md#{obname})"
 
 
 def is_private(obj_name):
@@ -83,25 +84,28 @@ def prioritised_get_members(module):
 
 def generate_markdown_from_module(module_name, target_root):
     root_package = module_name.split('.')[0]
+    links = []
 
     module = importlib.import_module(module_name)
     markdown = gen_obj_markdown(1, "Module", module, module.__name__, target_root)
+    links.append(gen_obj_link(module))
 
     for name, obj in prioritised_get_members(module):
         if external_dependency(obj, root_package) or is_private(name) or inspect.ismethod(obj) or inspect.isbuiltin(obj) or (name.startswith("_") and name.startswith("_") and name.endswith("__")):
             continue
         obname = "Class" if inspect.isclass(obj) else "Function" if inspect.isfunction(obj) else "Module" if inspect.ismodule(obj) else "Object"
         if no_include(obj, module_name):
-            markdown += gen_obj_link(obj)
+            markdown += f"see {gen_obj_link(obj)} \n\n"
         else:
             markdown += gen_obj_markdown(2, obname, obj, name, target_root)
+            links.append(gen_obj_link(obj))
 
         if inspect.isclass(obj):
             for cls_member_name, cls_member in inspect.getmembers(obj, inspect.ismethod):
                 if is_private(cls_member_name):
                     continue
                 markdown += gen_obj_markdown(3, "Method", cls_member_name, cls_member_name, target_root)
-    return markdown
+    return markdown, links
 
 
 def path_to_module(abs_path, base_path):
@@ -112,7 +116,7 @@ def path_to_module(abs_path, base_path):
 
 
 def gen_markdown(module_dot_path, target_root):
-    markdown_content = generate_markdown_from_module(module_dot_path, target_root)
+    markdown_content, links = generate_markdown_from_module(module_dot_path, target_root)
     output_file = os.path.join(target_root, f"{module_dot_path}.md")
     with open(output_file, "w") as f:
         f.write(markdown_content)
