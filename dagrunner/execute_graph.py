@@ -4,6 +4,7 @@
 # This file is part of 'pp_systems_framework' and is released under the BSD 3-Clause license.
 # See LICENSE in the root of the repository for full licensing details.
 import gc
+import inspect
 import json
 import os
 import shutil
@@ -40,7 +41,14 @@ class SkipBranch(Exception):
     pass
 
 
-def plugin_executor(*args, call=None, verbose=False, dry_run=False, **kwargs):
+def _filter_arguments(func, kwargs):
+    # Get the parameters of the function
+    params = inspect.signature(func).parameters
+    valid_kwargs = {k: v for k, v in kwargs.items() if k in params}
+    return valid_kwargs
+
+
+def plugin_executor(*args, call=None, verbose=False, dry_run=False, common_kwargs=None, **node_properties):
     """
     Executes a plugin function or method with the provided arguments and keyword arguments.
 
@@ -49,7 +57,10 @@ def plugin_executor(*args, call=None, verbose=False, dry_run=False, **kwargs):
         call: A tuple containing the callable object or python dot path to one, and its keyword arguments.
         verbose: A boolean indicating whether to print verbose output.
         dry_run: A boolean indicating whether to perform a dry run without executing the plugin.
-        **kwargs: Keyword arguments to be passed to the plugin function or method (common to all plugins).
+        common_kwargs: A dictionary of optional keyword arguments to apply to all applicable plugins.
+            That is, being passed to the plugin call if such keywords are expected from the plugin.
+            This is a useful alternative to global variables.
+        **node_properties: Node properties.  These will be passed to 'node-aware' plugins.
 
     Returns:
         The result of executing the plugin function or method.
@@ -74,17 +85,18 @@ def plugin_executor(*args, call=None, verbose=False, dry_run=False, **kwargs):
         callable_obj = getattr(module, function_name)
 
     with dask.config.set(scheduler="single-threaded"):
-        if issubclass(callable_obj, NodeAwarePlugin):
-            node_properties = kwargs
-            callable_kwargs["node_properties"] = node_properties
+        call_msg = ""
+        obj_name = callable_obj.__name__
         if isinstance(callable_obj, type):
-            if verbose:
-                print(f"{callable_obj.__name__}(*{args}, **{callable_kwargs})")
-            res = callable_obj()(*args, verbose=verbose, **callable_kwargs)
-        else:
-            if verbose:
-                print(f"{callable_obj.__name__}()(*{args}, **{callable_kwargs})")
-            res = callable_obj(*args, verbose=verbose, **callable_kwargs)
+            if issubclass(callable_obj, NodeAwarePlugin):
+                callable_kwargs["node_properties"] = node_properties
+            callable_obj = callable_obj()
+            call_msg = "()"
+        callable_kwargs = _filter_arguments(callable_obj, common_kwargs | callable_kwargs)
+
+        if verbose:
+            print(f"{obj_name}{call_msg}(*{args}, **{callable_kwargs})")
+        res = callable_obj(*args, verbose=verbose, **callable_kwargs)
 
     if verbose:
         print(f"result: '{res}'")
@@ -163,6 +175,10 @@ class ExecuteGraph:
                 A networkx graph; dot path to a networkx graph or callable that returns 
                 one (str); tuple representing (edges, nodes) or callable object that
                 returns a networkx.
+            plugin_executor (callable):
+                A callable object that executes a plugin function or method with the provided
+                arguments and keyword arguments.  By default, uses the `plugin_executor` function.
+                Optional.
             scheduler (str):
                 Accepted values include "ray", "multiprocessing" and those recognised
                 by dask: "threads", "processes" and "single-threaded" (useful for debugging).
@@ -178,9 +194,7 @@ class ExecuteGraph:
             verbose (bool):
                 Print executed commands.  Optional.
             **kwargs:
-                Keyword arguments common to all plugin execution (applied using functools.partial).
-                Typical examples include 'verbose', 'dry-run' etc.  Note that
-                verbose and dry-run are common to all workflows and to have explicit arguments above.
+                Optional global keyword arguments to apply to all applicable plugins.
         """
         self._nxgraph = _get_networkx(networkx_graph)
         self._plugin_executor = plugin_executor
@@ -199,14 +213,16 @@ class ExecuteGraph:
     def _process_graph(self):
         """
         Create flattened dictionary describing the relationship between each of our nodes.
-        Here we wrap our nodes to ensure common parameters are share accross all
+        Here we wrap our nodes to ensure common parameters are share across all
         executed nodes (e.g. dry-run, verbose).
         
         TODO: Potentially support 'clobber' i.e. partial graph execution from a graph failure recovery.
         """
         executor = partial(
             self._plugin_executor,
-            **self._kwargs,
+            verbose = self._kwargs.pop("verbose"),
+            dry_run = self._kwargs.pop("dry_run"),
+            common_kwargs = self._kwargs,
         )
 
         if callable(self._nxgraph):
@@ -217,8 +233,7 @@ class ExecuteGraph:
             key = node_id
             quoted_key = ObjectAsStr(node_id)
             args = list(self._nxgraph.predecessors(node_id))
-            kwargs = properties
-            exec_graph[key] = (apply, executor, args, kwargs)
+            exec_graph[key] = (apply, executor, args, properties)
 
         #handle_clobber(graph, workflow, no_clobber, verbose)
         return exec_graph
@@ -242,14 +257,15 @@ def main():
     Entry point of the program.
     Parses command line arguments and executes the graph using the ExecuteGraph class.
     """
-    parser = function_to_argparse(ExecuteGraph, exclude=["plugin_executor", "**kwargs"])
+    parser = function_to_argparse(ExecuteGraph, exclude=["plugin_executor"])
     args = parser.parse_args()
     args = vars(args)
     # positional arguments with '-' aren't converted to '_' by argparse.
     args = {key.replace("-", "_"): value for key, value in args.items()}
     if args.get('verbose', False):
         print(f"CLI call arguments: {args}")
-    ExecuteGraph(**args)()
+    kwargs = args.pop("kwargs", None) or {}
+    ExecuteGraph(**args, **kwargs)()
 
 
 if __name__ == "__main__":
