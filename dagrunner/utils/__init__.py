@@ -32,28 +32,65 @@ class ObjectAsStr(str):
 
 
 class TimeIt:
+    """
+    Timer context manager which can also be used as a standalone timer.
+
+    We can query our timer for the elapsed time in seconds even before .
+
+    Example as a context manager:
+
+        >>> with TimeIt() as timer:
+        >>>     sleep(0.05)
+        >>> print(timer)
+        "Elapsed time: 0.05s"
+
+    Example as a standalone timer:
+
+        >>> timer = TimeIt()
+        >>> timer.start_timer()
+        >>> sleep(0.05)
+        >>> print(timer)
+        "Elapsed time: 0.05s"
+
+    """
     def __init__(self, verbose=False):
         self._verbose = verbose
-        self._elapsed = None
+        self._total_elapsed = 0
         self._start = None
+        self._running = False
 
     def __enter__(self):
-        self._start = time.perf_counter()
+        self.start()
         return self
 
     def __exit__(self, *args):
-        self._elapsed = time.perf_counter() - self._start
+        self.stop()
         if self._verbose:
             print(str(self))
+        return False
+
+    def start(self):
+        self._running = True
+        self._start = time.perf_counter()
+
+    def stop(self):
+        if not self._running:
+            raise RuntimeError("Timer is not running.")
+        self._total_elapsed = self.elapsed
+        self._running = False
 
     @property
     def elapsed(self):
         """Return elapsed time in seconds."""
-        return self._elapsed
+        if self._running:
+            elapsed = self._total_elapsed + (time.perf_counter() - self._start)
+        else:
+            elapsed = self._total_elapsed
+        return elapsed
 
     def __str__(self):
         """Print elapsed time in seconds."""
-        return f"Run-time: {self._elapsed}s"
+        return f"Elapsed time: {self.elapsed:.2f}s"
 
 
 def _extract_arguments_and_descriptions(docstring):
