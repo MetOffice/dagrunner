@@ -22,6 +22,7 @@ from dagrunner.utils import (
     ObjectAsStr,
     TimeIt,
     function_to_argparse,
+    logger,
 )
 from dagrunner.plugin_framework import NodeAwarePlugin
 from dagrunner.runner.schedulers import SCHEDULERS
@@ -61,7 +62,9 @@ def plugin_executor(*args, call=None, verbose=False, dry_run=False, common_kwarg
     Raises:
         ValueError: If the `call` argument is not provided.
     """
-    args = [arg for arg in args if arg is not None]  # supporting plugins that have no return
+    logger.client_attach_socket_handler()
+
+    args = [arg for arg in args if arg is not None]  # support plugins that have no return value
     if call is None:
         raise ValueError("call is a required argument")
     if verbose:
@@ -86,11 +89,11 @@ def plugin_executor(*args, call=None, verbose=False, dry_run=False, common_kwarg
             callable_obj = callable_obj()
             call_msg = "()"
         callable_kwargs = callable_kwargs | {key: value for key, value in common_kwargs.items() if key in callable_kwargs}  # based on overriding arguments
-        #callable_kwargs = callable_kwargs | {key: value for key, value in common_kwargs.items() if key in inspect.signature(callable_obj).parameters}  # based on function signature
+        callable_kwargs = callable_kwargs | {key: value for key, value in {"verbose": verbose, "dry_run": dry_run} if key in inspect.signature(callable_obj).parameters}  # based on function signature
 
         if verbose:
             print(f"{obj_name}{call_msg}(*{args}, **{callable_kwargs})")
-        res = callable_obj(*args, verbose=verbose, **callable_kwargs)
+        res = callable_obj(*args, **callable_kwargs)
 
     if verbose:
         print(f"result: '{res}'")
@@ -160,6 +163,7 @@ class ExecuteGraph:
                  profiler_filepath: str = None,
                  dry_run: bool = False,
                  verbose: bool = False,
+                 sqlite_filepath: str = None,
                  **kwargs):
         """
         Execute a networkx graph using a chosen scheduler.
@@ -187,6 +191,8 @@ class ExecuteGraph:
                 Optional.
             verbose (bool):
                 Print executed commands.  Optional.
+            sqlite_filepath (str):
+                Filepath to a SQLite database to store log records.  Optional.
             **kwargs:
                 Optional global keyword arguments to apply to all applicable plugins.
         """
@@ -199,6 +205,7 @@ class ExecuteGraph:
         self._profiler_output = profiler_filepath
         self._kwargs = kwargs | {"verbose": verbose, "dry_run": dry_run}
         self._exec_graph = self._process_graph()
+        self._sqlite_filepath = sqlite_filepath
 
     @property
     def nxgraph(self):
@@ -236,13 +243,13 @@ class ExecuteGraph:
         _attempt_visualise_graph(self._exec_graph, output_filepath)
 
     def __call__(self):
-        with TimeIt("execute_graph"):
-            with self._scheduler(self._num_workers,
-                                 profiler_filepath=self._profiler_output) as scheduler:
-                try:
-                    res = scheduler.run(self._exec_graph)
-                except SkipBranch as err:
-                    pass
+        with logger.ServerContext(sqlite_filepath=self._sqlite_filepath), \
+                TimeIt("execute_graph"), \
+                self._scheduler(self._num_workers, profiler_filepath=self._profiler_output) as scheduler:
+            try:
+                res = scheduler.run(self._exec_graph)
+            except SkipBranch as err:
+                pass
         return res
 
 
