@@ -5,6 +5,7 @@ All have in common that they convert the provided workflow dictionary into a
 dask graph by initiating a dask Delayed container on each node and then
 executing it (by calling its compute method) using the specified scheduler.
 See the following useful background reading:
+
     - https://docs.dask.org/en/latest/scheduler-overview.html
     - https://docs.dask.org/en/latest/scheduling.html
     - https://docs.dask.org/en/latest/delayed.html
@@ -22,7 +23,7 @@ from dask.distributed import (
 
 
 def no_op(*args, **kwargs):
-    """Dummy operation for our dask graph See :func:`add_dummy_tasks`"""
+    """Dummy operation for our dask graph See [add_dummy_tasks](#add_dummy_tasks)"""
     pass
 
 
@@ -40,13 +41,13 @@ def add_dummy_tasks(dask_graph):
     effectively ensures that no data leaves the worker.
 
     Args:
-        dask_graph: Dask graph dict
+    - dask_graph (dict): Dask graph dict
 
     Returns:
-        Dask graph dict
+    - dict: Dask graph
 
     TODO:
-    Potentially skip intermediate dummy for tasks with no return value.
+    - Potentially skip intermediate dummy for tasks with no return value.
     """
     pred_deps, succ_deps = get_deps(dask_graph)
     # Determine termination nodes for each branch
