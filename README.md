@@ -1,3 +1,8 @@
+[![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
+![Experimental](https://img.shields.io/badge/status-experimental-orange)
+![Python Project](https://img.shields.io/badge/language-Python-blue?logo=python&logoColor=white)
+![Static Badge](https://img.shields.io/badge/pip%20install-blue)
+
 # Dagrunner
 
 Dagrunner serves as a Directed Acyclic Graph (DAG) runner, primarily designed to ensure a clear distinction between a project's graph definition (typically in native networkx format) and its execution method. In essence, Dagrunner offers various schedulers for executing the graph, but it firmly separates these operational concepts from the scientific configuration or recipe, i.e., the graph itself. Consequently, while Dagrunner currently provides convenient scheduling options, it remains adaptable to future changes or alternative solutions, ensuring that the scientific configuration can persist regardless of the technologies or tools employed, whether Dagrunner is utilized or not.
