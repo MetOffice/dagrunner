@@ -1,0 +1,14 @@
+# module: `dagrunner.runner.schedulers.asyncmp`
+
+[Source](../dagrunner/runner/schedulers/asyncmp.py#L0)
+
+# class: `AsyncMP`
+
+[Source](../dagrunner/runner/schedulers/asyncmp.py#L12)
+
+Basic asynchronous scheduler using python built-in multiprocessing.
+
+Context manager for creating a pool of workers, submits jobs based on the
+condition of their dependencies completing, then finally tidies up after
+itself.
+

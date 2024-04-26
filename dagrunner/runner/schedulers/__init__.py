@@ -2,11 +2,23 @@
 #
 # This file is part of 'pp_systems_framework' and is released under the BSD 3-Clause license.
 # See LICENSE in the root of the repository for full licensing details.
+"""
+Supackage which provides access to various schedulers through a common UI.
+
+A SCHEDULERS dictionary provides access to the available schedulers through a
+name-scheduler lookup:
+- distributed
+- threads
+- processes
+- single-threaded
+- multiprocessing
+- ray
+"""
 from functools import partial
 from . import asyncmp
 from . import dask
 
-
+# Schedulers that can be used with the runner, a name-lookup.
 SCHEDULERS = {
     "distributed": dask.Distributed,
     "threads": partial(dask.SingleMachine, scheduler="threads"),
