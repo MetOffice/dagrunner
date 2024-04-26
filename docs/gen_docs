@@ -77,12 +77,12 @@ def gen_obj_heading(level, obj, obname):
     return f"{'#' * level} {obj_descriptor(obj)}: `{obname}`\n\n"
 
 
-def gen_obj_link(obj, obname, relative_module_dot_path=None, depth=False):
+def gen_obj_link(obj, obname, rel_mod_path=None):
     """
     Generate a markdown link to an object i.e. to an objects corresponding markdown file.
-    
-    If depth is specified, then generate the link with name corresponding to the object name
-    and padding based on the depth of the object in the module hierarchy.
+
+    rel_mod_path makes the link name relative to this module.  If None, the
+    link name is the full module path, while setting it to "" will remove the module path.
     """
     heading = gen_obj_heading(0, obj, obname)
     heading = heading.strip().lower()
@@ -98,18 +98,18 @@ def gen_obj_link(obj, obname, relative_module_dot_path=None, depth=False):
         # Likely an object, not a type.
         return ""
     module_path_short = module_path
-    if relative_module_dot_path:
-        module_path_short = module_path.replace(f"{relative_module_dot_path}.", "")
+    module_path_full = module_path
     if not inspect.ismodule(obj):
+        module_path_full = f"{module_path}.{obname}"
         module_path_short = f"{module_path_short}.{obname}"
+    if rel_mod_path:
+        rel_mod_path += "."
+        module_path_short = module_path_short.replace(rel_mod_path, "")
+    if rel_mod_path == "":
+        module_path_short = module_path_short.split('.')[-1]
     link_name = f"{obj_descriptor(obj)}: {module_path_short}"
 
-    padding = ""
-    if depth:
-        padding = len(module_path.split('.'))
-        padding = f"\n{'  '*padding}- "
-        link_name = f"{obj_descriptor(obj)}: {module_path_short.split('.')[-1]}"
-    return f"{padding}[{link_name}]({module_path}.md#{heading})"
+    return (module_path_full, f"[{link_name}]({module_path}.md#{heading})")
 
 
 def gen_obj_markdown(level, obj, obname, target_root):
@@ -145,14 +145,14 @@ def generate_markdown_from_module(module_name, target_root):
     module = importlib.import_module(module_name)
     name = module.__name__.split('.')[-1]  # module names are returned as 'module_name.submodule_name'
     markdown = gen_obj_markdown(1, module, name, target_root)
-    index = gen_obj_link(module, name, depth=True)
+    index = [gen_obj_link(module, name, rel_mod_path="")]
 
     for name, obj in prioritised_get_members(module):
         name = name.split('.')[-1]  # module names are returned as 'module_name.submodule_name'
         if external_dependency(obj, root_package) or is_private(name) or inspect.ismethod(obj) or inspect.isbuiltin(obj) or (name.startswith("_") and name.endswith("__")):
             continue
         if no_include(obj, module_name):
-            markdown += f"see {gen_obj_link(obj, name, relative_module_dot_path=module.__name__)}\n\n"
+            markdown += f"see {gen_obj_link(obj, name, rel_mod_path=module.__name__)[1]}\n\n"
         else:
             markdown += gen_obj_markdown(2, obj, name, target_root)
 
@@ -162,7 +162,8 @@ def generate_markdown_from_module(module_name, target_root):
                     continue
                 markdown += gen_obj_markdown(3, cls_member_name, cls_member_name, target_root)
 
-        index += gen_obj_link(obj, name, depth=True)
+        index.append(gen_obj_link(obj, name, rel_mod_path=""))
+    index = [x for x in index if x]
     return markdown, index
 
 
@@ -187,6 +188,12 @@ def gen_markdown(module_dot_path, target_root):
     return index
 
 
+def format_index(index):
+    """Format the index for a markdown file."""
+    index = sorted(set(index), key=lambda x: x[0])
+    return '\n'.join([f"{'  '*len(dot_path.split('.'))}- {link}" for dot_path, link in index])
+
+
 def generate_markdown_recursive(module_dot_path, target_root):
     """Generate markdown for a module and it's submodules recursively."""
     module = importlib.import_module(module_dot_path)
@@ -195,6 +202,7 @@ def generate_markdown_recursive(module_dot_path, target_root):
     toc_filepath = os.path.join(target_root, f"{module_dot_path}_index.md")
     with open(toc_filepath, "w") as f:
         f.write(f"# Index for '{module_dot_path}' reference documentation\n")
+    index = []
 
     for root, _, filenames in os.walk(module.__path__[0]):
         # Check if any component of the root path is hidden ('.'), private ('_') or is testing ('tests')
@@ -204,20 +212,16 @@ def generate_markdown_recursive(module_dot_path, target_root):
         module_dot_path = path_to_module(root, base_path)
         if importlib.util.find_spec(module_dot_path):
             print(f"{module_dot_path} is a subpackage")
-            index = gen_markdown(module_dot_path, target_root)
-            with open(toc_filepath, "a") as f:
-                f.write(index)
-                #f.write('\n- ' + '\n- '.join(index))
+            index.extend(gen_markdown(module_dot_path, target_root))
 
         for filename in filenames:
             if not filename.startswith('_') and filename.endswith(".py"):
                 module_path = os.path.join(root, filename)
                 module_dot_path = path_to_module(module_path, base_path)
                 print(f"{module_dot_path} is a module")
-                index = gen_markdown(module_dot_path, target_root)
-                with open(toc_filepath, "a") as f:
-                    f.write(index)
-                    #f.write('\n- ' + '\n- '.join(index))
+                index.extend(gen_markdown(module_dot_path, target_root))
+    with open(toc_filepath, "a") as f:
+        f.write(format_index(index))
 
 
 if __name__ == "__main__":
