@@ -6,6 +6,12 @@
 
 [Source](../dagrunner/runner/schedulers/asyncmp.py#L12)
 
+### Call Signature:
+
+```python
+AsyncMP(nprocesses, *args, fail_fast=True, profiler_filepath=None, **kwargs)
+```
+
 Basic asynchronous scheduler using python built-in multiprocessing.
 
 Context manager for creating a pool of workers, submits jobs based on the

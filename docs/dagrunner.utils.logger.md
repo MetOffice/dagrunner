@@ -14,11 +14,23 @@ https://docs.python.org/3/howto/logging-cookbook.html#sending-and-receiving-logg
 
 [Source](../dagrunner/utils/logger.py#L98)
 
+### Call Signature:
+
+```python
+LogRecordSocketReceiver(host='localhost', port=9020, handler=<class 'dagrunner.utils.logger.LogRecordStreamHandler'>, log_queue=None)
+```
+
 Simple TCP socket-based logging receiver.
 
 # class: `LogRecordStreamHandler`
 
 [Source](../dagrunner/utils/logger.py#L49)
+
+### Call Signature:
+
+```python
+LogRecordStreamHandler(request, client_address, server)
+```
 
 Handler for a streaming logging request.
 
@@ -29,9 +41,21 @@ configured locally.
 
 [Source](../dagrunner/utils/logger.py#L132)
 
+### Call Signature:
+
+```python
+SQLiteQueueHandler(sqfile='logs.sqlite')
+```
+
 # class: `ServerContext`
 
 [Source](../dagrunner/utils/logger.py#L174)
+
+### Call Signature:
+
+```python
+ServerContext(sqlite_filepath=None)
+```
 
 Start a TCP server to receive log records.
 
@@ -46,6 +70,12 @@ Log format is:
 # function: `client_attach_socket_handler`
 
 [Source](../dagrunner/utils/logger.py#L22)
+
+### Call Signature:
+
+```python
+client_attach_socket_handler()
+```
 
 Attach a SocketHandler instance to the root logger at the sending end.
 
@@ -66,6 +96,12 @@ application:
 # function: `main`
 
 [Source](../dagrunner/utils/logger.py#L215)
+
+### Call Signature:
+
+```python
+main()
+```
 
 Demonstrate how to start a TCP server to receive log records.
 

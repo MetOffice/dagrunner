@@ -1,32 +1,3 @@
-
-l
-
-l
-
-l
-
-l
-
-l
-
-l
-
-l
-
-l
-
-l
-
-l
-
-l
-
-l
-
-l
-
-
-
 # module: `dagrunner.runner.schedulers`
 
 [Source](../dagrunner/runner/schedulers/__init__.py#L0)
@@ -42,9 +13,9 @@ name-scheduler lookup:
 - multiprocessing
 - ray
 
-see [dagrunner.runner.schedulers.asyncmp](dagrunner.runner.schedulers.asyncmp.md#module_dagrunner_runner_schedulers_asyncmp)
+see [module: asyncmp](dagrunner.runner.schedulers.asyncmp.md#module-dagrunnerrunnerschedulersasyncmp)
 
-see [dagrunner.runner.schedulers.dask](dagrunner.runner.schedulers.dask.md#module_dagrunner_runner_schedulers_dask)
+see [module: dask](dagrunner.runner.schedulers.dask.md#module-dagrunnerrunnerschedulersdask)
 
 # dict: `SCHEDULERS`
 

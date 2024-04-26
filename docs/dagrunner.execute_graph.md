@@ -2,15 +2,21 @@
 
 [Source](../dagrunner/execute_graph.py#L0)
 
-see [dagrunner.utils.logger](dagrunner.utils.logger.md#module_dagrunner_utils_logger)
+see [module: dagrunner.utils.logger](dagrunner.utils.logger.md#module-dagrunnerutilslogger)
 
 # class: `ExecuteGraph`
 
 [Source](../dagrunner/execute_graph.py#L159)
 
-see [NodeAwarePlugin](dagrunner.plugin_framework.md#class_nodeawareplugin)
+### Call Signature:
 
-see [ObjectAsStr](dagrunner.utils.md#class_objectasstr)
+```python
+ExecuteGraph(networkx_graph: str, plugin_executor: <built-in function callable> = <function plugin_executor at 0x7f9a78176d40>, scheduler: str = 'processes', num_workers: int = 1, profiler_filepath: str = None, dry_run: bool = False, verbose: bool = False, sqlite_filepath: str = None, **kwargs)
+```
+
+see [class: dagrunner.plugin_framework.NodeAwarePlugin](dagrunner.plugin_framework.md#class-nodeawareplugin)
+
+see [class: dagrunner.utils.ObjectAsStr](dagrunner.utils.md#class-objectasstr)
 
 # dict: `SCHEDULERS`
 
@@ -25,13 +31,19 @@ In the single-threaded scheduler, Dask executes tasks sequentially, and
 exceptions will propagate as they occur, potentially halting the execution of
 subsequent tasks.
 
-see [TimeIt](dagrunner.utils.md#class_timeit)
+see [class: dagrunner.utils.TimeIt](dagrunner.utils.md#class-timeit)
 
-see [function_to_argparse](dagrunner.utils.md#function_function_to_argparse)
+see [function: dagrunner.utils.function_to_argparse](dagrunner.utils.md#function-function_to_argparse)
 
 # function: `main`
 
 [Source](../dagrunner/execute_graph.py#L257)
+
+### Call Signature:
+
+```python
+main()
+```
 
 Entry point of the program.
 Parses command line arguments and executes the graph using the ExecuteGraph class.
@@ -39,6 +51,12 @@ Parses command line arguments and executes the graph using the ExecuteGraph clas
 # function: `plugin_executor`
 
 [Source](../dagrunner/execute_graph.py#L46)
+
+### Call Signature:
+
+```python
+plugin_executor(*args, call=None, verbose=False, dry_run=False, common_kwargs=None, **node_properties)
+```
 
 Executes a plugin function or method with the provided arguments and keyword arguments.
 
@@ -58,5 +76,5 @@ Returns:
 Raises:
     ValueError: If the `call` argument is not provided.
 
-see [visualise_graph](dagrunner.utils.visualisation.md#function_visualise_graph)
+see [function: dagrunner.utils.visualisation.visualise_graph](dagrunner.utils.visualisation.md#function-visualise_graph)
 

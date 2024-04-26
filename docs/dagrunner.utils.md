@@ -2,13 +2,19 @@
 
 [Source](../dagrunner/utils/__init__.py#L0)
 
-see [dagrunner.utils.logger](dagrunner.utils.logger.md#module_dagrunner_utils_logger)
+see [module: logger](dagrunner.utils.logger.md#module-dagrunnerutilslogger)
 
-see [dagrunner.utils.visualisation](dagrunner.utils.visualisation.md#module_dagrunner_utils_visualisation)
+see [module: visualisation](dagrunner.utils.visualisation.md#module-dagrunnerutilsvisualisation)
 
 # class: `KeyValueAction`
 
 [Source](../dagrunner/utils/__init__.py#L126)
+
+### Call Signature:
+
+```python
+KeyValueAction(option_strings, dest, nargs=None, const=None, default=None, type=None, choices=None, required=False, help=None, metavar=None)
+```
 
 Information about how to convert command line strings to Python objects.
 
@@ -63,11 +69,23 @@ Keyword Arguments:
 
 [Source](../dagrunner/utils/__init__.py#L10)
 
+### Call Signature:
+
+```python
+ObjectAsStr(obj, name=None)
+```
+
 Hide object under a string.
 
 # class: `TimeIt`
 
 [Source](../dagrunner/utils/__init__.py#L34)
+
+### Call Signature:
+
+```python
+TimeIt(verbose=False)
+```
 
 Timer context manager which can also be used as a standalone timer.
 
@@ -91,6 +109,12 @@ Example as a standalone timer:
 # function: `function_to_argparse`
 
 [Source](../dagrunner/utils/__init__.py#L138)
+
+### Call Signature:
+
+```python
+function_to_argparse(func, parser=None, exclude=None)
+```
 
 Generate an argparse from a function signature
 

@@ -17,17 +17,41 @@ See the following useful background reading:
 
 [Source](../dagrunner/runner/schedulers/dask.py#L156)
 
+### Call Signature:
+
+```python
+DaskOnRay(num_workers, profiler_filepath=None, **kwargs)
+```
+
 # class: `Distributed`
 
 [Source](../dagrunner/runner/schedulers/dask.py#L76)
+
+### Call Signature:
+
+```python
+Distributed(num_workers, profiler_filepath=None, **kwargs)
+```
 
 # class: `SingleMachine`
 
 [Source](../dagrunner/runner/schedulers/dask.py#L107)
 
+### Call Signature:
+
+```python
+SingleMachine(num_workers, scheduler='processes', profiler_filepath=None, **kwargs)
+```
+
 # function: `add_dummy_tasks`
 
 [Source](../dagrunner/runner/schedulers/dask.py#L30)
+
+### Call Signature:
+
+```python
+add_dummy_tasks(dask_graph)
+```
 
 Add a terminating dummy task to the graph as well as to each of our
 disconnected branches.
@@ -52,6 +76,12 @@ TODO:
 # function: `no_op`
 
 [Source](../dagrunner/runner/schedulers/dask.py#L25)
+
+### Call Signature:
+
+```python
+no_op(*args, **kwargs)
+```
 
 Dummy operation for our dask graph See [add_dummy_tasks](#add_dummy_tasks)
 

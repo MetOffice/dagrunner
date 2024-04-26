@@ -2,15 +2,15 @@
 
 [Source](../dagrunner/__init__.py#L0)
 
-see [dagrunner.plugin_framework](dagrunner.plugin_framework.md#module-dagrunnerpluginframework)
+see [module: plugin_framework](dagrunner.plugin_framework.md#module-dagrunnerplugin_framework)
 
-see [DataPolling](dagrunner.plugin_framework.md#class_datapolling)
+see [class: plugin_framework.DataPolling](dagrunner.plugin_framework.md#class-datapolling)
 
-see [Input](dagrunner.plugin_framework.md#class_input)
+see [class: plugin_framework.Input](dagrunner.plugin_framework.md#class-input)
 
-see [NodeAwarePlugin](dagrunner.plugin_framework.md#class_nodeawareplugin)
+see [class: plugin_framework.NodeAwarePlugin](dagrunner.plugin_framework.md#class-nodeawareplugin)
 
-see [Plugin](dagrunner.plugin_framework.md#class_plugin)
+see [class: plugin_framework.Plugin](dagrunner.plugin_framework.md#class-plugin)
 
-see [Shell](dagrunner.plugin_framework.md#class_shell)
+see [class: plugin_framework.Shell](dagrunner.plugin_framework.md#class-shell)
 
