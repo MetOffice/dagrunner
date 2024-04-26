@@ -11,7 +11,7 @@ see [module: dagrunner.utils.logger](dagrunner.utils.logger.md#module-dagrunneru
 ### Call Signature:
 
 ```python
-ExecuteGraph(networkx_graph: str, plugin_executor: <built-in function callable> = <function plugin_executor at 0x7f9a78176d40>, scheduler: str = 'processes', num_workers: int = 1, profiler_filepath: str = None, dry_run: bool = False, verbose: bool = False, sqlite_filepath: str = None, **kwargs)
+ExecuteGraph(networkx_graph: str, plugin_executor: <built-in function callable> = <function plugin_executor at 0x7f0ad8f2ee60>, scheduler: str = 'processes', num_workers: int = 1, profiler_filepath: str = None, dry_run: bool = False, verbose: bool = False, sqlite_filepath: str = None, **kwargs)
 ```
 
 see [class: dagrunner.plugin_framework.NodeAwarePlugin](dagrunner.plugin_framework.md#class-nodeawareplugin)
