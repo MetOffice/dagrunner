@@ -195,13 +195,13 @@ That is, the concatenation of node ID strings passed between nodes in the execut
 
 ### Customise graph construction
 
-Graph construction is owned by the you, the user (project) that utilises **dagrunner**.
+Graph construction is owned by you or your project, that utilises **dagrunner**.
 We saw how to execute our graph in our [example](#execute-our-graph-with-our-chosen-scheduler).  This [ExecuteGraph](docs/dagrunner.execute_graph.md#class-executegraph) class provides a means to customise what graph we actually execute by providing the means to pass it a **callable** which returns a networkx graph.
 As mentioned previously, this can be a python dot module path or the object itself.
 
-Typical uses include delaying the construction of your networkx graph until it is actually executed.  However, this offset complete flexibility for you to customise graph construction to your individual projects needs.
+Typical uses include delaying the construction of your networkx graph until it is actually executed.  However, this offsers complete flexibility for you to customise graph construction to your individual projects needs.
 
-Note that modifying graph construction is an added complication and should not be considered only where it is deemed absolutely necessary beyond the simple usecase (lazy construction).
+Note that modifying graph construction is an added complication and should be considered only where it is deemed absolutely necessary beyond the simple usecase (lazy construction).
 
 #### example lazy graph construction
 
@@ -235,7 +235,7 @@ We can now provide a python module dot path to this graph object to the `dagrunn
 
 ### Customise node execution
 
-The [ExecuteGraph](docs/dagrunner.execute_graph.md#class-executegraph) class accepts a custom 'plugin_executor' (rather than by default to use the built-in).
+The [ExecuteGraph](docs/dagrunner.execute_graph.md#class-executegraph) class accepts a custom 'plugin_executor' (rather than by default to use the built-in [plugin-executor](https://github.com/MetOffice/dagrunner/blob/main/docs/dagrunner.execute_graph.md#function-plugin_executor)).
 
 The 'plugin_executor' is what wraps every 'node' and is responsible for understanding how to 'execute' the particular node it wraps.  For example, the built-in [plugin-executor](https://github.com/MetOffice/dagrunner/blob/main/docs/dagrunner.execute_graph.md#function-plugin_executor) defines the contract we utilise in our example graph above, where 'call' takes the form `(callable object or python dot path to callable, callable keyword arguments)`.  For each node, this plugin executor then calls the underlying processing module (plugin) with its provided arguments (as per 'call').
 
