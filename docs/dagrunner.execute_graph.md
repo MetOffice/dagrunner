@@ -11,7 +11,7 @@ see [module: dagrunner.utils.logger](dagrunner.utils.logger.md#module-dagrunneru
 ### Call Signature:
 
 ```python
-ExecuteGraph(networkx_graph: str, plugin_executor: <built-in function callable> = <function plugin_executor at 0x7f0ad8f2ee60>, scheduler: str = 'processes', num_workers: int = 1, profiler_filepath: str = None, dry_run: bool = False, verbose: bool = False, sqlite_filepath: str = None, **kwargs)
+ExecuteGraph(networkx_graph: str, plugin_executor: <built-in function callable> = <function plugin_executor at 0x7f60939fad40>, scheduler: str = 'processes', num_workers: int = 1, profiler_filepath: str = None, dry_run: bool = False, verbose: bool = False, sqlite_filepath: str = None, **kwargs)
 ```
 
 see [class: dagrunner.plugin_framework.NodeAwarePlugin](dagrunner.plugin_framework.md#class-nodeawareplugin)
@@ -61,20 +61,20 @@ plugin_executor(*args, call=None, verbose=False, dry_run=False, common_kwargs=No
 Executes a plugin function or method with the provided arguments and keyword arguments.
 
 Args:
-    *args: Positional arguments to be passed to the plugin function or method.
-    call: A tuple containing the callable object or python dot path to one, and its keyword arguments.
-    verbose: A boolean indicating whether to print verbose output.
-    dry_run: A boolean indicating whether to perform a dry run without executing the plugin.
-    common_kwargs: A dictionary of optional keyword arguments to apply to all applicable plugins.
-        That is, being passed to the plugin call if such keywords are expected from the plugin.
-        This is a useful alternative to global or environment variable usage.
-    **node_properties: Node properties.  These will be passed to 'node-aware' plugins.
+- `*args`: Positional arguments to be passed to the plugin function or method.
+- `call`: A tuple containing the callable object or python dot path to one, and its keyword arguments.
+- `verbose`: A boolean indicating whether to print verbose output.
+- `dry_run`: A boolean indicating whether to perform a dry run without executing the plugin.
+- `common_kwargs`: A dictionary of optional keyword arguments to apply to all applicable plugins.
+    That is, being passed to the plugin call if such keywords are expected from the plugin.
+    This is a useful alternative to global or environment variable usage.
+- `**node_properties`: Node properties.  These will be passed to 'node-aware' plugins.
 
 Returns:
-    The result of executing the plugin function or method.
+- The result of executing the plugin function or method.
 
 Raises:
-    ValueError: If the `call` argument is not provided.
+- ValueError: If the `call` argument is not provided.
 
 see [function: dagrunner.utils.visualisation.visualise_graph](dagrunner.utils.visualisation.md#function-visualise_graph)
 

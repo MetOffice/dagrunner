@@ -48,20 +48,20 @@ def plugin_executor(*args, call=None, verbose=False, dry_run=False, common_kwarg
     Executes a plugin function or method with the provided arguments and keyword arguments.
 
     Args:
-        *args: Positional arguments to be passed to the plugin function or method.
-        call: A tuple containing the callable object or python dot path to one, and its keyword arguments.
-        verbose: A boolean indicating whether to print verbose output.
-        dry_run: A boolean indicating whether to perform a dry run without executing the plugin.
-        common_kwargs: A dictionary of optional keyword arguments to apply to all applicable plugins.
-            That is, being passed to the plugin call if such keywords are expected from the plugin.
-            This is a useful alternative to global or environment variable usage.
-        **node_properties: Node properties.  These will be passed to 'node-aware' plugins.
+    - `*args`: Positional arguments to be passed to the plugin function or method.
+    - `call`: A tuple containing the callable object or python dot path to one, and its keyword arguments.
+    - `verbose`: A boolean indicating whether to print verbose output.
+    - `dry_run`: A boolean indicating whether to perform a dry run without executing the plugin.
+    - `common_kwargs`: A dictionary of optional keyword arguments to apply to all applicable plugins.
+        That is, being passed to the plugin call if such keywords are expected from the plugin.
+        This is a useful alternative to global or environment variable usage.
+    - `**node_properties`: Node properties.  These will be passed to 'node-aware' plugins.
 
     Returns:
-        The result of executing the plugin function or method.
+    - The result of executing the plugin function or method.
 
     Raises:
-        ValueError: If the `call` argument is not provided.
+    - ValueError: If the `call` argument is not provided.
     """
     logger.client_attach_socket_handler()
 
