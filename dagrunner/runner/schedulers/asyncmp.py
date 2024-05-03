@@ -1,6 +1,6 @@
 # (C) Crown Copyright, Met Office. All rights reserved.
 #
-# This file is part of 'pp_systems_framework' and is released under the BSD 3-Clause license.
+# This file is part of 'dagrunner' and is released under the BSD 3-Clause license.
 # See LICENSE in the root of the repository for full licensing details.
 from multiprocessing import Pool
 from time import sleep
@@ -24,17 +24,18 @@ class AsyncMP:
         Initialise our asynchronous multiprocessing scheduler, ready to be used.
 
         Args:
-            nprocesses (int):
-                Number of processes to use.
-            *args:
-                Positional arguments to be passed to the multiprocessing pool call.
+        - nprocesses (int):
+          Number of processes to use.
+        - *args:
+          Positional arguments to be passed to the multiprocessing pool call.
+
         Keyword Args:
-            fail_fast (bool):
-                When a job is found to raise an exception, stop submiting new jobs
-                to the queue.  If fail_fast is True, terminate all currently running
-                jobs.  If False, wait for already queued jobs to complete.
-            **kwargs:
-                Keyword arguments to be passed to the multiprocessing pool call.
+        - fail_fast (bool):
+          When a job is found to raise an exception, stop submiting new jobs
+          to the queue.  If fail_fast is True, terminate all currently running
+          jobs.  If False, wait for already queued jobs to complete.
+        - **kwargs:
+          Keyword arguments to be passed to the multiprocessing pool call.
 
         """
         self._nprocesses = nprocesses
@@ -50,15 +51,16 @@ class AsyncMP:
         Run the provided graph using multiprocessing.
 
         Args:
-            graph (dict):
-                Dictionary, mapping targets to an iterable of commands.
+        - graph (dict):
+          Dictionary, mapping targets to an iterable of commands.
+
         Keyword Args:
-            verbose (bool):
-                Print out statements indicating progress.
-            poll_frequency (float):
-                This is the frequency in seconds which we poll running processes.
-                Dependent nodes are run if their predecessors are completed,
-                as verified by this polling of status.
+        - verbose (bool):
+          Print out statements indicating progress.
+        - poll_frequency (float):
+          This is the frequency in seconds which we poll running processes.
+          Dependent nodes are run if their predecessors are completed,
+          as verified by this polling of status.
         """
         if self._profiler_output:
             warnings.warn('profiler output not supported for multiprocessing scheduler')
@@ -131,13 +133,15 @@ class AsyncMP:
             )
 
     def __enter__(self):
+        """Initiate the pool of workers."""
         self._pool = Pool(self._nprocesses, *self._args, **self._kwargs)
         return self
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
-        # Prevents any more tasks from being submitted to the pool.
-        # Once all the tasks have been completed the worker processes will
-        # exit.
+        """Prevents any more tasks from being submitted to the pool.
+        Once all the tasks have been completed the worker processes will
+        exit.
+        """
         if self._fail_fast and self._failures_found:
             self._pool.terminate()
         self._pool.close()

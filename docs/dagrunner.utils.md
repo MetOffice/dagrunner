@@ -6,7 +6,7 @@ see [module: logger](dagrunner.utils.logger.md#module-dagrunnerutilslogger)
 
 see [module: visualisation](dagrunner.utils.visualisation.md#module-dagrunnerutilsvisualisation)
 
-# class: `KeyValueAction`
+## class: `KeyValueAction`
 
 [Source](../dagrunner/utils/__init__.py#L126)
 
@@ -65,7 +65,53 @@ Keyword Arguments:
     - metavar -- The name to be used for the option's argument with the
         help string. If None, the 'dest' value will be used as the name.
 
-# class: `ObjectAsStr`
+### function: `__call__`
+
+[Source](../dagrunner/utils/__init__.py#L127)
+
+#### Call Signature:
+
+```python
+__call__(self, parser, namespace, values, option_string=None)
+```
+
+Call self as a function.
+
+### function: `__init__`
+
+[Source](../../../../../../project/ukmo/scitools/opt_scitools/conda/deployments/default-2023_11_28/lib/python3.10/argparse.py#L827)
+
+#### Call Signature:
+
+```python
+__init__(self, option_strings, dest, nargs=None, const=None, default=None, type=None, choices=None, required=False, help=None, metavar=None)
+```
+
+Initialize self.  See help(type(self)) for accurate signature.
+
+### function: `__repr__`
+
+[Source](../../../../../../project/ukmo/scitools/opt_scitools/conda/deployments/default-2023_11_28/lib/python3.10/argparse.py#L116)
+
+#### Call Signature:
+
+```python
+__repr__(self)
+```
+
+Return repr(self).
+
+### function: `format_usage`
+
+[Source](../../../../../../project/ukmo/scitools/opt_scitools/conda/deployments/default-2023_11_28/lib/python3.10/argparse.py#L864)
+
+#### Call Signature:
+
+```python
+format_usage(self)
+```
+
+## class: `ObjectAsStr`
 
 [Source](../dagrunner/utils/__init__.py#L10)
 
@@ -77,7 +123,41 @@ ObjectAsStr(obj, name=None)
 
 Hide object under a string.
 
-# class: `TimeIt`
+### function: `__hash__`
+
+[Source](../dagrunner/utils/__init__.py#L22)
+
+#### Call Signature:
+
+```python
+__hash__(self)
+```
+
+Return hash(self).
+
+### function: `__new__`
+
+[Source](../dagrunner/utils/__init__.py#L13)
+
+#### Call Signature:
+
+```python
+__new__(cls, obj, name=None)
+```
+
+Create and return a new object.  See help(type) for accurate signature.
+
+### function: `obj_to_name`
+
+[Source](../dagrunner/utils/__init__.py#L26)
+
+#### Call Signature:
+
+```python
+obj_to_name(obj, cls)
+```
+
+## class: `TimeIt`
 
 [Source](../dagrunner/utils/__init__.py#L34)
 
@@ -106,7 +186,71 @@ Example as a standalone timer:
     >>> print(timer)
     "Elapsed time: 0.05s"
 
-# function: `function_to_argparse`
+### function: `__enter__`
+
+[Source](../dagrunner/utils/__init__.py#L62)
+
+#### Call Signature:
+
+```python
+__enter__(self)
+```
+
+### function: `__exit__`
+
+[Source](../dagrunner/utils/__init__.py#L66)
+
+#### Call Signature:
+
+```python
+__exit__(self, *args)
+```
+
+### function: `__init__`
+
+[Source](../dagrunner/utils/__init__.py#L56)
+
+#### Call Signature:
+
+```python
+__init__(self, verbose=False)
+```
+
+Initialize self.  See help(type(self)) for accurate signature.
+
+### function: `__str__`
+
+[Source](../dagrunner/utils/__init__.py#L91)
+
+#### Call Signature:
+
+```python
+__str__(self)
+```
+
+Print elapsed time in seconds.
+
+### function: `start`
+
+[Source](../dagrunner/utils/__init__.py#L72)
+
+#### Call Signature:
+
+```python
+start(self)
+```
+
+### function: `stop`
+
+[Source](../dagrunner/utils/__init__.py#L76)
+
+#### Call Signature:
+
+```python
+stop(self)
+```
+
+## function: `function_to_argparse`
 
 [Source](../dagrunner/utils/__init__.py#L138)
 

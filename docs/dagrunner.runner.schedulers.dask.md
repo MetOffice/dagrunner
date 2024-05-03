@@ -13,9 +13,9 @@ See the following useful background reading:
     - https://docs.dask.org/en/latest/scheduling.html
     - https://docs.dask.org/en/latest/delayed.html
 
-# class: `DaskOnRay`
+## class: `DaskOnRay`
 
-[Source](../dagrunner/runner/schedulers/dask.py#L156)
+[Source](../dagrunner/runner/schedulers/dask.py#L186)
 
 ### Call Signature:
 
@@ -23,9 +23,64 @@ See the following useful background reading:
 DaskOnRay(num_workers, profiler_filepath=None, **kwargs)
 ```
 
-# class: `Distributed`
+A class to run dask graphs using the 'dak-on-ray' scheduler.
 
-[Source](../dagrunner/runner/schedulers/dask.py#L76)
+### function: `__enter__`
+
+[Source](../dagrunner/runner/schedulers/dask.py#L193)
+
+#### Call Signature:
+
+```python
+__enter__(self)
+```
+
+### function: `__exit__`
+
+[Source](../dagrunner/runner/schedulers/dask.py#L196)
+
+#### Call Signature:
+
+```python
+__exit__(self, exc_type, exc_value, exc_traceback)
+```
+
+### function: `__init__`
+
+[Source](../dagrunner/runner/schedulers/dask.py#L188)
+
+#### Call Signature:
+
+```python
+__init__(self, num_workers, profiler_filepath=None, **kwargs)
+```
+
+Initialize self.  See help(type(self)) for accurate signature.
+
+### function: `run`
+
+[Source](../dagrunner/runner/schedulers/dask.py#L200)
+
+#### Call Signature:
+
+```python
+run(self, dask_graph, verbose=False)
+```
+
+Execute the provided graph.
+
+Args:
+- dask_graph (dict): Dask graph dictionary
+
+Keyword Args:
+- verbose (bool): Print out statements indicating progress.
+
+Returns:
+- Any: The output of the graph execution.
+
+## class: `Distributed`
+
+[Source](../dagrunner/runner/schedulers/dask.py#L79)
 
 ### Call Signature:
 
@@ -33,9 +88,66 @@ DaskOnRay(num_workers, profiler_filepath=None, **kwargs)
 Distributed(num_workers, profiler_filepath=None, **kwargs)
 ```
 
-# class: `SingleMachine`
+A class to run dask graphs on a distributed cluster.
 
-[Source](../dagrunner/runner/schedulers/dask.py#L107)
+### function: `__enter__`
+
+[Source](../dagrunner/runner/schedulers/dask.py#L87)
+
+#### Call Signature:
+
+```python
+__enter__(self)
+```
+
+Create a local cluster and connect a client to it.
+
+### function: `__exit__`
+
+[Source](../dagrunner/runner/schedulers/dask.py#L95)
+
+#### Call Signature:
+
+```python
+__exit__(self)
+```
+
+### function: `__init__`
+
+[Source](../dagrunner/runner/schedulers/dask.py#L81)
+
+#### Call Signature:
+
+```python
+__init__(self, num_workers, profiler_filepath=None, **kwargs)
+```
+
+Initialize self.  See help(type(self)) for accurate signature.
+
+### function: `run`
+
+[Source](../dagrunner/runner/schedulers/dask.py#L99)
+
+#### Call Signature:
+
+```python
+run(self, dask_graph, verbose=False)
+```
+
+Execute the provided graph.
+
+Args:
+- dask_graph (dict): Dask graph dictionary
+
+Keyword Args:
+- verbose (bool): Print out statements indicating progress.
+
+Returns:
+- Any: The output of the graph execution.
+
+## class: `SingleMachine`
+
+[Source](../dagrunner/runner/schedulers/dask.py#L124)
 
 ### Call Signature:
 
@@ -43,9 +155,64 @@ Distributed(num_workers, profiler_filepath=None, **kwargs)
 SingleMachine(num_workers, scheduler='processes', profiler_filepath=None, **kwargs)
 ```
 
-# function: `add_dummy_tasks`
+A class to run dask graphs on a single machine.
 
-[Source](../dagrunner/runner/schedulers/dask.py#L30)
+### function: `__enter__`
+
+[Source](../dagrunner/runner/schedulers/dask.py#L133)
+
+#### Call Signature:
+
+```python
+__enter__(self)
+```
+
+### function: `__exit__`
+
+[Source](../dagrunner/runner/schedulers/dask.py#L182)
+
+#### Call Signature:
+
+```python
+__exit__(self, exc_type, exc_value, exc_traceback)
+```
+
+### function: `__init__`
+
+[Source](../dagrunner/runner/schedulers/dask.py#L126)
+
+#### Call Signature:
+
+```python
+__init__(self, num_workers, scheduler='processes', profiler_filepath=None, **kwargs)
+```
+
+Initialize self.  See help(type(self)) for accurate signature.
+
+### function: `run`
+
+[Source](../dagrunner/runner/schedulers/dask.py#L136)
+
+#### Call Signature:
+
+```python
+run(self, dask_graph, verbose=False)
+```
+
+Execute the provided graph.
+
+Args:
+- dask_graph (dict): Dask graph dictionary
+
+Keyword Args:
+- verbose (bool): Print out statements indicating progress.
+
+Returns:
+- Any: The output of the graph execution.
+
+## function: `add_dummy_tasks`
+
+[Source](../dagrunner/runner/schedulers/dask.py#L33)
 
 ### Call Signature:
 
@@ -73,7 +240,7 @@ Returns:
 TODO:
 - Potentially skip intermediate dummy for tasks with no return value.
 
-# function: `no_op`
+## function: `no_op`
 
 [Source](../dagrunner/runner/schedulers/dask.py#L25)
 
@@ -83,5 +250,5 @@ TODO:
 no_op(*args, **kwargs)
 ```
 
-Dummy operation for our dask graph See [add_dummy_tasks](#add_dummy_tasks)
+Dummy operation for our dask graph See [add_dummy_tasks](#function-add_dummy_tasks)
 

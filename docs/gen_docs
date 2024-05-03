@@ -112,13 +112,28 @@ def gen_obj_link(obj, obname, rel_mod_path=None):
     return (module_path_full, f"[{link_name}]({module_path}.md#{heading})")
 
 
+def get_obj_call_signature(obj):
+    """Get the call signature of an object."""
+    call_signature = inspect.signature(obj)
+    call_signature_str = []
+    for param in call_signature.parameters.values():
+        if param.default is not inspect._empty and callable(param.default):
+            call_signature_str.append(f"<{obj_descriptor(param.default)} {param.default.__name__}>")
+        else:
+            call_signature_str.append(str(param))
+    call_signature_str = '(' + ', '.join(call_signature_str) + ')'
+    return call_signature_str
+
+
 def gen_obj_markdown(level, obj, obname, target_root):
     """Generate markdown for an object."""
-    markdown = gen_obj_heading(1, obj, obname)
+    markdown = gen_obj_heading(level, obj, obname)
     if inspect.isclass(obj) or inspect.isfunction(obj) or inspect.ismodule(obj):
         markdown += gen_source_link(obj, target_root)
+        if obname == "ExecuteGraph":
+            a = 1
         try:
-            call_signature = inspect.signature(obj)
+            call_signature = get_obj_call_signature(obj)
             if call_signature:
                 markdown += gen_heading(level+1, "Call Signature")
                 markdown += f"```python\n{obname}{str(call_signature)}\n```\n\n"
@@ -131,12 +146,19 @@ def gen_obj_markdown(level, obj, obname, target_root):
 
 
 def prioritised_get_members(module):
-    """Get members of a module, prioritising modules (imports) over other objects."""
-    for member in inspect.getmembers(module, inspect.ismodule):
-        yield member
-    for member in inspect.getmembers(module):
-        if not inspect.ismodule(member[1]):
-            yield member
+    """Get members of a module, prioritising non documented (imported) at the top."""
+    for name, obj in inspect.getmembers(module):
+        if no_include(obj, module.__name__):
+            yield name, obj
+    for name, obj in inspect.getmembers(module):
+        if not no_include(obj, module.__name__):
+            yield name, obj
+
+    # for member in inspect.getmembers(module, inspect.ismodule):
+    #     yield member
+    # for member in inspect.getmembers(module):
+    #     if not inspect.ismodule(member[1]):
+    #         yield member
 
 
 def generate_markdown_from_module(module_name, target_root):
@@ -153,14 +175,15 @@ def generate_markdown_from_module(module_name, target_root):
             continue
         if no_include(obj, module_name):
             markdown += f"see {gen_obj_link(obj, name, rel_mod_path=module.__name__)[1]}\n\n"
+            continue
         else:
             markdown += gen_obj_markdown(2, obj, name, target_root)
 
         if inspect.isclass(obj):
-            for cls_member_name, cls_member in inspect.getmembers(obj, inspect.ismethod):
+            for cls_member_name, cls_member in inspect.getmembers(obj, inspect.ismethod and inspect.isfunction):
                 if is_private(cls_member_name):
                     continue
-                markdown += gen_obj_markdown(3, cls_member_name, cls_member_name, target_root)
+                markdown += gen_obj_markdown(3, cls_member, cls_member_name, target_root)
 
         index.append(gen_obj_link(obj, name, rel_mod_path=""))
     index = [x for x in index if x]
@@ -201,7 +224,7 @@ def generate_markdown_recursive(module_dot_path, target_root):
     module_path = module.__path__[0]
     toc_filepath = os.path.join(target_root, f"{module_dot_path}_index.md")
     with open(toc_filepath, "w") as f:
-        f.write(f"# Index for '{module_dot_path}' reference documentation\n")
+        f.write(f"# Index for '{module_dot_path}' reference documentation\nversion: {module.__version__}\n\n")
     index = []
 
     for root, _, filenames in os.walk(module.__path__[0]):
