@@ -273,5 +273,5 @@ The `dagrunner-execute-graph` script exposes a scheduler argument for specifying
 
 ## Logging and monitoring
 
-Dagrunner is configured with a TCP socket handler, meaning that it will function accross the network.  Additionally, it will write logs to an sqlite database to aid in realtime monitoring from external tools.
+Dagrunner is configured with a TCP socket handler, meaning that it will function across the network.  Additionally, it will write logs to an sqlite database to aid in realtime monitoring from external tools.
 We can see that both [ExecuteGraph](docs/dagrunner.execute_graph.md#class-executegraph) class and commandline script provide a means for passing a filepath to an sqlite database file for storing real-time logging information.

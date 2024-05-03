@@ -2,9 +2,9 @@
 
 [Source](../dagrunner/plugin_framework.py#L0)
 
-# class: `DataPolling`
+## class: `DataPolling`
 
-[Source](../dagrunner/plugin_framework.py#L49)
+[Source](../dagrunner/plugin_framework.py#L61)
 
 ### Call Signature:
 
@@ -14,9 +14,39 @@ DataPolling()
 
 Abstract base class to define our plugin UI
 
-# class: `Input`
+### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L96)
+[Source](../dagrunner/plugin_framework.py#L62)
+
+#### Call Signature:
+
+```python
+__call__(self, *args, timeout=120, polling=1, file_count=None)
+```
+
+Poll for availability of files
+
+Poll for data and return when all are available or otherwise raise an
+exception if the timeout is reached.
+
+Args:
+- *args: Variable length argument list of file patterns to be checked.
+- timeout (int): Timeout in seconds (default is 120 seconds).
+- polling (int): Time interval in seconds between each poll (default is 1 second).
+- file_count (int): Expected number of files to be found (default is None).
+    If specified, the total number of files found can be greater than the
+    number of arguments.  Each argument is expected to return a minimum of
+    1 match each in either case.
+
+Returns:
+- None
+
+Raises:
+- RuntimeError: If the timeout is reached before all files are found.
+
+## class: `Input`
+
+[Source](../dagrunner/plugin_framework.py#L107)
 
 ### Call Signature:
 
@@ -24,11 +54,40 @@ Abstract base class to define our plugin UI
 Input()
 ```
 
-A plugin that is of type instructed to be passed node parameters
+An abstract base class plugin that is of type that instructs the plugin
+executor to pass it node parameters.  This enables the definition of plugins
+that are 'node aware'.
 
-# class: `NodeAwarePlugin`
+### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L21)
+[Source](../dagrunner/plugin_framework.py#L108)
+
+#### Call Signature:
+
+```python
+__call__(self, *args, filepath=None, **kwargs)
+```
+
+Given a filepath, expand it and return this string
+
+Expand the provided filepath using the keyword arguments and environment variables.
+Note that this plugin is 'node aware' since it is derived from the `NodeAwarePlugin`.
+
+Args:
+- *args: Positional arguments are not accepted.
+- filepath (str): The filepath to be expanded.
+- **kwargs: Keyword arguments to be used in the expansion.  Node
+  properties/attributes are additionally included here as a node aware plugin.
+
+Returns:
+- str: The expanded filepath.
+
+Raises:
+- ValueError: If positional arguments are provided.
+
+## class: `NodeAwarePlugin`
+
+[Source](../dagrunner/plugin_framework.py#L35)
 
 ### Call Signature:
 
@@ -36,9 +95,33 @@ A plugin that is of type instructed to be passed node parameters
 NodeAwarePlugin()
 ```
 
-A plugin that is of type instructed to be passed node parameters
+An abstract base class plugin that is of type that instructs the plugin
+executor to pass it node parameters.  This enables the definition of plugins
+that are 'node aware'.
 
-# class: `Plugin`
+### function: `__call__`
+
+[Source](../dagrunner/plugin_framework.py#L16)
+
+#### Call Signature:
+
+```python
+__call__(self, *args, **kwargs)
+```
+
+The main method of the plugin (abstract method).
+
+Positional arguments represent the plugin's inputs (dependencies),
+while keyword arguments represent the plugin's parameters.
+
+Args:
+- *args: Positional arguments.
+- **kwargs: Keyword arguments.
+
+Returns:
+- Any: The output of the plugin.
+
+## class: `Plugin`
 
 [Source](../dagrunner/plugin_framework.py#L13)
 
@@ -50,9 +133,31 @@ Plugin()
 
 Abstract base class to define our plugin UI
 
-# class: `Shell`
+### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L29)
+[Source](../dagrunner/plugin_framework.py#L16)
+
+#### Call Signature:
+
+```python
+__call__(self, *args, **kwargs)
+```
+
+The main method of the plugin (abstract method).
+
+Positional arguments represent the plugin's inputs (dependencies),
+while keyword arguments represent the plugin's parameters.
+
+Args:
+- *args: Positional arguments.
+- **kwargs: Keyword arguments.
+
+Returns:
+- Any: The output of the plugin.
+
+## class: `Shell`
+
+[Source](../dagrunner/plugin_framework.py#L43)
 
 ### Call Signature:
 
@@ -61,4 +166,26 @@ Shell()
 ```
 
 Abstract base class to define our plugin UI
+
+### function: `__call__`
+
+[Source](../dagrunner/plugin_framework.py#L44)
+
+#### Call Signature:
+
+```python
+__call__(self, *args, **kwargs)
+```
+
+Execute a subprocess command.
+
+Args:
+- *args: The command to be executed.
+- **kwargs: Additional keyword arguments to be passed to `subprocess.run`
+
+Returns:
+- CompletedProcess: An object representing the completed process.
+
+Raises:
+- CalledProcessError: If the command returns a non-zero exit status.
 

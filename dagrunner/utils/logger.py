@@ -68,19 +68,19 @@ class LogRecordStreamHandler(socketserver.StreamRequestHandler):
             chunk = self.connection.recv(slen)
             while len(chunk) < slen:
                 chunk = chunk + self.connection.recv(slen - len(chunk))
-            obj = self.unPickle(chunk)
+            obj = self.unpickle(chunk)
             record = logging.makeLogRecord(obj)
             # Modify record to include hostname
             record.hostname = socket.gethostname()
-            self.handleLogRecord(record)
+            self.handle_log_record(record)
 
             # Push log record to the queue for database writing
             self.server.log_queue.put(record)
 
-    def unPickle(self, data):
+    def unpickle(self, data):
         return pickle.loads(data)
 
-    def handleLogRecord(self, record):
+    def handle_log_record(self, record):
         # if a name is specified, we use the named logger rather than the one
         # implied by the record.
         if self.server.logname is not None:

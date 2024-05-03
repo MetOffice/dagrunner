@@ -1,4 +1,6 @@
 # Index for 'dagrunner' reference documentation
+version: 0.0.1
+
   - [module: dagrunner](dagrunner.md#module-dagrunner)
     - [module: execute_graph](dagrunner.execute_graph.md#module-dagrunnerexecute_graph)
       - [class: ExecuteGraph](dagrunner.execute_graph.md#class-executegraph)

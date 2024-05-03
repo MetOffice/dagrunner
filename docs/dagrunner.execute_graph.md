@@ -2,25 +2,93 @@
 
 [Source](../dagrunner/execute_graph.py#L0)
 
+see [class: dagrunner.plugin_framework.NodeAwarePlugin](dagrunner.plugin_framework.md#class-nodeawareplugin)
+
+see [class: dagrunner.utils.ObjectAsStr](dagrunner.utils.md#class-objectasstr)
+
+see [class: dagrunner.utils.TimeIt](dagrunner.utils.md#class-timeit)
+
+see [function: dagrunner.utils.function_to_argparse](dagrunner.utils.md#function-function_to_argparse)
+
 see [module: dagrunner.utils.logger](dagrunner.utils.logger.md#module-dagrunnerutilslogger)
 
-# class: `ExecuteGraph`
+see [function: dagrunner.utils.visualisation.visualise_graph](dagrunner.utils.visualisation.md#function-visualise_graph)
+
+## class: `ExecuteGraph`
 
 [Source](../dagrunner/execute_graph.py#L159)
 
 ### Call Signature:
 
 ```python
-ExecuteGraph(networkx_graph: str, plugin_executor: <built-in function callable> = <function plugin_executor at 0x7f60939fad40>, scheduler: str = 'processes', num_workers: int = 1, profiler_filepath: str = None, dry_run: bool = False, verbose: bool = False, sqlite_filepath: str = None, **kwargs)
+ExecuteGraph(networkx_graph: str, <function plugin_executor>, scheduler: str = 'processes', num_workers: int = 1, profiler_filepath: str = None, dry_run: bool = False, verbose: bool = False, sqlite_filepath: str = None, **kwargs)
 ```
 
-see [class: dagrunner.plugin_framework.NodeAwarePlugin](dagrunner.plugin_framework.md#class-nodeawareplugin)
+### function: `__call__`
 
-see [class: dagrunner.utils.ObjectAsStr](dagrunner.utils.md#class-objectasstr)
+[Source](../dagrunner/execute_graph.py#L246)
 
-# dict: `SCHEDULERS`
+#### Call Signature:
 
-# class: `SkipBranch`
+```python
+__call__(self)
+```
+
+Call self as a function.
+
+### function: `__init__`
+
+[Source](../dagrunner/execute_graph.py#L160)
+
+#### Call Signature:
+
+```python
+__init__(self, networkx_graph: str, <function plugin_executor>, scheduler: str = 'processes', num_workers: int = 1, profiler_filepath: str = None, dry_run: bool = False, verbose: bool = False, sqlite_filepath: str = None, **kwargs)
+```
+
+Execute a networkx graph using a chosen scheduler.
+
+Args:
+- networkx_graph (networkx.DiGraph, callable or str):
+  A networkx graph; dot path to a networkx graph or callable that returns 
+- one (str); tuple representing (edges, nodes) or callable object that
+  returns a networkx.
+- plugin_executor (callable):
+  A callable object that executes a plugin function or method with the provided
+  arguments and keyword arguments.  By default, uses the `plugin_executor` function.
+  Optional.
+- scheduler (str):
+  Accepted values include "ray", "multiprocessing" and those recognised
+  by dask: "threads", "processes" and "single-threaded" (useful for debugging).
+  See https://docs.dask.org/en/latest/scheduling.html.  Optional.
+- num_workers (int):
+  Number of processes or threads to use.  Optional.
+- dry_run (bool):
+  Print executed commands but don't actually run them.  Optional.
+- profiler_filepath (str):
+  Output html profile filepath if supported by the chosen scheduler.
+  See https://docs.dask.org/en/latest/diagnostics-local.html
+  Optional.
+- verbose (bool):
+  Print executed commands.  Optional.
+- sqlite_filepath (str):
+  Filepath to a SQLite database to store log records.  Optional.
+- **kwargs:
+  Optional global keyword arguments to apply to all applicable plugins.
+
+### function: `visualise`
+
+[Source](../dagrunner/execute_graph.py#L243)
+
+#### Call Signature:
+
+```python
+visualise(self, output_filepath: str)
+```
+
+## dict: `SCHEDULERS`
+
+## class: `SkipBranch`
 
 [Source](../dagrunner/execute_graph.py#L33)
 
@@ -31,11 +99,7 @@ In the single-threaded scheduler, Dask executes tasks sequentially, and
 exceptions will propagate as they occur, potentially halting the execution of
 subsequent tasks.
 
-see [class: dagrunner.utils.TimeIt](dagrunner.utils.md#class-timeit)
-
-see [function: dagrunner.utils.function_to_argparse](dagrunner.utils.md#function-function_to_argparse)
-
-# function: `main`
+## function: `main`
 
 [Source](../dagrunner/execute_graph.py#L257)
 
@@ -48,7 +112,7 @@ main()
 Entry point of the program.
 Parses command line arguments and executes the graph using the ExecuteGraph class.
 
-# function: `plugin_executor`
+## function: `plugin_executor`
 
 [Source](../dagrunner/execute_graph.py#L46)
 
@@ -66,8 +130,8 @@ Args:
 - `verbose`: A boolean indicating whether to print verbose output.
 - `dry_run`: A boolean indicating whether to perform a dry run without executing the plugin.
 - `common_kwargs`: A dictionary of optional keyword arguments to apply to all applicable plugins.
-    That is, being passed to the plugin call if such keywords are expected from the plugin.
-    This is a useful alternative to global or environment variable usage.
+  That is, being passed to the plugin call if such keywords are expected from the plugin.
+  This is a useful alternative to global or environment variable usage.
 - `**node_properties`: Node properties.  These will be passed to 'node-aware' plugins.
 
 Returns:
@@ -75,6 +139,4 @@ Returns:
 
 Raises:
 - ValueError: If the `call` argument is not provided.
-
-see [function: dagrunner.utils.visualisation.visualise_graph](dagrunner.utils.visualisation.md#function-visualise_graph)
 

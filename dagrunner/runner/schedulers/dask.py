@@ -23,7 +23,10 @@ from dask.distributed import (
 
 
 def no_op(*args, **kwargs):
-    """Dummy operation for our dask graph See [add_dummy_tasks](#add_dummy_tasks)"""
+    """
+    Dummy operation for our dask graph See [add_dummy_tasks](#function-add_dummy_tasks)
+
+    """
     pass
 
 
@@ -74,6 +77,7 @@ def add_dummy_tasks(dask_graph):
 
 
 class Distributed:
+    """A class to run dask graphs on a distributed cluster."""
     def __init__(self, num_workers, profiler_filepath=None, **kwargs):
             self._num_workers = num_workers
             self._profiler_output = profiler_filepath
@@ -81,6 +85,7 @@ class Distributed:
             self._cluster = None
 
     def __enter__(self):
+        """Create a local cluster and connect a client to it."""
         self._cluster = LocalCluster(
                 n_workers=self._num_workers, processes=True, threads_per_worker=1, **self._kwargs
             )
@@ -92,6 +97,18 @@ class Distributed:
         self._cluster = None
 
     def run(self, dask_graph, verbose=False):
+        """
+        Execute the provided graph.
+
+        Args:
+        - dask_graph (dict): Dask graph dictionary
+
+        Keyword Args:
+        - verbose (bool): Print out statements indicating progress.
+
+        Returns:
+        - Any: The output of the graph execution.
+        """
         graph, target = add_dummy_tasks(dask_graph)
         dask_container = Delayed(target, graph)
         if self._profiler_output:
@@ -105,6 +122,7 @@ class Distributed:
 
 
 class SingleMachine:
+    """A class to run dask graphs on a single machine."""
     def __init__(self, num_workers, scheduler="processes", profiler_filepath=None, **kwargs):
             num_workers = 1 if scheduler == "single-threaded" else num_workers
             self._num_workers = num_workers
@@ -116,6 +134,18 @@ class SingleMachine:
          return self
 
     def run(self, dask_graph, verbose=False):
+        """
+        Execute the provided graph.
+
+        Args:
+        - dask_graph (dict): Dask graph dictionary
+
+        Keyword Args:
+        - verbose (bool): Print out statements indicating progress.
+
+        Returns:
+        - Any: The output of the graph execution.
+        """
         graph, target = add_dummy_tasks(dask_graph.copy())
         self._dask_container = Delayed(target, graph)
         
@@ -154,6 +184,7 @@ class SingleMachine:
 
 
 class DaskOnRay:
+    """A class to run dask graphs using the 'dak-on-ray' scheduler."""
     def __init__(self, num_workers, profiler_filepath=None, **kwargs):
         self._num_workers = num_workers
         self._profiler_output = profiler_filepath
@@ -167,6 +198,18 @@ class DaskOnRay:
         ray.shutdown()
 
     def run(self, dask_graph, verbose=False):
+        """
+        Execute the provided graph.
+
+        Args:
+        - dask_graph (dict): Dask graph dictionary
+
+        Keyword Args:
+        - verbose (bool): Print out statements indicating progress.
+
+        Returns:
+        - Any: The output of the graph execution.
+        """
         import ray
         from ray.util.dask import ray_dask_get
 
