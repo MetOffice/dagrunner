@@ -3,19 +3,19 @@
 ![Python Project](https://img.shields.io/badge/language-Python-blue?logo=python&logoColor=white)
 ![Static Badge](https://img.shields.io/badge/pip%20install-blue)
 
-# Dagrunner
+# DAGrunner
 
-Dagrunner serves as a Directed Acyclic Graph (DAG) runner, primarily designed to ensure a clear distinction between a project's graph definition (typically in native networkx format) and its execution method. In essence, Dagrunner offers various schedulers for executing the graph, but it firmly separates these operational concepts from the scientific configuration or recipe, i.e., the graph itself. Consequently, while Dagrunner currently provides convenient scheduling options, it remains adaptable to future changes or alternative solutions, ensuring that the scientific configuration can persist regardless of the technologies or tools employed, whether Dagrunner is utilized or not.
+DAGrunner serves as a Directed Acyclic Graph (DAG) runner, primarily designed to ensure a clear distinction between a project's graph definition (typically in native networkx format) and its execution method. In essence, DAGrunner offers various schedulers for executing the graph, but it firmly separates these operational concepts from the scientific configuration or recipe, i.e., the graph itself. Consequently, while DAGrunner currently provides convenient scheduling options, it remains adaptable to future changes or alternative solutions, ensuring that the scientific configuration can persist regardless of the technologies or tools employed, whether DAGrunner is utilized or not.
 
 ## API
 
-See [dagrunner API](docs/dagrunner_index.md)
+See [DAGrunner API](docs/dagrunner_index.md)
 
 ## License/copyright
 
 (C) Crown Copyright, Met Office. All rights reserved.
 
-This file is part of 'dagrunner' and is released under the BSD 3-Clause license.
+This file is part of 'DAGrunner' and is released under the BSD 3-Clause license.
 See LICENSE in the root of the repository for full licensing details.
 
 ## Installation
@@ -241,7 +241,7 @@ def gen_networkx(config_dot_path):
 
 GRAPH = lambda: gen_networkx("<node-edge-module-dot-path>")
 ```
-We can now provide a python module dot path to this graph object to the `dagrunner-execute-graph` script.  The networkx graph will then be constructed when dagrunner internally calls it before its execution.
+We can now provide a python module dot path to this graph object to the `dagrunner-execute-graph` script.  The networkx graph will then be constructed when DAGrunner internally calls it before its execution.
 
 ### Customise node execution
 
@@ -267,8 +267,8 @@ Note that you may choose to subclass [ExecuteGraph](docs/dagrunner.execute_graph
 
 ## Processing modules (aka plugins)
 
-Dagrunner concerns itself with graph execution and does not strictly require processing modules (plugins) to take any particular form.  That is, you may or may not choose to use or subclass the plugins provided by dagrunner.
-However, for convenience, dagrunner does define some plugins which fall into two broad categories, as defined by two abstract classes.  One is the basic [Plugin](docs/dagrunner.plugin_framework.md#class-plugin) which defines a reasonable standard UI.  The other is [NodeAwarePlugin](docs/dagrunner.plugin_framework.md#class-nodeawareplugin).  This is identical to the basic [Plugin](docs/dagrunner.plugin_framework.md#class-plugin) but additionally triggers the the built-in plugin-executor function to pass your plugin all of its node parameters (i.e. extend the keyword arguments with node properties in its call).  That is, making the plugin we define 'node aware'.
+DAGrunner concerns itself with graph execution and does not strictly require processing modules (plugins) to take any particular form.  That is, you may or may not choose to use or subclass the plugins provided by DAGrunner.
+However, for convenience, DAGrunner does define some plugins which fall into two broad categories, as defined by two abstract classes.  One is the basic [Plugin](docs/dagrunner.plugin_framework.md#class-plugin) which defines a reasonable standard UI.  The other is [NodeAwarePlugin](docs/dagrunner.plugin_framework.md#class-nodeawareplugin).  This is identical to the basic [Plugin](docs/dagrunner.plugin_framework.md#class-plugin) but additionally triggers the the built-in plugin-executor function to pass your plugin all of its node parameters (i.e. extend the keyword arguments with node properties in its call).  That is, making the plugin we define 'node aware'.
 
 Plugins included:
 - [Plugin](docs/dagrunner.plugin_framework.md#class-plugin): Abstract class on which to define other plugins.
@@ -283,5 +283,5 @@ The `dagrunner-execute-graph` script exposes a scheduler argument for specifying
 
 ## Logging and monitoring
 
-Dagrunner is configured with a TCP socket handler, meaning that it will function across the network.  Additionally, it will write logs to an sqlite database to aid in realtime monitoring from external tools.
+DAGrunner is configured with a TCP socket handler, meaning that it will function across the network.  Additionally, it will write logs to an sqlite database to aid in realtime monitoring from external tools.
 We can see that both [ExecuteGraph](docs/dagrunner.execute_graph.md#class-executegraph) class and commandline script provide a means for passing a filepath to an sqlite database file for storing real-time logging information.
