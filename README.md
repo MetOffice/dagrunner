@@ -29,6 +29,16 @@ pip install .
 
 This will also make an executable script available to the PATH: `dagrunner-execute-graph`
 
+## Documentation
+
+DAGrunner takes advantage of the native markdown rendering support provided by github.  To that end, all documentation of DAGrunner resides in markdown files.
+
+Regarding reference documentation, this is generated using a script to extract markdown docstrings from the DAGrunner package.
+
+To generate the reference documentation, call:
+
+    ./docs/gen_docs dagrunner ./docs/.
+
 ## Execution of a networkx graph using `dagrunner-execute-graph` script
 
 ```
