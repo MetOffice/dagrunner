@@ -2,13 +2,15 @@
 
 [Source](../dagrunner/utils/__init__.py#L0)
 
+see [module: _doc_styles](dagrunner.utils._doc_styles.md#module-dagrunnerutils_doc_styles)
+
 see [module: logger](dagrunner.utils.logger.md#module-dagrunnerutilslogger)
 
 see [module: visualisation](dagrunner.utils.visualisation.md#module-dagrunnerutilsvisualisation)
 
 ## class: `KeyValueAction`
 
-[Source](../dagrunner/utils/__init__.py#L126)
+[Source](../dagrunner/utils/__init__.py#L115)
 
 ### Call Signature:
 
@@ -67,7 +69,7 @@ Keyword Arguments:
 
 ### function: `__call__`
 
-[Source](../dagrunner/utils/__init__.py#L127)
+[Source](../dagrunner/utils/__init__.py#L116)
 
 #### Call Signature:
 
@@ -77,43 +79,9 @@ __call__(self, parser, namespace, values, option_string=None)
 
 Call self as a function.
 
-### function: `__init__`
-
-[Source](../../../../../../project/ukmo/scitools/opt_scitools/conda/deployments/default-2023_11_28/lib/python3.10/argparse.py#L827)
-
-#### Call Signature:
-
-```python
-__init__(self, option_strings, dest, nargs=None, const=None, default=None, type=None, choices=None, required=False, help=None, metavar=None)
-```
-
-Initialize self.  See help(type(self)) for accurate signature.
-
-### function: `__repr__`
-
-[Source](../../../../../../project/ukmo/scitools/opt_scitools/conda/deployments/default-2023_11_28/lib/python3.10/argparse.py#L116)
-
-#### Call Signature:
-
-```python
-__repr__(self)
-```
-
-Return repr(self).
-
-### function: `format_usage`
-
-[Source](../../../../../../project/ukmo/scitools/opt_scitools/conda/deployments/default-2023_11_28/lib/python3.10/argparse.py#L864)
-
-#### Call Signature:
-
-```python
-format_usage(self)
-```
-
 ## class: `ObjectAsStr`
 
-[Source](../dagrunner/utils/__init__.py#L10)
+[Source](../dagrunner/utils/__init__.py#L12)
 
 ### Call Signature:
 
@@ -125,7 +93,7 @@ Hide object under a string.
 
 ### function: `__hash__`
 
-[Source](../dagrunner/utils/__init__.py#L22)
+[Source](../dagrunner/utils/__init__.py#L24)
 
 #### Call Signature:
 
@@ -137,7 +105,7 @@ Return hash(self).
 
 ### function: `__new__`
 
-[Source](../dagrunner/utils/__init__.py#L13)
+[Source](../dagrunner/utils/__init__.py#L15)
 
 #### Call Signature:
 
@@ -149,7 +117,7 @@ Create and return a new object.  See help(type) for accurate signature.
 
 ### function: `obj_to_name`
 
-[Source](../dagrunner/utils/__init__.py#L26)
+[Source](../dagrunner/utils/__init__.py#L28)
 
 #### Call Signature:
 
@@ -159,7 +127,7 @@ obj_to_name(obj, cls)
 
 ## class: `TimeIt`
 
-[Source](../dagrunner/utils/__init__.py#L34)
+[Source](../dagrunner/utils/__init__.py#L36)
 
 ### Call Signature:
 
@@ -188,7 +156,7 @@ Example as a standalone timer:
 
 ### function: `__enter__`
 
-[Source](../dagrunner/utils/__init__.py#L62)
+[Source](../dagrunner/utils/__init__.py#L64)
 
 #### Call Signature:
 
@@ -198,7 +166,7 @@ __enter__(self)
 
 ### function: `__exit__`
 
-[Source](../dagrunner/utils/__init__.py#L66)
+[Source](../dagrunner/utils/__init__.py#L68)
 
 #### Call Signature:
 
@@ -208,7 +176,7 @@ __exit__(self, *args)
 
 ### function: `__init__`
 
-[Source](../dagrunner/utils/__init__.py#L56)
+[Source](../dagrunner/utils/__init__.py#L58)
 
 #### Call Signature:
 
@@ -220,7 +188,7 @@ Initialize self.  See help(type(self)) for accurate signature.
 
 ### function: `__str__`
 
-[Source](../dagrunner/utils/__init__.py#L91)
+[Source](../dagrunner/utils/__init__.py#L93)
 
 #### Call Signature:
 
@@ -232,7 +200,7 @@ Print elapsed time in seconds.
 
 ### function: `start`
 
-[Source](../dagrunner/utils/__init__.py#L72)
+[Source](../dagrunner/utils/__init__.py#L74)
 
 #### Call Signature:
 
@@ -242,7 +210,7 @@ start(self)
 
 ### function: `stop`
 
-[Source](../dagrunner/utils/__init__.py#L76)
+[Source](../dagrunner/utils/__init__.py#L78)
 
 #### Call Signature:
 
@@ -250,9 +218,19 @@ start(self)
 stop(self)
 ```
 
+## function: `docstring_parse`
+
+[Source](../dagrunner/utils/__init__.py#L98)
+
+### Call Signature:
+
+```python
+docstring_parse(obj)
+```
+
 ## function: `function_to_argparse`
 
-[Source](../dagrunner/utils/__init__.py#L138)
+[Source](../dagrunner/utils/__init__.py#L127)
 
 ### Call Signature:
 
