@@ -170,31 +170,31 @@ class ExecuteGraph:
         Execute a networkx graph using a chosen scheduler.
 
         Args:
-        - networkx_graph (networkx.DiGraph, callable or str):
+        - `networkx_graph` (networkx.DiGraph, callable or str):
           A networkx graph; dot path to a networkx graph or callable that returns 
-        - one (str); tuple representing (edges, nodes) or callable object that
+          one; tuple representing (edges, nodes) or callable object that
           returns a networkx.
-        - plugin_executor (callable):
+        - `plugin_executor` (callable):
           A callable object that executes a plugin function or method with the provided
           arguments and keyword arguments.  By default, uses the `plugin_executor` function.
           Optional.
-        - scheduler (str):
+        - `scheduler` (str):
           Accepted values include "ray", "multiprocessing" and those recognised
           by dask: "threads", "processes" and "single-threaded" (useful for debugging).
           See https://docs.dask.org/en/latest/scheduling.html.  Optional.
-        - num_workers (int):
+        - `num_workers` (int):
           Number of processes or threads to use.  Optional.
-        - dry_run (bool):
+        - `dry_run` (bool):
           Print executed commands but don't actually run them.  Optional.
-        - profiler_filepath (str):
+        - `profiler_filepath` (str):
           Output html profile filepath if supported by the chosen scheduler.
           See https://docs.dask.org/en/latest/diagnostics-local.html
           Optional.
-        - verbose (bool):
+        - `verbose` (bool):
           Print executed commands.  Optional.
-        - sqlite_filepath (str):
+        - `sqlite_filepath` (str):
           Filepath to a SQLite database to store log records.  Optional.
-        - **kwargs:
+        - `**kwargs`:
           Optional global keyword arguments to apply to all applicable plugins.
         """
         self._nxgraph = _get_networkx(networkx_graph)

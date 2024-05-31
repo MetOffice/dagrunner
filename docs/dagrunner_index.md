@@ -1,5 +1,5 @@
 # Index for 'dagrunner' reference documentation
-version: 0.0.1
+version: 0.0.1dev
 
   - [module: dagrunner](dagrunner.md#module-dagrunner)
     - [module: execute_graph](dagrunner.execute_graph.md#module-dagrunnerexecute_graph)
@@ -28,6 +28,7 @@ version: 0.0.1
       - [class: KeyValueAction](dagrunner.utils.md#class-keyvalueaction)
       - [class: ObjectAsStr](dagrunner.utils.md#class-objectasstr)
       - [class: TimeIt](dagrunner.utils.md#class-timeit)
+      - [function: docstring_parse](dagrunner.utils.md#function-docstring_parse)
       - [function: function_to_argparse](dagrunner.utils.md#function-function_to_argparse)
       - [module: logger](dagrunner.utils.logger.md#module-dagrunnerutilslogger)
         - [class: LogRecordSocketReceiver](dagrunner.utils.logger.md#class-logrecordsocketreceiver)

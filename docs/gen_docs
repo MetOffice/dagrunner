@@ -154,12 +154,6 @@ def prioritised_get_members(module):
         if not no_include(obj, module.__name__):
             yield name, obj
 
-    # for member in inspect.getmembers(module, inspect.ismodule):
-    #     yield member
-    # for member in inspect.getmembers(module):
-    #     if not inspect.ismodule(member[1]):
-    #         yield member
-
 
 def generate_markdown_from_module(module_name, target_root):
     root_package = module_name.split('.')[0]
@@ -181,7 +175,7 @@ def generate_markdown_from_module(module_name, target_root):
 
         if inspect.isclass(obj):
             for cls_member_name, cls_member in inspect.getmembers(obj, inspect.ismethod and inspect.isfunction):
-                if is_private(cls_member_name):
+                if is_private(cls_member_name) or external_dependency(cls_member, root_package):
                     continue
                 markdown += gen_obj_markdown(3, cls_member, cls_member_name, target_root)
 

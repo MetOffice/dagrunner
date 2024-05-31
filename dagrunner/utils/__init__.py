@@ -4,8 +4,10 @@
 # See LICENSE in the root of the repository for full licensing details.
 import argparse
 import inspect
-import re
 import time
+
+import dagrunner.utils._doc_styles as doc_styles
+
 
 class ObjectAsStr(str):
     """Hide object under a string."""
@@ -93,34 +95,21 @@ class TimeIt:
         return f"Elapsed time: {self.elapsed:.2f}s"
 
 
-def _extract_arguments_and_descriptions(docstring):
-    docstring = docstring.replace('\\*', '*')
-    pattern = r'(:param|:keyword) (\*{0,2}\w+):(.+?)(?=\n\s*(?::\s*(?:\w+:)?/|:)|$)'
-    matches = re.findall(pattern, docstring, re.DOTALL)
-    arguments_and_descriptions = {}
-
-    for match in matches:
-        directive, argument_name, description = match
-        argument_name = argument_name.strip().replace('*', '')
-        description = description.strip()
-        arguments_and_descriptions[argument_name] = ' '.join(map(str.strip, description.split('\n')))
-
-    return arguments_and_descriptions
-
-def _docstring_parse(obj):
-    from inspect import cleandoc, getdoc
-    from sphinx.ext.napoleon.docstring import GoogleDocstring, NumpyDocstring
-
-    if isinstance(obj, str):
-        doc = cleandoc(obj)
+def docstring_parse(obj):
+    doc = obj.__doc__
+    if doc_styles.RSTStyle.is_style(doc):
+        parser = doc_styles.RSTStyle(doc)
+    elif doc_styles.GoogleStyle.is_style(doc):
+        parser = doc_styles.GoogleStyle(doc)
+    elif doc_styles.NumpyStyle.is_style(doc):
+        parser = doc_styles.NumpyStyle(doc)
     else:
-        doc = getdoc(obj)
-    if not doc:
-        return "", {}
-    doc = str(GoogleDocstring(str(NumpyDocstring(doc))))
-    arg_mapping = _extract_arguments_and_descriptions(doc)
-    intro_lines = re.search(r'^(.*?)(?=:param|:keyword|\Z)', doc, re.DOTALL).group(1).strip()
-    return intro_lines, arg_mapping,
+        parser = doc_styles.MDStyle(doc)
+    desc = parser.description
+    var_mapping = parser.variable_mapping if parser.is_style(doc) else {}
+    if var_mapping:
+        var_mapping = {k.replace('*',''): v for k, v in var_mapping.items()}
+    return desc, var_mapping
 
 
 class KeyValueAction(argparse.Action):
@@ -131,9 +120,9 @@ class KeyValueAction(argparse.Action):
         getattr(namespace, self.dest)[key] = value
 
 
-# TODO: Support for *args and **kwargs
+# TODO: Support for *args
 #       Check signature against docstring (inconsistency)
-#       howitworks docstring
+#       'how it works' docstring
 #       more sophisticated support for classes (class.__call__ etc.)
 def function_to_argparse(func, parser=None, exclude=None):
     """Generate an argparse from a function signature"""
@@ -145,7 +134,7 @@ def function_to_argparse(func, parser=None, exclude=None):
     if isinstance(func, type):
         is_method = True
         func = func.__init__    
-    func_desc, arg_mapping = _docstring_parse(func)
+    func_desc, arg_mapping = docstring_parse(func)
     if parser:
         parser = parser.add_parser(name.replace("_", "-"), help=func_desc)
     else:
@@ -159,8 +148,8 @@ def function_to_argparse(func, parser=None, exclude=None):
         if param.kind == inspect.Parameter.VAR_POSITIONAL:
             print(f"'function_to_argparse' parameter expansion '{param}' not supported yet")
             continue
-        # if name in exclude:
-        #     continue
+        if name in exclude:
+            continue
 
         arg_name = name.replace("_", "-")
         arg_type = param.annotation

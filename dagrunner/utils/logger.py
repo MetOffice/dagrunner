@@ -2,9 +2,9 @@
 This module takes much from the Python logging cookbook:
 https://docs.python.org/3/howto/logging-cookbook.html#sending-and-receiving-logging-events-across-a-network
 
-- client_attach_socket_handler, a function that attaches a socket handler to the root
+- `client_attach_socket_handler`, a function that attaches a socket handler to the root
   logger.
-- ServerContext, a context manager that starts and manages the TCP server on its own
+- `ServerContext`, a context manager that starts and manages the TCP server on its own
   thread to receive log records.
 """
 import logging, logging.handlers
@@ -50,8 +50,8 @@ class LogRecordStreamHandler(socketserver.StreamRequestHandler):
     """
     Handler for a streaming logging request.
 
-    This basically logs the record using whatever logging policy is
-    configured locally.
+    Specialisation of the `socketserver.StreamRequestHandler` class to handle log
+    records and customise logging events.
     """
 
     def handle(self):
@@ -98,6 +98,9 @@ class LogRecordStreamHandler(socketserver.StreamRequestHandler):
 class LogRecordSocketReceiver(socketserver.ThreadingTCPServer):
     """
     Simple TCP socket-based logging receiver.
+
+    Specialisation of the `socketserver.ThreadingTCPServer` class to handle
+    log records.
     """
 
     allow_reuse_address = True
