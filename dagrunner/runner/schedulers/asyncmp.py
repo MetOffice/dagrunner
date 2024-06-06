@@ -19,7 +19,9 @@ class AsyncMP:
 
     """
 
-    def __init__(self, nprocesses, *args, fail_fast=True, profiler_filepath=None, **kwargs):
+    def __init__(
+        self, nprocesses, *args, fail_fast=True, profiler_filepath=None, **kwargs
+    ):
         """
         Initialise our asynchronous multiprocessing scheduler, ready to be used.
 
@@ -63,7 +65,7 @@ class AsyncMP:
           as verified by this polling of status.
         """
         if self._profiler_output:
-            warnings.warn('profiler output not supported for multiprocessing scheduler')
+            warnings.warn("profiler output not supported for multiprocessing scheduler")
 
         pred_deps, succ_deps = get_deps(graph)
         completed = {target: False for target in pred_deps.keys()}

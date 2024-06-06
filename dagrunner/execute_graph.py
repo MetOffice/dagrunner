@@ -3,13 +3,8 @@
 #
 # This file is part of 'dagrunner' and is released under the BSD 3-Clause license.
 # See LICENSE in the root of the repository for full licensing details.
-import gc
 import inspect
-import json
 import logging
-import os
-import shutil
-import tempfile
 import warnings
 from functools import partial
 
@@ -17,10 +12,8 @@ import importlib
 import networkx as nx
 
 import dask
-from dask.core import get_deps
 from dask.utils import apply
 from dagrunner.utils import (
-    ObjectAsStr,
     TimeIt,
     function_to_argparse,
     logger,
@@ -33,17 +26,25 @@ from dagrunner.utils.visualisation import visualise_graph
 class SkipBranch(Exception):
     """
     This exception is used to skip a branch of the execution graph.
-    
+
     To be used in combination to one of the multiprocessing schedulers.
     In the single-threaded scheduler, Dask executes tasks sequentially, and
     exceptions will propagate as they occur, potentially halting the execution of
     subsequent tasks.
 
     """
+
     pass
 
 
-def plugin_executor(*args, call=None, verbose=False, dry_run=False, common_kwargs=None, **node_properties):
+def plugin_executor(
+    *args,
+    call=None,
+    verbose=False,
+    dry_run=False,
+    common_kwargs=None,
+    **node_properties,
+):
     """
     Executes a plugin function or method with the provided arguments and keyword arguments.
 
@@ -65,17 +66,19 @@ def plugin_executor(*args, call=None, verbose=False, dry_run=False, common_kwarg
     """
     logger.client_attach_socket_handler()
 
-    args = [arg for arg in args if arg is not None]  # support plugins that have no return value
+    args = [
+        arg for arg in args if arg is not None
+    ]  # support plugins that have no return value
     if call is None:
         raise ValueError("call is a required argument")
     if verbose:
-       print(f"args: {args}")
-       print(f"call: {call}")
+        print(f"args: {args}")
+        print(f"call: {call}")
     callable_obj, callable_kwargs = call
 
     if isinstance(callable_obj, str):
         # import callable if a string is provided
-        module_name, function_name = callable_obj.rsplit('.', 1)
+        module_name, function_name = callable_obj.rsplit(".", 1)
         module = importlib.import_module(module_name)
         if verbose:
             print(f"imported module '{module}', callable '{function_name}'")
@@ -89,8 +92,14 @@ def plugin_executor(*args, call=None, verbose=False, dry_run=False, common_kwarg
                 callable_kwargs["node_properties"] = node_properties
             callable_obj = callable_obj()
             call_msg = "()"
-        callable_kwargs = callable_kwargs | {key: value for key, value in common_kwargs.items() if key in callable_kwargs}  # based on overriding arguments
-        callable_kwargs = callable_kwargs | {key: value for key, value in {"verbose": verbose, "dry_run": dry_run}.items() if key in inspect.signature(callable_obj).parameters}  # based on function signature
+        callable_kwargs = callable_kwargs | {
+            key: value for key, value in common_kwargs.items() if key in callable_kwargs
+        }  # based on overriding arguments
+        callable_kwargs = callable_kwargs | {
+            key: value
+            for key, value in {"verbose": verbose, "dry_run": dry_run}.items()
+            if key in inspect.signature(callable_obj).parameters
+        }  # based on function signature
 
         if verbose:
             msg = f"{obj_name}{call_msg}(*{args}, **{callable_kwargs})"
@@ -124,7 +133,7 @@ def _get_networkx(networkx_graph):
 
     Args:
         networkx_graph (networkx.DiGraph, callable or str):
-            A networkx graph; dot path to a networkx graph or callable that returns 
+            A networkx graph; dot path to a networkx graph or callable that returns
             one (str); tuple representing (edges, nodes) or callable object that
             returns a networkx.
 
@@ -138,8 +147,8 @@ def _get_networkx(networkx_graph):
     if isinstance(networkx_graph, nx.DiGraph) or callable(networkx_graph):
         return networkx_graph
     elif isinstance(networkx_graph, str):
-        parts = networkx_graph.split('.')
-        module = importlib.import_module('.'.join(parts[:-1]))
+        parts = networkx_graph.split(".")
+        module = importlib.import_module(".".join(parts[:-1]))
         networkx_graph = parts[-1]
         nxgraph = getattr(module, networkx_graph)
     elif callable(networkx_graph):
@@ -147,31 +156,36 @@ def _get_networkx(networkx_graph):
     else:
         try:
             edges, nodes = networkx_graph
-            nodes = ({k: nodes[k] | _process_nodes(k) for k in nodes.keys()}.items())
+            nodes = {k: nodes[k] | _process_nodes(k) for k in nodes.keys()}.items()
             nxgraph = nx.DiGraph()
             nxgraph.add_edges_from(edges)
             nxgraph.add_nodes_from(nodes)
         except ValueError:
-            raise ValueError(f"Not recognised 'networkx_graph' parameter, see ExecuteGraph docstring.")
+            raise ValueError(
+                "Not recognised 'networkx_graph' parameter, see ExecuteGraph docstring."
+            )
     return nxgraph
 
 
 class ExecuteGraph:
-    def __init__(self, networkx_graph: str,
-                 plugin_executor: callable = plugin_executor,
-                 scheduler: str = "processes",
-                 num_workers: int = 1,
-                 profiler_filepath: str = None,
-                 dry_run: bool = False,
-                 verbose: bool = False,
-                 sqlite_filepath: str = None,
-                 **kwargs):
+    def __init__(
+        self,
+        networkx_graph: str,
+        plugin_executor: callable = plugin_executor,
+        scheduler: str = "processes",
+        num_workers: int = 1,
+        profiler_filepath: str = None,
+        dry_run: bool = False,
+        verbose: bool = False,
+        sqlite_filepath: str = None,
+        **kwargs,
+    ):
         """
         Execute a networkx graph using a chosen scheduler.
 
         Args:
         - `networkx_graph` (networkx.DiGraph, callable or str):
-          A networkx graph; dot path to a networkx graph or callable that returns 
+          A networkx graph; dot path to a networkx graph or callable that returns
           one; tuple representing (edges, nodes) or callable object that
           returns a networkx.
         - `plugin_executor` (callable):
@@ -200,7 +214,9 @@ class ExecuteGraph:
         self._nxgraph = _get_networkx(networkx_graph)
         self._plugin_executor = plugin_executor
         if scheduler not in SCHEDULERS:
-            raise ValueError(f"scheduler '{scheduler}' not recognised, please choose from {list(SCHEDULERS.keys())}")
+            raise ValueError(
+                f"scheduler '{scheduler}' not recognised, please choose from {list(SCHEDULERS.keys())}"
+            )
         self._scheduler = SCHEDULERS[scheduler]
         self._num_workers = num_workers
         self._profiler_output = profiler_filepath
@@ -217,14 +233,14 @@ class ExecuteGraph:
         Create flattened dictionary describing the relationship between each of our nodes.
         Here we wrap our nodes to ensure common parameters are share across all
         executed nodes (e.g. dry-run, verbose).
-        
+
         TODO: Potentially support 'clobber' i.e. partial graph execution from a graph failure recovery.
         """
         executor = partial(
             self._plugin_executor,
-            verbose = self._kwargs.pop("verbose"),
-            dry_run = self._kwargs.pop("dry_run"),
-            common_kwargs = self._kwargs,
+            verbose=self._kwargs.pop("verbose"),
+            dry_run=self._kwargs.pop("dry_run"),
+            common_kwargs=self._kwargs,
         )
 
         if callable(self._nxgraph):
@@ -233,23 +249,25 @@ class ExecuteGraph:
         exec_graph = {}
         for node_id, properties in self._nxgraph.nodes(data=True):
             key = node_id
-            quoted_key = ObjectAsStr(node_id)
+            # quoted_key = ObjectAsStr(node_id)
             args = list(self._nxgraph.predecessors(node_id))
             exec_graph[key] = (apply, executor, args, properties)
 
-        #handle_clobber(graph, workflow, no_clobber, verbose)
+        # handle_clobber(graph, workflow, no_clobber, verbose)
         return exec_graph
 
     def visualise(self, output_filepath: str):
         _attempt_visualise_graph(self._exec_graph, output_filepath)
 
     def __call__(self):
-        with logger.ServerContext(sqlite_filepath=self._sqlite_filepath), \
-                TimeIt(verbose=True), \
-                self._scheduler(self._num_workers, profiler_filepath=self._profiler_output) as scheduler:
+        with logger.ServerContext(sqlite_filepath=self._sqlite_filepath), TimeIt(
+            verbose=True
+        ), self._scheduler(
+            self._num_workers, profiler_filepath=self._profiler_output
+        ) as scheduler:
             try:
                 res = scheduler.run(self._exec_graph)
-            except SkipBranch as err:
+            except SkipBranch:
                 pass
         return res
 
@@ -264,7 +282,7 @@ def main():
     args = vars(args)
     # positional arguments with '-' aren't converted to '_' by argparse.
     args = {key.replace("-", "_"): value for key, value in args.items()}
-    if args.get('verbose', False):
+    if args.get("verbose", False):
         print(f"CLI call arguments: {args}")
     kwargs = args.pop("kwargs", None) or {}
     ExecuteGraph(**args, **kwargs)()

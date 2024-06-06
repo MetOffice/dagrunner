@@ -11,7 +11,9 @@ import dagrunner.utils._doc_styles as doc_styles
 
 class ObjectAsStr(str):
     """Hide object under a string."""
+
     __slots__ = ("original_object",)
+
     def __new__(cls, obj, name=None):
         if isinstance(obj, cls):
             # return object as already wrapped
@@ -55,6 +57,7 @@ class TimeIt:
         "Elapsed time: 0.05s"
 
     """
+
     def __init__(self, verbose=False):
         self._verbose = verbose
         self._total_elapsed = 0
@@ -108,7 +111,7 @@ def docstring_parse(obj):
     desc = parser.description
     var_mapping = parser.variable_mapping if parser.is_style(doc) else {}
     if var_mapping:
-        var_mapping = {k.replace('*',''): v for k, v in var_mapping.items()}
+        var_mapping = {k.replace("*", ""): v for k, v in var_mapping.items()}
     return desc, var_mapping
 
 
@@ -133,7 +136,7 @@ def function_to_argparse(func, parser=None, exclude=None):
     is_method = False
     if isinstance(func, type):
         is_method = True
-        func = func.__init__    
+        func = func.__init__
     func_desc, arg_mapping = docstring_parse(func)
     if parser:
         parser = parser.add_parser(name.replace("_", "-"), help=func_desc)
@@ -143,10 +146,14 @@ def function_to_argparse(func, parser=None, exclude=None):
         )
 
     sig = inspect.signature(func)
-    singature_param = list(sig.parameters.items())[1:] if is_method else sig.parameters.items()
+    singature_param = (
+        list(sig.parameters.items())[1:] if is_method else sig.parameters.items()
+    )
     for name, param in singature_param:
         if param.kind == inspect.Parameter.VAR_POSITIONAL:
-            print(f"'function_to_argparse' parameter expansion '{param}' not supported yet")
+            print(
+                f"'function_to_argparse' parameter expansion '{param}' not supported yet"
+            )
             continue
         if name in exclude:
             continue
@@ -154,8 +161,16 @@ def function_to_argparse(func, parser=None, exclude=None):
         arg_name = name.replace("_", "-")
         arg_type = param.annotation
         arg_default = param.default if param.default is not param.empty else None
-        arg_optional = "optional" in arg_mapping[name].lower() if name in arg_mapping else arg_default is not None
-        arg_kwargs = dict(type=arg_type, default=arg_default, help=arg_mapping[name] if name in arg_mapping else None)
+        arg_optional = (
+            "optional" in arg_mapping[name].lower()
+            if name in arg_mapping
+            else arg_default is not None
+        )
+        arg_kwargs = dict(
+            type=arg_type,
+            default=arg_default,
+            help=arg_mapping[name] if name in arg_mapping else None,
+        )
         if arg_type is bool:
             arg_kwargs.update(dict(action=f"store_{str(not arg_default).lower()}"))
             arg_kwargs.pop("type")
@@ -168,10 +183,13 @@ def function_to_argparse(func, parser=None, exclude=None):
             arg_kwargs["nargs"] = 2
             arg_kwargs["action"] = KeyValueAction
             arg_kwargs["metavar"] = ("key", "value")
-            arg_kwargs["help"] += '\n Key-value pair argument.'
+            arg_kwargs["help"] += "\n Key-value pair argument."
             arg_optional = True
 
-        if param.default is not param.empty or param.kind == inspect.Parameter.VAR_KEYWORD:
+        if (
+            param.default is not param.empty
+            or param.kind == inspect.Parameter.VAR_KEYWORD
+        ):
             # is a keywarg
             arg_kwargs["dest"] = name
             arg_kwargs["required"] = not arg_optional

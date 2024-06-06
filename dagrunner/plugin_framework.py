@@ -20,14 +20,14 @@ class Plugin(ABC):
 
         Positional arguments represent the plugin's inputs (dependencies),
         while keyword arguments represent the plugin's parameters.
-    
+
         Args:
         - *args: Positional arguments.
         - **kwargs: Keyword arguments.
 
         Returns:
         - Any: The output of the plugin.
-    
+
         """
         raise NotImplementedError
 
@@ -59,13 +59,15 @@ class Shell(Plugin):
 
 
 class DataPolling(Plugin):
-    def __call__(self, *args, timeout=60*2, polling=1, file_count=None):
+    def __call__(
+        self, *args, timeout=60 * 2, polling=1, file_count=None, verbose=False
+    ):
         """
         Poll for availability of files
-        
+
         Poll for data and return when all are available or otherwise raise an
         exception if the timeout is reached.
-        
+
         Args:
         - *args: Variable length argument list of file patterns to be checked.
         - timeout (int): Timeout in seconds (default is 120 seconds).
@@ -74,17 +76,22 @@ class DataPolling(Plugin):
             If specified, the total number of files found can be greater than the
             number of arguments.  Each argument is expected to return a minimum of
             1 match each in either case.
-        
+
+
         Returns:
         - None
-        
+
         Raises:
         - RuntimeError: If the timeout is reached before all files are found.
         """
         time_taken = indx = patterns_found = files_found = 0
         fpaths_found = []
         file_count = len(args) if file_count is None else max(file_count, len(args))
-        while patterns_found < len(args) and files_found < file_count and time_taken < timeout:
+        while (
+            patterns_found < len(args)
+            and files_found < file_count
+            and time_taken < timeout
+        ):
             fpattern = args[indx]
             expanded_paths = glob(fpattern)
             if expanded_paths:
@@ -93,7 +100,9 @@ class DataPolling(Plugin):
                 files_found += len(expanded_paths)
                 indx += 1
             elif verbose:
-                print(f"polling for '{fpattern}', time taken: {time_taken}s of limit {timeout}s")
+                print(
+                    f"polling for '{fpattern}', time taken: {time_taken}s of limit {timeout}s"
+                )
                 time.sleep(polling)
                 time_taken += polling
 
@@ -117,7 +126,7 @@ class Input(NodeAwarePlugin):
         - filepath (str): The filepath to be expanded.
         - **kwargs: Keyword arguments to be used in the expansion.  Node
           properties/attributes are additionally included here as a node aware plugin.
-    
+
         Returns:
         - str: The expanded filepath.
 
@@ -126,5 +135,6 @@ class Input(NodeAwarePlugin):
         """
         if args:
             raise ValueError("Input plugin does not accept positional arguments")
-        target_fmt = filepath.format
-        return os.path.expanduser(string.Template(filepath.format(**kwargs)).substitute(os.environ))
+        return os.path.expanduser(
+            string.Template(filepath.format(**kwargs)).substitute(os.environ)
+        )

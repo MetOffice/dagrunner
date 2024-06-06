@@ -7,7 +7,9 @@ https://docs.python.org/3/howto/logging-cookbook.html#sending-and-receiving-logg
 - `ServerContext`, a context manager that starts and manages the TCP server on its own
   thread to receive log records.
 """
-import logging, logging.handlers
+
+import logging
+import logging.handlers
 import pickle
 import socket
 import socketserver
@@ -16,7 +18,7 @@ import threading
 import queue
 
 
-__all__ = ['client_attach_socket_handler', 'ServerContext']
+__all__ = ["client_attach_socket_handler", "ServerContext"]
 
 
 def client_attach_socket_handler():
@@ -37,10 +39,11 @@ def client_attach_socket_handler():
         logger2.warning('Jail zesty vixen who grabbed pay from quack.')
         logger2.error('The five boxing wizards jump quickly.')
     """
-    rootLogger = logging.getLogger('')
+    rootLogger = logging.getLogger("")
     rootLogger.setLevel(logging.DEBUG)
-    socketHandler = logging.handlers.SocketHandler('localhost',
-                        logging.handlers.DEFAULT_TCP_LOGGING_PORT)
+    socketHandler = logging.handlers.SocketHandler(
+        "localhost", logging.handlers.DEFAULT_TCP_LOGGING_PORT
+    )
     # don't bother with a formatter, since a socket handler sends the event as
     # an unformatted pickle
     rootLogger.addHandler(socketHandler)
@@ -64,7 +67,7 @@ class LogRecordStreamHandler(socketserver.StreamRequestHandler):
             chunk = self.connection.recv(4)
             if len(chunk) < 4:
                 break
-            slen = struct.unpack('>L', chunk)[0]
+            slen = struct.unpack(">L", chunk)[0]
             chunk = self.connection.recv(slen)
             while len(chunk) < slen:
                 chunk = chunk + self.connection.recv(slen - len(chunk))
@@ -105,9 +108,13 @@ class LogRecordSocketReceiver(socketserver.ThreadingTCPServer):
 
     allow_reuse_address = True
 
-    def __init__(self, host='localhost',
-                 port=logging.handlers.DEFAULT_TCP_LOGGING_PORT,
-                 handler=LogRecordStreamHandler, log_queue=None):
+    def __init__(
+        self,
+        host="localhost",
+        port=logging.handlers.DEFAULT_TCP_LOGGING_PORT,
+        handler=LogRecordStreamHandler,
+        log_queue=None,
+    ):
         socketserver.ThreadingTCPServer.__init__(self, (host, port), handler)
         self.abort = 0
         self.timeout = 1
@@ -116,11 +123,10 @@ class LogRecordSocketReceiver(socketserver.ThreadingTCPServer):
 
     def serve_until_stopped(self, queue_handler=None):
         import select
+
         abort = 0
         while not abort:
-            rd, wr, ex = select.select([self.socket.fileno()],
-                                       [], [],
-                                       self.timeout)
+            rd, wr, ex = select.select([self.socket.fileno()], [], [], self.timeout)
             if rd:
                 self.handle_request()
                 queue_handler.write(self.log_queue)
@@ -133,7 +139,7 @@ class LogRecordSocketReceiver(socketserver.ThreadingTCPServer):
 
 
 class SQLiteQueueHandler:
-    def __init__(self, sqfile='logs.sqlite'):
+    def __init__(self, sqfile="logs.sqlite"):
         self._sqfile = sqfile
         self._conn = None
 
@@ -141,6 +147,7 @@ class SQLiteQueueHandler:
     def db(self):
         if self._conn is None:
             import sqlite3
+
             print(f"Writing sqlite file: {self._sqfile}")
             self._conn = sqlite3.connect(self._sqfile)  # Connect to the SQLite database
             cursor = self._conn.cursor()
@@ -163,12 +170,23 @@ class SQLiteQueueHandler:
             record = log_queue.get()
             print("Dequeued item:", record)
             cursor = self.db.cursor()
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO logs (created, name, level, message, hostname, process, thread)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
-            """, (record.created, record.name, record.levelname, record.getMessage(), record.hostname, record.process, record.thread))
+            """,
+                (
+                    record.created,
+                    record.name,
+                    record.levelname,
+                    record.getMessage(),
+                    record.hostname,
+                    record.process,
+                    record.thread,
+                ),
+            )
             self.db.commit()  # Commit the transaction
-        
+
     def close(self):
         if self._conn:
             self._conn.close()
@@ -187,6 +205,7 @@ class ServerContext:
     %(relativeCreated)5d %(name)-15s %(levelname)-8s %(hostname)s %(process)d %(asctime)s %(message)s
 
     """
+
     def __init__(self, sqlite_filepath=None):
         self.tcpserver = None
         self.server_thread = None
@@ -194,9 +213,10 @@ class ServerContext:
 
     def __enter__(self):
         logging.basicConfig(
-            format='%(relativeCreated)5d %(name)-15s %(levelname)-8s %(hostname)s %(process)d %(asctime)s %(message)s',
-            datefmt="%Y-%m-%dT%H:%M:%S")  # Date in ISO 8601 format
-        
+            format="%(relativeCreated)5d %(name)-15s %(levelname)-8s %(hostname)s %(process)d %(asctime)s %(message)s",
+            datefmt="%Y-%m-%dT%H:%M:%S",
+        )  # Date in ISO 8601 format
+
         self.log_queue = queue.Queue()
 
         sqlitequeue = None
@@ -204,8 +224,11 @@ class ServerContext:
             sqlitequeue = SQLiteQueueHandler(sqfile=self._sqlite_filepath)
 
         self.tcpserver = LogRecordSocketReceiver(log_queue=self.log_queue)
-        print('About to start TCP server...')
-        self.server_thread = threading.Thread(target=self.tcpserver.serve_until_stopped, kwargs={'queue_handler': sqlitequeue})
+        print("About to start TCP server...")
+        self.server_thread = threading.Thread(
+            target=self.tcpserver.serve_until_stopped,
+            kwargs={"queue_handler": sqlitequeue},
+        )
         self.server_thread.start()
 
         return self.server_thread, self.tcpserver
@@ -225,5 +248,5 @@ def main():
     print("Server stopped")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
