@@ -17,6 +17,7 @@ readme = "README.md"
 license = {file = "LICENSE"}
 dependencies = [
   'networkx >= 3.2',
+  'dask >= 2024.1.1',
 ]
 
 [project.optional-dependencies]
