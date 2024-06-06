@@ -5,12 +5,12 @@ import logging
 import os
 import pytest
 
-from dagrunner.utils.logger import ServerContext, SQLiteQueueHandler
+from dagrunner.utils.logger import ServerContext
 
 
 @pytest.fixture
 def sqlite_filepath(tmp_path):
-    return tmp_path / 'test_logs.sqlite'
+    return tmp_path / "test_logs.sqlite"
 
 
 def gen_client_code(loggers):
@@ -26,28 +26,37 @@ def gen_client_code(loggers):
     return code
 
 
-@pytest.mark.parametrize("test_inputs", [
-    (
+@pytest.mark.parametrize(
+    "test_inputs",
+    [
+        (
             ("Python is versatile and powerful.", "root", "info"),
             ("Lists store collections of items.", "myapp.area1", "debug"),
             ("Functions encapsulate reusable code.", "myapp.area1", "info"),
             ("Indentation defines code blocks.", "myapp.area2", "warning"),
             ("Libraries extend Pythons capabilities.", "myapp.area2", "error"),
-    ),
-])
+        ),
+    ],
+)
 def test_sqlitedb(test_inputs, sqlite_filepath, caplog):
     client_code = gen_client_code(test_inputs)
-    target_msg = [msg[0] for msg in test_inputs]
 
     with ServerContext(sqlite_filepath=sqlite_filepath):
         # Wait for server to start
         time.sleep(0.5)
         # Run client in subprocess
-        result = subprocess.run(["python", "-c", client_code], capture_output=True, text=True, check=True)
+        subprocess.run(
+            ["python", "-c", client_code], capture_output=True, text=True, check=True
+        )
 
     # Check log messages
     for test_input, record in zip(test_inputs, caplog.record_tuples):
-        assert tuple([test_input[1], getattr(logging, test_input[2].upper()), test_input[0]]) == record
+        assert (
+            tuple(
+                [test_input[1], getattr(logging, test_input[2].upper()), test_input[0]]
+            )
+            == record
+        )
 
     # Check there are any records in the database
     conn = sqlite3.connect(sqlite_filepath)
@@ -61,7 +70,15 @@ def test_sqlitedb(test_inputs, sqlite_filepath, caplog):
     # Verify against expected values and ensure dynamic values are of the expected type.
     records = cursor.execute("SELECT * FROM logs").fetchall()
     for test_input, record in zip(test_inputs, records):
-        tar_format = (float, test_input[1], test_input[2].upper(), test_input[0], os.uname().nodename, int, int)
+        tar_format = (
+            float,
+            test_input[1],
+            test_input[2].upper(),
+            test_input[0],
+            os.uname().nodename,
+            int,
+            int,
+        )
 
         assert len(record) == len(tar_format)
         for tar, rec in zip(tar_format, record):

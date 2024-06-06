@@ -5,6 +5,7 @@
 """
 Module responsible for scheduler independent graph visualisation
 """
+
 import os
 
 from dask.core import get_deps
@@ -144,16 +145,18 @@ tr:nth-child(odd) {{ background: #FFF }}
 
     @classmethod
     def _graph_engine_gen_with_table(cls, graph):
+        def get_command(tgt):
+            if graph[tgt][2] == "improver":
+                return graph[tgt][3], graph[tgt][2:]
+            else:
+                return graph[tgt][2], graph[tgt][2:]
+
         table = _HTMLTable(["node ID", "command", "target", "args"])
         graph_engine = cls.GRAPH_ENGINE()
         node_target_id_map = {}
         node_id = 0
         pred_deps, _ = get_deps(graph)
-        get_command = (
-            lambda tgt: (graph[tgt][3], graph[tgt][2:])
-            if graph[tgt][2] == "improver"
-            else (graph[tgt][2], graph[tgt][2:])
-        )
+
         for target in pred_deps:
             if target not in node_target_id_map:
                 node_target_id_map[target] = node_id

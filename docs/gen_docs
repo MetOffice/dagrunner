@@ -5,6 +5,7 @@ Generate reference documentation for a Python module.
 Example usage:
     python generate_docs.py my_module /path/to/docs
 """
+
 import inspect
 import importlib
 import os
@@ -14,7 +15,9 @@ import sys
 def gen_source_link(obj, target_root):
     """Generate a markdown link to the source code of an object."""
     source_link = inspect.getsourcefile(obj)
-    source_link = os.path.relpath(os.path.realpath(source_link), os.path.realpath(target_root))
+    source_link = os.path.relpath(
+        os.path.realpath(source_link), os.path.realpath(target_root)
+    )
     source_line = inspect.getsourcelines(obj)[1]
     return f"[Source]({source_link}#L{source_line})\n\n"
 
@@ -44,7 +47,7 @@ def external_dependency(obj, root_package):
 def no_include(obj, module_name):
     """
     Returns True if the object should not be included in the documentation.
-    
+
     If any of the following conditions are met:
     - Definition lives outside the module and is not a private module.
     """
@@ -61,11 +64,15 @@ def gen_heading(level, text):
 
 def obj_descriptor(obj):
     return (
-        "class" if inspect.isclass(obj) else
-        "method" if inspect.ismethod(obj) else
-        "function" if inspect.isfunction(obj) else
-        "module" if inspect.ismodule(obj) else
-        type(obj).__name__ #"Object"
+        "class"
+        if inspect.isclass(obj)
+        else "method"
+        if inspect.ismethod(obj)
+        else "function"
+        if inspect.isfunction(obj)
+        else "module"
+        if inspect.ismodule(obj)
+        else type(obj).__name__  # "Object"
     )
 
 
@@ -86,8 +93,8 @@ def gen_obj_link(obj, obname, rel_mod_path=None):
     """
     heading = gen_obj_heading(0, obj, obname)
     heading = heading.strip().lower()
-    removing = ('`', "'", '"', '.', ':')
-    replacing = (' ')
+    removing = ("`", "'", '"', ".", ":")
+    replacing = " "
     for r in replacing:
         heading = heading.replace(r, "-")
     for r in removing:
@@ -106,7 +113,7 @@ def gen_obj_link(obj, obname, rel_mod_path=None):
         rel_mod_path += "."
         module_path_short = module_path_short.replace(rel_mod_path, "")
     if rel_mod_path == "":
-        module_path_short = module_path_short.split('.')[-1]
+        module_path_short = module_path_short.split(".")[-1]
     link_name = f"{obj_descriptor(obj)}: {module_path_short}"
 
     return (module_path_full, f"[{link_name}]({module_path}.md#{heading})")
@@ -118,10 +125,12 @@ def get_obj_call_signature(obj):
     call_signature_str = []
     for param in call_signature.parameters.values():
         if param.default is not inspect._empty and callable(param.default):
-            call_signature_str.append(f"<{obj_descriptor(param.default)} {param.default.__name__}>")
+            call_signature_str.append(
+                f"<{obj_descriptor(param.default)} {param.default.__name__}>"
+            )
         else:
             call_signature_str.append(str(param))
-    call_signature_str = '(' + ', '.join(call_signature_str) + ')'
+    call_signature_str = "(" + ", ".join(call_signature_str) + ")"
     return call_signature_str
 
 
@@ -130,12 +139,10 @@ def gen_obj_markdown(level, obj, obname, target_root):
     markdown = gen_obj_heading(level, obj, obname)
     if inspect.isclass(obj) or inspect.isfunction(obj) or inspect.ismodule(obj):
         markdown += gen_source_link(obj, target_root)
-        if obname == "ExecuteGraph":
-            a = 1
         try:
             call_signature = get_obj_call_signature(obj)
             if call_signature:
-                markdown += gen_heading(level+1, "Call Signature")
+                markdown += gen_heading(level + 1, "Call Signature")
                 markdown += f"```python\n{obname}{str(call_signature)}\n```\n\n"
         except (AttributeError, ValueError, TypeError):
             pass
@@ -156,28 +163,46 @@ def prioritised_get_members(module):
 
 
 def generate_markdown_from_module(module_name, target_root):
-    root_package = module_name.split('.')[0]
+    root_package = module_name.split(".")[0]
 
     module = importlib.import_module(module_name)
-    name = module.__name__.split('.')[-1]  # module names are returned as 'module_name.submodule_name'
+    name = module.__name__.split(".")[
+        -1
+    ]  # module names are returned as 'module_name.submodule_name'
     markdown = gen_obj_markdown(1, module, name, target_root)
     index = [gen_obj_link(module, name, rel_mod_path="")]
 
     for name, obj in prioritised_get_members(module):
-        name = name.split('.')[-1]  # module names are returned as 'module_name.submodule_name'
-        if external_dependency(obj, root_package) or is_private(name) or inspect.ismethod(obj) or inspect.isbuiltin(obj) or (name.startswith("_") and name.endswith("__")):
+        name = name.split(".")[
+            -1
+        ]  # module names are returned as 'module_name.submodule_name'
+        if (
+            external_dependency(obj, root_package)
+            or is_private(name)
+            or inspect.ismethod(obj)
+            or inspect.isbuiltin(obj)
+            or (name.startswith("_") and name.endswith("__"))
+        ):
             continue
         if no_include(obj, module_name):
-            markdown += f"see {gen_obj_link(obj, name, rel_mod_path=module.__name__)[1]}\n\n"
+            markdown += (
+                f"see {gen_obj_link(obj, name, rel_mod_path=module.__name__)[1]}\n\n"
+            )
             continue
         else:
             markdown += gen_obj_markdown(2, obj, name, target_root)
 
         if inspect.isclass(obj):
-            for cls_member_name, cls_member in inspect.getmembers(obj, inspect.ismethod and inspect.isfunction):
-                if is_private(cls_member_name) or external_dependency(cls_member, root_package):
+            for cls_member_name, cls_member in inspect.getmembers(
+                obj, inspect.ismethod and inspect.isfunction
+            ):
+                if is_private(cls_member_name) or external_dependency(
+                    cls_member, root_package
+                ):
                     continue
-                markdown += gen_obj_markdown(3, cls_member, cls_member_name, target_root)
+                markdown += gen_obj_markdown(
+                    3, cls_member, cls_member_name, target_root
+                )
 
         index.append(gen_obj_link(obj, name, rel_mod_path=""))
     index = [x for x in index if x]
@@ -197,7 +222,9 @@ def gen_markdown(module_dot_path, target_root):
     Generate markdown for a module and write it to it's corresponding markdown file.
     Return an index of markdown object links.
     """
-    markdown_content, index = generate_markdown_from_module(module_dot_path, target_root)
+    markdown_content, index = generate_markdown_from_module(
+        module_dot_path, target_root
+    )
     output_file = os.path.join(target_root, f"{module_dot_path}.md")
     with open(output_file, "w") as f:
         f.write(markdown_content)
@@ -208,22 +235,31 @@ def gen_markdown(module_dot_path, target_root):
 def format_index(index):
     """Format the index for a markdown file."""
     index = sorted(set(index), key=lambda x: x[0])
-    return '\n'.join([f"{'  '*len(dot_path.split('.'))}- {link}" for dot_path, link in index])
+    return "\n".join(
+        [f"{'  '*len(dot_path.split('.'))}- {link}" for dot_path, link in index]
+    )
 
 
 def generate_markdown_recursive(module_dot_path, target_root):
     """Generate markdown for a module and it's submodules recursively."""
     module = importlib.import_module(module_dot_path)
-    base_path = os.path.dirname(importlib.import_module(module_dot_path.split('.')[0]).__path__[0])
+    base_path = os.path.dirname(
+        importlib.import_module(module_dot_path.split(".")[0]).__path__[0]
+    )
     module_path = module.__path__[0]
     toc_filepath = os.path.join(target_root, f"{module_dot_path}_index.md")
     with open(toc_filepath, "w") as f:
-        f.write(f"# Index for '{module_dot_path}' reference documentation\nversion: {module.__version__}\n\n")
+        f.write(
+            f"# Index for '{module_dot_path}' reference documentation\nversion: {module.__version__}\n\n"
+        )
     index = []
 
     for root, _, filenames in os.walk(module.__path__[0]):
         # Check if any component of the root path is hidden ('.'), private ('_') or is testing ('tests')
-        if any(part.startswith('.') or part.startswith('_') or part.startswith('tests') for part in root.split(os.path.sep)):
+        if any(
+            part.startswith(".") or part.startswith("_") or part.startswith("tests")
+            for part in root.split(os.path.sep)
+        ):
             continue
 
         module_dot_path = path_to_module(root, base_path)
@@ -232,7 +268,7 @@ def generate_markdown_recursive(module_dot_path, target_root):
             index.extend(gen_markdown(module_dot_path, target_root))
 
         for filename in filenames:
-            if not filename.startswith('_') and filename.endswith(".py"):
+            if not filename.startswith("_") and filename.endswith(".py"):
                 module_path = os.path.join(root, filename)
                 module_dot_path = path_to_module(module_path, base_path)
                 print(f"{module_dot_path} is a module")

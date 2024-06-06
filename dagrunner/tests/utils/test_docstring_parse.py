@@ -1,6 +1,5 @@
 from dagrunner.utils import docstring_parse
 import pytest
-from dagrunner.utils import docstring_parse
 
 
 def markdown_style(arg1, arg2=None):
@@ -101,7 +100,10 @@ def non_style_v2():
 def test_docstring_parse(func):
     intro_lines, arg_mapping = docstring_parse(func)
     assert intro_lines == "Summary line.\n\nExtended description of function."
-    assert arg_mapping == {"arg1": "Description of arg1 further description.", "arg2": "Description of arg2, defaults to None"}
+    assert arg_mapping == {
+        "arg1": "Description of arg1 further description.",
+        "arg2": "Description of arg2, defaults to None",
+    }
 
 
 @pytest.mark.parametrize("func", [non_style, non_style_v2])

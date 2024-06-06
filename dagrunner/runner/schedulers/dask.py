@@ -11,6 +11,7 @@ See the following useful background reading:
     - https://docs.dask.org/en/latest/delayed.html
 
 """
+
 import warnings
 
 from dask.base import tokenize
@@ -78,17 +79,21 @@ def add_dummy_tasks(dask_graph):
 
 class Distributed:
     """A class to run dask graphs on a distributed cluster."""
+
     def __init__(self, num_workers, profiler_filepath=None, **kwargs):
-            self._num_workers = num_workers
-            self._profiler_output = profiler_filepath
-            self._kwargs = kwargs
-            self._cluster = None
+        self._num_workers = num_workers
+        self._profiler_output = profiler_filepath
+        self._kwargs = kwargs
+        self._cluster = None
 
     def __enter__(self):
         """Create a local cluster and connect a client to it."""
         self._cluster = LocalCluster(
-                n_workers=self._num_workers, processes=True, threads_per_worker=1, **self._kwargs
-            )
+            n_workers=self._num_workers,
+            processes=True,
+            threads_per_worker=1,
+            **self._kwargs,
+        )
         Client(self._cluster)
         return self
 
@@ -123,15 +128,18 @@ class Distributed:
 
 class SingleMachine:
     """A class to run dask graphs on a single machine."""
-    def __init__(self, num_workers, scheduler="processes", profiler_filepath=None, **kwargs):
-            num_workers = 1 if scheduler == "single-threaded" else num_workers
-            self._num_workers = num_workers
-            self._profiler_output = profiler_filepath
-            self._kwargs = kwargs
-            self._scheduler = scheduler
+
+    def __init__(
+        self, num_workers, scheduler="processes", profiler_filepath=None, **kwargs
+    ):
+        num_workers = 1 if scheduler == "single-threaded" else num_workers
+        self._num_workers = num_workers
+        self._profiler_output = profiler_filepath
+        self._kwargs = kwargs
+        self._scheduler = scheduler
 
     def __enter__(self):
-         return self
+        return self
 
     def run(self, dask_graph, verbose=False):
         """
@@ -148,7 +156,7 @@ class SingleMachine:
         """
         graph, target = add_dummy_tasks(dask_graph.copy())
         self._dask_container = Delayed(target, graph)
-        
+
         # Note the if we use the dask 'processes' scheduler, then we
         # must make use of the chunksize=1 parameter
         # See
@@ -166,7 +174,11 @@ class SingleMachine:
             with Profiler() as prof, ResourceProfiler(
                 dt=1
             ) as rprof, CacheProfiler() as cprof:
-                res = self._dask_container.compute(scheduler=self._scheduler, num_workers=self._num_workers, chunksize=1)
+                res = self._dask_container.compute(
+                    scheduler=self._scheduler,
+                    num_workers=self._num_workers,
+                    chunksize=1,
+                )
                 visualize(
                     [prof, rprof, cprof],
                     file_path=self._profiler_output,
@@ -176,7 +188,9 @@ class SingleMachine:
             if verbose:
                 print(f"{max([res.mem for res in rprof.results])}MB total memory used")
         else:
-            res = self._dask_container.compute(scheduler=self._scheduler, num_workers=self._num_workers, chunksize=1)
+            res = self._dask_container.compute(
+                scheduler=self._scheduler, num_workers=self._num_workers, chunksize=1
+            )
         return res
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
@@ -185,6 +199,7 @@ class SingleMachine:
 
 class DaskOnRay:
     """A class to run dask graphs using the 'dak-on-ray' scheduler."""
+
     def __init__(self, num_workers, profiler_filepath=None, **kwargs):
         self._num_workers = num_workers
         self._profiler_output = profiler_filepath
@@ -195,6 +210,7 @@ class DaskOnRay:
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
         import ray
+
         ray.shutdown()
 
     def run(self, dask_graph, verbose=False):
@@ -216,6 +232,6 @@ class DaskOnRay:
         graph, target = add_dummy_tasks(dask_graph)
         dask_container = Delayed(target, graph)
         if self._profiler_output:
-            warnings.warn('profiler output not supported for Ray scheduler')
+            warnings.warn("profiler output not supported for Ray scheduler")
         ray.init(num_cpus=self._num_workers, include_dashboard=False)
         return dask_container.compute(scheduler=ray_dask_get)
