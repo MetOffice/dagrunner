@@ -24,9 +24,6 @@ dependencies = [
 tests = [
     "pytest"
 ]
-docs = [
-    "importlib-metadata"
-]
 
 [project.urls]
 Repository = "https://github.com/MetOffice/dagrunner"
