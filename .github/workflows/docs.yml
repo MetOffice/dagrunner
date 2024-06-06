@@ -1,0 +1,38 @@
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.9
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install .[tests]
+
+      - name: Build documentation
+        run: ./docs/gen_docs dagrunner ./docs
+
+      - name: Check if documentation has changed
+        id: check-docs
+        run: |
+          git diff --quiet --exit-code || echo "::set-output name=changed::true"
+
+      # https://github.com/orgs/community/discussions/26560#discussioncomment-3531273
+      - name: Commit and push documentation changes
+        if: steps.check-docs.outputs.changed == 'true'
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git commit -am "Automated reference documentation update"
+          git push
