@@ -20,14 +20,20 @@ jobs:
           python-version: 3.9
           cache: 'pip'
 
+      - name: Add checkout directory to PYTHONPATH
+        run: echo "PYTHONPATH=$(pwd):$PYTHONPATH" >> $GITHUB_ENV
+
       - name: Install dependencies
-        run: pip install .[tests,docs]
+        run: |
+          pip install .[tests,docs]
+          pip uninstall dagrunner -y
 
       - name: Run pytest
         run: pytest
 
       - name: Build documentation
-        run: ./docs/gen_docs dagrunner ./docs
+        run: |
+          ./docs/gen_docs dagrunner ./docs
 
       - name: Check if documentation has changed
         id: check-docs
