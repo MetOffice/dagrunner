@@ -22,7 +22,10 @@ dependencies = [
 
 [project.optional-dependencies]
 tests = [
-    "pytest"
+  "pytest"
+]
+dev = [
+  "pre-commit"
 ]
 
 [project.urls]

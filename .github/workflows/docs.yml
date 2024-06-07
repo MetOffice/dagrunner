@@ -17,21 +17,13 @@
 #           python-version: 3.9
 #           cache: 'pip'
 
-<<<<<<< Updated upstream
-      - name: Add checkout directory to PYTHONPATH
-        run: echo "PYTHONPATH=$(pwd):$PYTHONPATH" >> $GITHUB_ENV
+#       - name: Add checkout directory to PYTHONPATH
+#         run: echo "PYTHONPATH=$(pwd):$PYTHONPATH" >> $GITHUB_ENV
 
-      - name: Install dependencies
-        run: |
-          pip install .
-          pip uninstall dagrunner -y
-||||||| constructed merge base
-      - name: Install dependencies
-        run: pip install .
-=======
 #       - name: Install dependencies
-#         run: pip install .
->>>>>>> Stashed changes
+#         run: |
+#           pip install .
+#           pip uninstall dagrunner -y
 
 #       - name: Build documentation
 #         run: ./docs/gen_docs dagrunner ./docs
@@ -41,33 +33,6 @@
 #         run: |
 #           git diff --quiet --exit-code || echo "::set-output name=changed::true"
 
-<<<<<<< Updated upstream
-      # https://github.com/orgs/community/discussions/26560#discussioncomment-3531273
-      - name: Commit and push documentation changes
-        if: steps.check-docs.outputs.changed == 'true'
-        run: |
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git checkout -b documentation-update || git checkout documentation-update
-          git commit -am "Automated reference documentation update"
-          git push origin documentation-update
-          gh pr create --title "Automated reference documentation update" --body "This is an automated PR triggered by a change to 'main'"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-||||||| constructed merge base
-      # https://github.com/orgs/community/discussions/26560#discussioncomment-3531273
-      - name: Commit and push documentation changes
-        if: steps.check-docs.outputs.changed == 'true'
-        run: |
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git checkout -b documentation-update || git checkout documentation-update
-          git commit -am "Automated reference documentation update"
-          git push origin documentation-update
-          gh pr create --title "Title of your PR" --body "Description of your PR"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-=======
 #       # https://github.com/orgs/community/discussions/26560#discussioncomment-3531273
 #       - name: Commit and push documentation changes
 #         if: steps.check-docs.outputs.changed == 'true'
@@ -76,8 +41,7 @@
 #           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
 #           git checkout -b documentation-update || git checkout documentation-update
 #           git commit -am "Automated reference documentation update"
-#           git push origin documentation-update -f
-#           gh pr create --title "Title of your PR" --body "Description of your PR"
+#           git push origin documentation-update
+#           gh pr create --title "Automated reference documentation update" --body "This is an automated PR triggered by a change to 'main'"
 #         env:
 #           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
->>>>>>> Stashed changes
