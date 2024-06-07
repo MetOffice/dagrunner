@@ -35,6 +35,7 @@ jobs:
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git commit -am "Automated reference documentation update"
-          git push
+          git push origin documentation-update
+          gh pr create --title "Title of your PR" --body "Description of your PR"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
