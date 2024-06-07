@@ -1,6 +1,6 @@
 # module: `dagrunner.utils.logger`
 
-[Source](../dagrunner/utils/logger.py#L0)
+[Source](../../../../../../opt/hostedtoolcache/Python/3.9.19/x64/lib/python3.9/site-packages/dagrunner/utils/logger.py#L0)
 
 This module takes much from the Python logging cookbook:
 https://docs.python.org/3/howto/logging-cookbook.html#sending-and-receiving-logging-events-across-a-network
@@ -12,7 +12,7 @@ https://docs.python.org/3/howto/logging-cookbook.html#sending-and-receiving-logg
 
 ## class: `LogRecordSocketReceiver`
 
-[Source](../dagrunner/utils/logger.py#L98)
+[Source](../../../../../../opt/hostedtoolcache/Python/3.9.19/x64/lib/python3.9/site-packages/dagrunner/utils/logger.py#L101)
 
 ### Call Signature:
 
@@ -27,7 +27,7 @@ log records.
 
 ### function: `__init__`
 
-[Source](../dagrunner/utils/logger.py#L108)
+[Source](../../../../../../opt/hostedtoolcache/Python/3.9.19/x64/lib/python3.9/site-packages/dagrunner/utils/logger.py#L111)
 
 #### Call Signature:
 
@@ -39,7 +39,7 @@ Constructor.  May be extended, do not override.
 
 ### function: `serve_until_stopped`
 
-[Source](../dagrunner/utils/logger.py#L117)
+[Source](../../../../../../opt/hostedtoolcache/Python/3.9.19/x64/lib/python3.9/site-packages/dagrunner/utils/logger.py#L124)
 
 #### Call Signature:
 
@@ -49,7 +49,7 @@ serve_until_stopped(self, queue_handler=None)
 
 ### function: `stop`
 
-[Source](../dagrunner/utils/logger.py#L130)
+[Source](../../../../../../opt/hostedtoolcache/Python/3.9.19/x64/lib/python3.9/site-packages/dagrunner/utils/logger.py#L136)
 
 #### Call Signature:
 
@@ -59,7 +59,7 @@ stop(self)
 
 ## class: `LogRecordStreamHandler`
 
-[Source](../dagrunner/utils/logger.py#L49)
+[Source](../../../../../../opt/hostedtoolcache/Python/3.9.19/x64/lib/python3.9/site-packages/dagrunner/utils/logger.py#L52)
 
 ### Call Signature:
 
@@ -74,7 +74,7 @@ records and customise logging events.
 
 ### function: `handle`
 
-[Source](../dagrunner/utils/logger.py#L57)
+[Source](../../../../../../opt/hostedtoolcache/Python/3.9.19/x64/lib/python3.9/site-packages/dagrunner/utils/logger.py#L60)
 
 #### Call Signature:
 
@@ -88,7 +88,7 @@ according to whatever policy is configured locally.
 
 ### function: `handle_log_record`
 
-[Source](../dagrunner/utils/logger.py#L83)
+[Source](../../../../../../opt/hostedtoolcache/Python/3.9.19/x64/lib/python3.9/site-packages/dagrunner/utils/logger.py#L86)
 
 #### Call Signature:
 
@@ -98,7 +98,7 @@ handle_log_record(self, record)
 
 ### function: `unpickle`
 
-[Source](../dagrunner/utils/logger.py#L80)
+[Source](../../../../../../opt/hostedtoolcache/Python/3.9.19/x64/lib/python3.9/site-packages/dagrunner/utils/logger.py#L83)
 
 #### Call Signature:
 
@@ -108,7 +108,7 @@ unpickle(self, data)
 
 ## class: `SQLiteQueueHandler`
 
-[Source](../dagrunner/utils/logger.py#L135)
+[Source](../../../../../../opt/hostedtoolcache/Python/3.9.19/x64/lib/python3.9/site-packages/dagrunner/utils/logger.py#L141)
 
 ### Call Signature:
 
@@ -118,7 +118,7 @@ SQLiteQueueHandler(sqfile='logs.sqlite')
 
 ### function: `__init__`
 
-[Source](../dagrunner/utils/logger.py#L136)
+[Source](../../../../../../opt/hostedtoolcache/Python/3.9.19/x64/lib/python3.9/site-packages/dagrunner/utils/logger.py#L142)
 
 #### Call Signature:
 
@@ -130,7 +130,7 @@ Initialize self.  See help(type(self)) for accurate signature.
 
 ### function: `close`
 
-[Source](../dagrunner/utils/logger.py#L172)
+[Source](../../../../../../opt/hostedtoolcache/Python/3.9.19/x64/lib/python3.9/site-packages/dagrunner/utils/logger.py#L190)
 
 #### Call Signature:
 
@@ -140,7 +140,7 @@ close(self)
 
 ### function: `write`
 
-[Source](../dagrunner/utils/logger.py#L160)
+[Source](../../../../../../opt/hostedtoolcache/Python/3.9.19/x64/lib/python3.9/site-packages/dagrunner/utils/logger.py#L167)
 
 #### Call Signature:
 
@@ -150,7 +150,7 @@ write(self, log_queue)
 
 ## class: `ServerContext`
 
-[Source](../dagrunner/utils/logger.py#L177)
+[Source](../../../../../../opt/hostedtoolcache/Python/3.9.19/x64/lib/python3.9/site-packages/dagrunner/utils/logger.py#L195)
 
 ### Call Signature:
 
@@ -170,7 +170,7 @@ Log format is:
 
 ### function: `__enter__`
 
-[Source](../dagrunner/utils/logger.py#L195)
+[Source](../../../../../../opt/hostedtoolcache/Python/3.9.19/x64/lib/python3.9/site-packages/dagrunner/utils/logger.py#L214)
 
 #### Call Signature:
 
@@ -180,7 +180,7 @@ __enter__(self)
 
 ### function: `__exit__`
 
-[Source](../dagrunner/utils/logger.py#L213)
+[Source](../../../../../../opt/hostedtoolcache/Python/3.9.19/x64/lib/python3.9/site-packages/dagrunner/utils/logger.py#L236)
 
 #### Call Signature:
 
@@ -190,7 +190,7 @@ __exit__(self, exc_type, exc_val, exc_tb)
 
 ### function: `__init__`
 
-[Source](../dagrunner/utils/logger.py#L190)
+[Source](../../../../../../opt/hostedtoolcache/Python/3.9.19/x64/lib/python3.9/site-packages/dagrunner/utils/logger.py#L209)
 
 #### Call Signature:
 
@@ -202,7 +202,7 @@ Initialize self.  See help(type(self)) for accurate signature.
 
 ## function: `client_attach_socket_handler`
 
-[Source](../dagrunner/utils/logger.py#L22)
+[Source](../../../../../../opt/hostedtoolcache/Python/3.9.19/x64/lib/python3.9/site-packages/dagrunner/utils/logger.py#L24)
 
 ### Call Signature:
 
@@ -228,7 +228,7 @@ application:
 
 ## function: `main`
 
-[Source](../dagrunner/utils/logger.py#L218)
+[Source](../../../../../../opt/hostedtoolcache/Python/3.9.19/x64/lib/python3.9/site-packages/dagrunner/utils/logger.py#L241)
 
 ### Call Signature:
 

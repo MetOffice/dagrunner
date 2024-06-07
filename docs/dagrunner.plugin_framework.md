@@ -1,10 +1,10 @@
 # module: `dagrunner.plugin_framework`
 
-[Source](../dagrunner/plugin_framework.py#L0)
+[Source](../../../../../../opt/hostedtoolcache/Python/3.9.19/x64/lib/python3.9/site-packages/dagrunner/plugin_framework.py#L0)
 
 ## class: `DataPolling`
 
-[Source](../dagrunner/plugin_framework.py#L61)
+[Source](../../../../../../opt/hostedtoolcache/Python/3.9.19/x64/lib/python3.9/site-packages/dagrunner/plugin_framework.py#L61)
 
 ### Call Signature:
 
@@ -16,12 +16,12 @@ Abstract base class to define our plugin UI
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L62)
+[Source](../../../../../../opt/hostedtoolcache/Python/3.9.19/x64/lib/python3.9/site-packages/dagrunner/plugin_framework.py#L62)
 
 #### Call Signature:
 
 ```python
-__call__(self, *args, timeout=120, polling=1, file_count=None)
+__call__(self, *args, timeout=120, polling=1, file_count=None, verbose=False)
 ```
 
 Poll for availability of files
@@ -38,6 +38,7 @@ Args:
     number of arguments.  Each argument is expected to return a minimum of
     1 match each in either case.
 
+
 Returns:
 - None
 
@@ -46,7 +47,7 @@ Raises:
 
 ## class: `Input`
 
-[Source](../dagrunner/plugin_framework.py#L107)
+[Source](../../../../../../opt/hostedtoolcache/Python/3.9.19/x64/lib/python3.9/site-packages/dagrunner/plugin_framework.py#L116)
 
 ### Call Signature:
 
@@ -60,7 +61,7 @@ that are 'node aware'.
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L108)
+[Source](../../../../../../opt/hostedtoolcache/Python/3.9.19/x64/lib/python3.9/site-packages/dagrunner/plugin_framework.py#L117)
 
 #### Call Signature:
 
@@ -87,7 +88,7 @@ Raises:
 
 ## class: `NodeAwarePlugin`
 
-[Source](../dagrunner/plugin_framework.py#L35)
+[Source](../../../../../../opt/hostedtoolcache/Python/3.9.19/x64/lib/python3.9/site-packages/dagrunner/plugin_framework.py#L35)
 
 ### Call Signature:
 
@@ -101,7 +102,7 @@ that are 'node aware'.
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L16)
+[Source](../../../../../../opt/hostedtoolcache/Python/3.9.19/x64/lib/python3.9/site-packages/dagrunner/plugin_framework.py#L16)
 
 #### Call Signature:
 
@@ -123,7 +124,7 @@ Returns:
 
 ## class: `Plugin`
 
-[Source](../dagrunner/plugin_framework.py#L13)
+[Source](../../../../../../opt/hostedtoolcache/Python/3.9.19/x64/lib/python3.9/site-packages/dagrunner/plugin_framework.py#L13)
 
 ### Call Signature:
 
@@ -135,7 +136,7 @@ Abstract base class to define our plugin UI
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L16)
+[Source](../../../../../../opt/hostedtoolcache/Python/3.9.19/x64/lib/python3.9/site-packages/dagrunner/plugin_framework.py#L16)
 
 #### Call Signature:
 
@@ -157,7 +158,7 @@ Returns:
 
 ## class: `Shell`
 
-[Source](../dagrunner/plugin_framework.py#L43)
+[Source](../../../../../../opt/hostedtoolcache/Python/3.9.19/x64/lib/python3.9/site-packages/dagrunner/plugin_framework.py#L43)
 
 ### Call Signature:
 
@@ -169,7 +170,7 @@ Abstract base class to define our plugin UI
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L44)
+[Source](../../../../../../opt/hostedtoolcache/Python/3.9.19/x64/lib/python3.9/site-packages/dagrunner/plugin_framework.py#L44)
 
 #### Call Signature:
 
