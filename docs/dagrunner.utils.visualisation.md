@@ -6,7 +6,7 @@ Module responsible for scheduler independent graph visualisation
 
 ## class: `MermaidGraph`
 
-[Source](../dagrunner/utils/visualisation.py#L54)
+[Source](../dagrunner/utils/visualisation.py#L55)
 
 ### Call Signature:
 
@@ -16,7 +16,7 @@ MermaidGraph()
 
 ### function: `__init__`
 
-[Source](../dagrunner/utils/visualisation.py#L58)
+[Source](../dagrunner/utils/visualisation.py#L59)
 
 #### Call Signature:
 
@@ -28,7 +28,7 @@ Initialize self.  See help(type(self)) for accurate signature.
 
 ### function: `__str__`
 
-[Source](../dagrunner/utils/visualisation.py#L75)
+[Source](../dagrunner/utils/visualisation.py#L76)
 
 #### Call Signature:
 
@@ -40,7 +40,7 @@ Return str(self).
 
 ### function: `add_connection`
 
-[Source](../dagrunner/utils/visualisation.py#L72)
+[Source](../dagrunner/utils/visualisation.py#L73)
 
 #### Call Signature:
 
@@ -50,7 +50,7 @@ add_connection(self, id1, id2)
 
 ### function: `add_node`
 
-[Source](../dagrunner/utils/visualisation.py#L61)
+[Source](../dagrunner/utils/visualisation.py#L62)
 
 #### Call Signature:
 
@@ -60,7 +60,7 @@ add_node(self, nodeid, label=None, tooltip=None, url=None)
 
 ## class: `MermaidHTML`
 
-[Source](../dagrunner/utils/visualisation.py#L79)
+[Source](../dagrunner/utils/visualisation.py#L80)
 
 ### Call Signature:
 
@@ -70,7 +70,7 @@ MermaidHTML(graph)
 
 ### function: `__init__`
 
-[Source](../dagrunner/utils/visualisation.py#L125)
+[Source](../dagrunner/utils/visualisation.py#L126)
 
 #### Call Signature:
 
@@ -82,7 +82,7 @@ Initialize self.  See help(type(self)) for accurate signature.
 
 ### function: `__str__`
 
-[Source](../dagrunner/utils/visualisation.py#L189)
+[Source](../dagrunner/utils/visualisation.py#L192)
 
 #### Call Signature:
 
@@ -94,7 +94,7 @@ Return str(self).
 
 ### function: `save`
 
-[Source](../dagrunner/utils/visualisation.py#L194)
+[Source](../dagrunner/utils/visualisation.py#L197)
 
 #### Call Signature:
 
@@ -104,7 +104,7 @@ save(self, output_filepath)
 
 ## function: `visualise_graph`
 
-[Source](../dagrunner/utils/visualisation.py#L202)
+[Source](../dagrunner/utils/visualisation.py#L205)
 
 ### Call Signature:
 

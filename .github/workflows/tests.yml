@@ -4,11 +4,15 @@ on: [pull_request]
 
 jobs:
   test:
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}  # Ensure branch is checked out, not detached state (so we can push a commit later)
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -16,8 +20,33 @@ jobs:
           python-version: 3.9
           cache: 'pip'
 
+      - name: Add checkout directory to PYTHONPATH
+        run: echo "PYTHONPATH=$(pwd):$PYTHONPATH" >> $GITHUB_ENV
+
       - name: Install dependencies
-        run: pip install .[tests]
+        run: |
+          pip install .[tests,docs]
+          pip uninstall dagrunner -y
 
       - name: Run pytest
         run: pytest
+
+      - name: Build documentation
+        run: |
+          ./docs/gen_docs dagrunner ./docs
+
+      - name: Check if documentation has changed
+        id: check-docs
+        run: |
+          git diff --quiet --exit-code || echo "::set-output name=changed::true"
+
+      # https://github.com/orgs/community/discussions/26560#discussioncomment-3531273
+      - name: Commit and push documentation changes
+        if: steps.check-docs.outputs.changed == 'true'
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git commit -am "Automated reference documentation update for PR ${{ github.event.number }} [skip ci]"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
