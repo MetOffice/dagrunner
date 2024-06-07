@@ -8,6 +8,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # SETUP
+
       - name: Checkout code
         uses: actions/checkout@v4
         with:
@@ -25,11 +27,36 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install .[tests,docs]
+          pip install .[tests,dev]
           pip uninstall dagrunner -y
+
+      # TESTS
 
       - name: Run pytest
         run: pytest
+
+      # PRE-COMMIT
+
+      - name: Python interpreter version sha (PYSHA)
+        run: echo "PYSHA=$(python -VV | sha256sum | cut -d' ' -f1)" >> $GITHUB_ENV
+
+      - name: Cache pre-commit
+        uses: actions/cache@v3
+        id: pre-commit-cache
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit|${{ env.PYSHA }}|${{ hashFiles('.pre-commit-config.yaml') }}
+
+      - name: pre-commit install
+        if: steps.pre-commit-cache.outputs.cache-hit != 'true'
+        run: |
+          pre-commit install
+
+      - name: pre-commit run
+        run: |
+          pre-commit run --all-files
+
+      # DOCUMENTATION
 
       - name: Build documentation
         run: |

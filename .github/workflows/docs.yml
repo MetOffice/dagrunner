@@ -1,47 +1,47 @@
-on:
-  push:
-    branches:
-      - main
+# on:
+#   push:
+#     branches:
+#       - main
 
-jobs:
-  test:
-    runs-on: ubuntu-latest
+# jobs:
+#   test:
+#     runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: 3.9
-          cache: 'pip'
+#       - name: Set up Python
+#         uses: actions/setup-python@v5
+#         with:
+#           python-version: 3.9
+#           cache: 'pip'
 
-      - name: Add checkout directory to PYTHONPATH
-        run: echo "PYTHONPATH=$(pwd):$PYTHONPATH" >> $GITHUB_ENV
+#       - name: Add checkout directory to PYTHONPATH
+#         run: echo "PYTHONPATH=$(pwd):$PYTHONPATH" >> $GITHUB_ENV
 
-      - name: Install dependencies
-        run: |
-          pip install .
-          pip uninstall dagrunner -y
+#       - name: Install dependencies
+#         run: |
+#           pip install .
+#           pip uninstall dagrunner -y
 
-      - name: Build documentation
-        run: ./docs/gen_docs dagrunner ./docs
+#       - name: Build documentation
+#         run: ./docs/gen_docs dagrunner ./docs
 
-      - name: Check if documentation has changed
-        id: check-docs
-        run: |
-          git diff --quiet --exit-code || echo "::set-output name=changed::true"
+#       - name: Check if documentation has changed
+#         id: check-docs
+#         run: |
+#           git diff --quiet --exit-code || echo "::set-output name=changed::true"
 
-      # https://github.com/orgs/community/discussions/26560#discussioncomment-3531273
-      - name: Commit and push documentation changes
-        if: steps.check-docs.outputs.changed == 'true'
-        run: |
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git checkout -b documentation-update || git checkout documentation-update
-          git commit -am "Automated reference documentation update"
-          git push origin documentation-update
-          gh pr create --title "Automated reference documentation update" --body "This is an automated PR triggered by a change to 'main'"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#       # https://github.com/orgs/community/discussions/26560#discussioncomment-3531273
+#       - name: Commit and push documentation changes
+#         if: steps.check-docs.outputs.changed == 'true'
+#         run: |
+#           git config user.name github-actions[bot]
+#           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+#           git checkout -b documentation-update || git checkout documentation-update
+#           git commit -am "Automated reference documentation update"
+#           git push origin documentation-update
+#           gh pr create --title "Automated reference documentation update" --body "This is an automated PR triggered by a change to 'main'"
+#         env:
+#           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
