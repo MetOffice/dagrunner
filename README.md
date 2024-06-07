@@ -2,7 +2,7 @@
 ![Experimental](https://img.shields.io/badge/status-experimental-orange)
 ![Python Project](https://img.shields.io/badge/language-Python-blue?logo=python&logoColor=white)
 ![Static Badge](https://img.shields.io/badge/pip%20install-blue)
-![PR CI status](https://github.com/MetOffice/dagrunner/actions/workflows/tests.yml/badge.svg?event=push)
+![PR CI status](https://github.com/MetOffice/dagrunner/actions/workflows/tests.yml/badge.svg)
 
 # DAGrunner
 
