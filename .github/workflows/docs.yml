@@ -17,8 +17,13 @@ jobs:
           python-version: 3.9
           cache: 'pip'
 
+      - name: Add checkout directory to PYTHONPATH
+        run: echo "PYTHONPATH=$(pwd):$PYTHONPATH" >> $GITHUB_ENV
+
       - name: Install dependencies
-        run: pip install .
+        run: |
+          pip install .
+          pip uninstall dagrunner -y
 
       - name: Build documentation
         run: ./docs/gen_docs dagrunner ./docs
@@ -37,6 +42,6 @@ jobs:
           git checkout -b documentation-update || git checkout documentation-update
           git commit -am "Automated reference documentation update"
           git push origin documentation-update
-          gh pr create --title "Title of your PR" --body "Description of your PR"
+          gh pr create --title "Automated reference documentation update" --body "This is an automated PR triggered by a change to 'main'"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
