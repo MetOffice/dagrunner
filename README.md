@@ -3,6 +3,7 @@
 ![Python Project](https://img.shields.io/badge/language-Python-blue?logo=python&logoColor=white)
 ![Static Badge](https://img.shields.io/badge/pip%20install-blue)
 ![PR CI status](https://github.com/MetOffice/dagrunner/actions/workflows/tests.yml/badge.svg)
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://github.com/pre-commit/pre-commit)
 
 # DAGrunner
 
