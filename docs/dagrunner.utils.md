@@ -10,7 +10,7 @@ see [module: visualisation](dagrunner.utils.visualisation.md#module-dagrunneruti
 
 ## class: `KeyValueAction`
 
-[Source](../dagrunner/utils/__init__.py#L115)
+[Source](../dagrunner/utils/__init__.py#L118)
 
 ### Call Signature:
 
@@ -69,7 +69,7 @@ Keyword Arguments:
 
 ### function: `__call__`
 
-[Source](../dagrunner/utils/__init__.py#L116)
+[Source](../dagrunner/utils/__init__.py#L119)
 
 #### Call Signature:
 
@@ -93,7 +93,7 @@ Hide object under a string.
 
 ### function: `__hash__`
 
-[Source](../dagrunner/utils/__init__.py#L24)
+[Source](../dagrunner/utils/__init__.py#L26)
 
 #### Call Signature:
 
@@ -105,7 +105,7 @@ Return hash(self).
 
 ### function: `__new__`
 
-[Source](../dagrunner/utils/__init__.py#L15)
+[Source](../dagrunner/utils/__init__.py#L17)
 
 #### Call Signature:
 
@@ -117,7 +117,7 @@ Create and return a new object.  See help(type) for accurate signature.
 
 ### function: `obj_to_name`
 
-[Source](../dagrunner/utils/__init__.py#L28)
+[Source](../dagrunner/utils/__init__.py#L30)
 
 #### Call Signature:
 
@@ -127,7 +127,7 @@ obj_to_name(obj, cls)
 
 ## class: `TimeIt`
 
-[Source](../dagrunner/utils/__init__.py#L36)
+[Source](../dagrunner/utils/__init__.py#L38)
 
 ### Call Signature:
 
@@ -156,7 +156,7 @@ Example as a standalone timer:
 
 ### function: `__enter__`
 
-[Source](../dagrunner/utils/__init__.py#L64)
+[Source](../dagrunner/utils/__init__.py#L67)
 
 #### Call Signature:
 
@@ -166,7 +166,7 @@ __enter__(self)
 
 ### function: `__exit__`
 
-[Source](../dagrunner/utils/__init__.py#L68)
+[Source](../dagrunner/utils/__init__.py#L71)
 
 #### Call Signature:
 
@@ -176,7 +176,7 @@ __exit__(self, *args)
 
 ### function: `__init__`
 
-[Source](../dagrunner/utils/__init__.py#L58)
+[Source](../dagrunner/utils/__init__.py#L61)
 
 #### Call Signature:
 
@@ -188,7 +188,7 @@ Initialize self.  See help(type(self)) for accurate signature.
 
 ### function: `__str__`
 
-[Source](../dagrunner/utils/__init__.py#L93)
+[Source](../dagrunner/utils/__init__.py#L96)
 
 #### Call Signature:
 
@@ -200,7 +200,7 @@ Print elapsed time in seconds.
 
 ### function: `start`
 
-[Source](../dagrunner/utils/__init__.py#L74)
+[Source](../dagrunner/utils/__init__.py#L77)
 
 #### Call Signature:
 
@@ -210,7 +210,7 @@ start(self)
 
 ### function: `stop`
 
-[Source](../dagrunner/utils/__init__.py#L78)
+[Source](../dagrunner/utils/__init__.py#L81)
 
 #### Call Signature:
 
@@ -220,7 +220,7 @@ stop(self)
 
 ## function: `docstring_parse`
 
-[Source](../dagrunner/utils/__init__.py#L98)
+[Source](../dagrunner/utils/__init__.py#L101)
 
 ### Call Signature:
 
@@ -230,7 +230,7 @@ docstring_parse(obj)
 
 ## function: `function_to_argparse`
 
-[Source](../dagrunner/utils/__init__.py#L127)
+[Source](../dagrunner/utils/__init__.py#L130)
 
 ### Call Signature:
 

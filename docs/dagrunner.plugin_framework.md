@@ -21,7 +21,7 @@ Abstract base class to define our plugin UI
 #### Call Signature:
 
 ```python
-__call__(self, *args, timeout=120, polling=1, file_count=None)
+__call__(self, *args, timeout=120, polling=1, file_count=None, verbose=False)
 ```
 
 Poll for availability of files
@@ -38,6 +38,7 @@ Args:
     number of arguments.  Each argument is expected to return a minimum of
     1 match each in either case.
 
+
 Returns:
 - None
 
@@ -46,7 +47,7 @@ Raises:
 
 ## class: `Input`
 
-[Source](../dagrunner/plugin_framework.py#L107)
+[Source](../dagrunner/plugin_framework.py#L116)
 
 ### Call Signature:
 
@@ -60,7 +61,7 @@ that are 'node aware'.
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L108)
+[Source](../dagrunner/plugin_framework.py#L117)
 
 #### Call Signature:
 

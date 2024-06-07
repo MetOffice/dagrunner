@@ -4,8 +4,6 @@
 
 see [class: dagrunner.plugin_framework.NodeAwarePlugin](dagrunner.plugin_framework.md#class-nodeawareplugin)
 
-see [class: dagrunner.utils.ObjectAsStr](dagrunner.utils.md#class-objectasstr)
-
 see [class: dagrunner.utils.TimeIt](dagrunner.utils.md#class-timeit)
 
 see [function: dagrunner.utils.function_to_argparse](dagrunner.utils.md#function-function_to_argparse)
@@ -16,7 +14,7 @@ see [function: dagrunner.utils.visualisation.visualise_graph](dagrunner.utils.vi
 
 ## class: `ExecuteGraph`
 
-[Source](../dagrunner/execute_graph.py#L159)
+[Source](../dagrunner/execute_graph.py#L170)
 
 ### Call Signature:
 
@@ -26,7 +24,7 @@ ExecuteGraph(networkx_graph: str, <function plugin_executor>, scheduler: str = '
 
 ### function: `__call__`
 
-[Source](../dagrunner/execute_graph.py#L246)
+[Source](../dagrunner/execute_graph.py#L262)
 
 #### Call Signature:
 
@@ -38,7 +36,7 @@ Call self as a function.
 
 ### function: `__init__`
 
-[Source](../dagrunner/execute_graph.py#L160)
+[Source](../dagrunner/execute_graph.py#L171)
 
 #### Call Signature:
 
@@ -50,7 +48,7 @@ Execute a networkx graph using a chosen scheduler.
 
 Args:
 - `networkx_graph` (networkx.DiGraph, callable or str):
-  A networkx graph; dot path to a networkx graph or callable that returns 
+  A networkx graph; dot path to a networkx graph or callable that returns
   one; tuple representing (edges, nodes) or callable object that
   returns a networkx.
 - `plugin_executor` (callable):
@@ -78,7 +76,7 @@ Args:
 
 ### function: `visualise`
 
-[Source](../dagrunner/execute_graph.py#L243)
+[Source](../dagrunner/execute_graph.py#L259)
 
 #### Call Signature:
 
@@ -90,7 +88,7 @@ visualise(self, output_filepath: str)
 
 ## class: `SkipBranch`
 
-[Source](../dagrunner/execute_graph.py#L33)
+[Source](../dagrunner/execute_graph.py#L26)
 
 This exception is used to skip a branch of the execution graph.
 
@@ -101,7 +99,7 @@ subsequent tasks.
 
 ## function: `main`
 
-[Source](../dagrunner/execute_graph.py#L257)
+[Source](../dagrunner/execute_graph.py#L275)
 
 ### Call Signature:
 
@@ -114,7 +112,7 @@ Parses command line arguments and executes the graph using the ExecuteGraph clas
 
 ## function: `plugin_executor`
 
-[Source](../dagrunner/execute_graph.py#L46)
+[Source](../dagrunner/execute_graph.py#L40)
 
 ### Call Signature:
 
