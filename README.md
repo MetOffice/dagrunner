@@ -10,6 +10,10 @@
 
 DAGrunner serves as a Directed Acyclic Graph (DAG) runner, primarily designed to ensure a clear distinction between a project's graph definition (typically in native networkx format) and its execution method. In essence, DAGrunner offers various schedulers for executing the graph, but it firmly separates these operational concepts from the scientific configuration or recipe, i.e., the graph itself. Consequently, while DAGrunner currently provides convenient scheduling options, it remains adaptable to future changes or alternative solutions, ensuring that the scientific configuration can persist regardless of the technologies or tools employed, whether DAGrunner is utilized or not.
 
+## Documentation
+
+DAGrunner takes advantage of the native markdown rendering support provided by github.  To that end, all documentation of DAGrunner resides in markdown files.
+
 ## API
 
 See [DAGrunner API](docs/dagrunner_index.md)
@@ -31,16 +35,6 @@ pip install .
 (uninstall: `pip uninstall dagrunner`)
 
 This will also make an executable script available to the PATH: `dagrunner-execute-graph`
-
-## Documentation
-
-DAGrunner takes advantage of the native markdown rendering support provided by github.  To that end, all documentation of DAGrunner resides in markdown files.
-
-Regarding reference documentation, this is generated using a script to extract markdown docstrings from the DAGrunner package.
-
-To generate the reference documentation, call:
-
-    ./docs/gen_docs dagrunner ./docs/.
 
 ## Execution of a networkx graph using `dagrunner-execute-graph` script
 
