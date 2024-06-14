@@ -23,7 +23,7 @@ See LICENSE in the root of the repository for full licensing details.
 
 ## Installation
 
-The package is [pip](https://pip.pypa.io/en/stable/) installable.  Note that dependencies are expected to be installed via conda (at this time).
+The package is [pip](https://pip.pypa.io/en/stable/) installable.
 ```
 pip install .
 ```
