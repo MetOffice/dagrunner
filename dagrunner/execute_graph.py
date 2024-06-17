@@ -16,7 +16,6 @@ from dask.utils import apply
 from dagrunner.utils import (
     TimeIt,
     function_to_argparse,
-    logger,
 )
 from dagrunner.plugin_framework import NodeAwarePlugin
 from dagrunner.runner.schedulers import SCHEDULERS
@@ -64,7 +63,7 @@ def plugin_executor(
     Raises:
     - ValueError: If the `call` argument is not provided.
     """
-    logger.client_attach_socket_handler()
+    # logger.client_attach_socket_handler()
 
     args = [
         arg for arg in args if arg is not None
@@ -101,8 +100,8 @@ def plugin_executor(
             if key in inspect.signature(callable_obj).parameters
         }  # based on function signature
 
+        msg = f"{obj_name}{call_msg}(*{args}, **{callable_kwargs})"
         if verbose:
-            msg = f"{obj_name}{call_msg}(*{args}, **{callable_kwargs})"
             print(msg)
         with TimeIt() as timer:
             res = callable_obj(*args, **callable_kwargs)
@@ -260,9 +259,8 @@ class ExecuteGraph:
         _attempt_visualise_graph(self._exec_graph, output_filepath)
 
     def __call__(self):
-        with logger.ServerContext(sqlite_filepath=self._sqlite_filepath), TimeIt(
-            verbose=True
-        ), self._scheduler(
+        # logger.ServerContext(sqlite_filepath=self._sqlite_filepath)
+        with TimeIt(verbose=True), self._scheduler(
             self._num_workers, profiler_filepath=self._profiler_output
         ) as scheduler:
             try:
