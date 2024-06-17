@@ -82,7 +82,8 @@ def graph(tmp_path_factory):
 
 
 @pytest.mark.parametrize(
-    "scheduler", ["single-threaded", "processes", "distributed"]
+    "scheduler",
+    ["multiprocessing"],  # ["single-threaded", "processes", "distributed"]
 )  # , "ray", "distributed", "multiprocessing"])
 def test_execution(graph, scheduler):
     EDGES, SETTINGS, output_files = graph

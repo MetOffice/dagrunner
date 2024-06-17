@@ -69,6 +69,7 @@ class AsyncMP:
 
         pred_deps, succ_deps = get_deps(graph)
         completed = {target: False for target in pred_deps.keys()}
+        data_map = {}  # map between target and result
 
         # Submit initial nodes
         starting_nodes = []
@@ -98,6 +99,7 @@ class AsyncMP:
                             raise RuntimeError(
                                 f"Command failure, key: '{target}'\ncommand:{command}"
                             ) from err
+                    data_map[target] = async_res.get()  # store result
                     pred_deps.pop(target)
                     completed.append(target)
                     node_queue.extend(succ_deps[target])  # nodes we want to run next
@@ -118,8 +120,39 @@ class AsyncMP:
                         running_nodes.append(target)
                         if verbose:
                             print(f"Executing: {target}")
+                        # processed_args = graph[target][1:]
+                        # if len(processed_args) == 3:
+                        #     processed_args = list(processed_args)
+                        #     processed_args[1] = [data_map[input] if input in data_map else input for input in processed_args[1]]
+
+                        def feedback_results(obj):
+                            from typing import Iterable
+
+                            for ind, ob in enumerate(obj):
+                                if isinstance(ob, Iterable) and not isinstance(
+                                    ob, (str, bytes)
+                                ):
+                                    obj[ind] = list(feedback_results(ob))
+                                elif ob in data_map:
+                                    obj[ind] = data_map[ob]
+                            return obj
+
+                        # processed_args = [data_map[arg] if arg in data_map else arg for arg in list(graph[target][1:])]  # graph[target][1:]
+                        # special case where we have a list of inputs as an argument
+                        processed_args = graph[target][1:]
+                        if len(processed_args) == 3 and isinstance(
+                            processed_args[1], list
+                        ):
+                            processed_args = list(processed_args)
+                            processed_args[1] = [
+                                data_map[input] if input in data_map else input
+                                for input in processed_args[1]
+                            ]
+                        # processed_args[1] = [data_map[input] if input in data_map else input for input in processed_args[1]]
+                        # processed_args = feedback_results(list(graph[target][1:]))
                         async_results[target] = self._pool.apply_async(
-                            graph[target][0], args=graph[target][1:]
+                            graph[target][0],
+                            args=processed_args,  # graph[target][1:]
                         )
             if running_nodes:
                 node_queue = list(
