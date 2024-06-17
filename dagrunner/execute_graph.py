@@ -20,6 +20,7 @@ from dagrunner.utils import (
 from dagrunner.plugin_framework import NodeAwarePlugin
 from dagrunner.runner.schedulers import SCHEDULERS
 from dagrunner.utils.visualisation import visualise_graph
+from dagrunner.utils import logger
 
 
 class SkipBranch(Exception):
@@ -63,7 +64,7 @@ def plugin_executor(
     Raises:
     - ValueError: If the `call` argument is not provided.
     """
-    # logger.client_attach_socket_handler()
+    logger.client_attach_socket_handler()
 
     args = [
         arg for arg in args if arg is not None
@@ -107,9 +108,12 @@ def plugin_executor(
             res = callable_obj(*args, **callable_kwargs)
         logging.info(f"{str(timer)}; {msg}")
 
+    if verbose:
+        print(f"result: {res}")
+    # from dagrunner.utils import ObjectAsStr
     # if res and not isinstance(res, ObjectAsStr):
-    #     # ObjectAsStr protects against circular dependencies in an executed graph
-    #     res = ObjectAsStr(res, str(res))
+    #    # ObjectAsStr protects against circular dependencies in an executed graph
+    #    res = ObjectAsStr(res, str(res))
     return res
 
 
@@ -248,8 +252,11 @@ class ExecuteGraph:
         exec_graph = {}
         for node_id, properties in self._nxgraph.nodes(data=True):
             key = node_id
-            # quoted_key = ObjectAsStr(node_id)
+            from dask.base import tokenize
+
+            key = tokenize(node_id)
             args = list(self._nxgraph.predecessors(node_id))
+            args = [tokenize(arg) for arg in args]
             exec_graph[key] = (apply, executor, args, properties)
 
         # handle_clobber(graph, workflow, no_clobber, verbose)
@@ -259,7 +266,7 @@ class ExecuteGraph:
         _attempt_visualise_graph(self._exec_graph, output_filepath)
 
     def __call__(self):
-        # logger.ServerContext(sqlite_filepath=self._sqlite_filepath)
+        logger.ServerContext(sqlite_filepath=self._sqlite_filepath)
         with TimeIt(verbose=True), self._scheduler(
             self._num_workers, profiler_filepath=self._profiler_output
         ) as scheduler:

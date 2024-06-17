@@ -16,6 +16,9 @@ class ProcessID(Plugin):
     """Concatenate node id together"""
 
     def __call__(self, *args, id=None):
+        import time
+
+        time.sleep(1)
         concat_arg_id = str(id)
         if args and args[0]:
             concat_arg_id = "_".join([str(arg) for arg in args if arg]) + f"_{id}"
@@ -79,11 +82,13 @@ def graph(tmp_path_factory):
 
 
 @pytest.mark.parametrize(
-    "scheduler", ["single-threaded", "processes"]
+    "scheduler", ["single-threaded", "processes", "distributed"]
 )  # , "ray", "distributed", "multiprocessing"])
 def test_execution(graph, scheduler):
     EDGES, SETTINGS, output_files = graph
-    graph = ExecuteGraph((EDGES, SETTINGS), num_workers=None, scheduler=scheduler)
+    graph = ExecuteGraph(
+        (EDGES, SETTINGS), num_workers=3, scheduler=scheduler, verbose=True
+    )
     graph()
     for output_file in output_files:
         with open(output_file, "r") as file:
@@ -91,3 +96,20 @@ def test_execution(graph, scheduler):
             res = json.load(file)
             assert len(res) == 1
             assert res[0] == "1_2_3_4_5"
+
+
+# def execution(graph, scheduler):
+#     EDGES, SETTINGS, output_files = graph
+#     graph = ExecuteGraph((EDGES, SETTINGS), num_workers=1, scheduler=scheduler)
+#     graph.visualize()
+#     graph()
+#     for output_file in output_files:
+#         with open(output_file, "r") as file:
+#             # two of them are expected since we have to leadtime branches
+#             res = json.load(file)
+#             assert len(res) == 1
+#             assert res[0] == "1_2_3_4_5"
+
+
+# if __name__ == "__main__":
+#     execution(grapha(), "distributed")
