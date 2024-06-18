@@ -4,7 +4,7 @@
 
 ## class: `DataPolling`
 
-[Source](../dagrunner/plugin_framework.py#L61)
+[Source](../dagrunner/plugin_framework.py#L62)
 
 ### Call Signature:
 
@@ -16,7 +16,7 @@ Abstract base class to define our plugin UI
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L62)
+[Source](../dagrunner/plugin_framework.py#L63)
 
 #### Call Signature:
 
@@ -47,7 +47,7 @@ Raises:
 
 ## class: `Input`
 
-[Source](../dagrunner/plugin_framework.py#L116)
+[Source](../dagrunner/plugin_framework.py#L117)
 
 ### Call Signature:
 
@@ -61,7 +61,7 @@ that are 'node aware'.
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L117)
+[Source](../dagrunner/plugin_framework.py#L118)
 
 #### Call Signature:
 
@@ -88,7 +88,7 @@ Raises:
 
 ## class: `NodeAwarePlugin`
 
-[Source](../dagrunner/plugin_framework.py#L35)
+[Source](../dagrunner/plugin_framework.py#L36)
 
 ### Call Signature:
 
@@ -102,7 +102,7 @@ that are 'node aware'.
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L16)
+[Source](../dagrunner/plugin_framework.py#L17)
 
 #### Call Signature:
 
@@ -124,7 +124,7 @@ Returns:
 
 ## class: `Plugin`
 
-[Source](../dagrunner/plugin_framework.py#L13)
+[Source](../dagrunner/plugin_framework.py#L14)
 
 ### Call Signature:
 
@@ -136,7 +136,7 @@ Abstract base class to define our plugin UI
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L16)
+[Source](../dagrunner/plugin_framework.py#L17)
 
 #### Call Signature:
 
@@ -156,9 +156,49 @@ Args:
 Returns:
 - Any: The output of the plugin.
 
+## class: `SaveJson`
+
+[Source](../dagrunner/plugin_framework.py#L144)
+
+### Call Signature:
+
+```python
+SaveJson()
+```
+
+An abstract base class plugin that is of type that instructs the plugin
+executor to pass it node parameters.  This enables the definition of plugins
+that are 'node aware'.
+
+### function: `__call__`
+
+[Source](../dagrunner/plugin_framework.py#L145)
+
+#### Call Signature:
+
+```python
+__call__(self, *args, filepath=None, node_properties=None, **kwargs)
+```
+
+Save data to a JSON file
+
+Save the provided data to a JSON file at the specified filepath.  The filepath
+is expanded using the keyword arguments and environment variables.  Note that
+this plugin is 'node aware' since it is derived from the `NodeAwarePlugin`.
+
+Args:
+- *args: Positional arguments (data) to be saved.
+- filepath (str): The filepath to save the data to.
+- data (Any): The data to be saved.
+- **kwargs: Keyword arguments to be used in the expansion.  Node
+  properties/attributes are additionally included here as a node aware plugin.
+
+Returns:
+- None
+
 ## class: `Shell`
 
-[Source](../dagrunner/plugin_framework.py#L43)
+[Source](../dagrunner/plugin_framework.py#L44)
 
 ### Call Signature:
 
@@ -170,7 +210,7 @@ Abstract base class to define our plugin UI
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L44)
+[Source](../dagrunner/plugin_framework.py#L45)
 
 #### Call Signature:
 

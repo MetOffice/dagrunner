@@ -24,7 +24,7 @@ ExecuteGraph(networkx_graph: str, <function plugin_executor>, scheduler: str = '
 
 ### function: `__call__`
 
-[Source](../dagrunner/execute_graph.py#L262)
+[Source](../dagrunner/execute_graph.py#L264)
 
 #### Call Signature:
 
@@ -76,7 +76,7 @@ Args:
 
 ### function: `visualise`
 
-[Source](../dagrunner/execute_graph.py#L259)
+[Source](../dagrunner/execute_graph.py#L261)
 
 #### Call Signature:
 
@@ -88,7 +88,7 @@ visualise(self, output_filepath: str)
 
 ## class: `SkipBranch`
 
-[Source](../dagrunner/execute_graph.py#L26)
+[Source](../dagrunner/execute_graph.py#L27)
 
 This exception is used to skip a branch of the execution graph.
 
@@ -99,7 +99,7 @@ subsequent tasks.
 
 ## function: `main`
 
-[Source](../dagrunner/execute_graph.py#L275)
+[Source](../dagrunner/execute_graph.py#L277)
 
 ### Call Signature:
 
@@ -112,7 +112,7 @@ Parses command line arguments and executes the graph using the ExecuteGraph clas
 
 ## function: `plugin_executor`
 
-[Source](../dagrunner/execute_graph.py#L40)
+[Source](../dagrunner/execute_graph.py#L41)
 
 ### Call Signature:
 
