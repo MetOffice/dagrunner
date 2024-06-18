@@ -12,6 +12,7 @@ import importlib
 import networkx as nx
 
 import dask
+from dask.base import tokenize
 from dask.utils import apply
 from dagrunner.utils import (
     TimeIt,
@@ -110,10 +111,6 @@ def plugin_executor(
 
     if verbose:
         print(f"result: {res}")
-    # from dagrunner.utils import ObjectAsStr
-    # if res and not isinstance(res, ObjectAsStr):
-    #    # ObjectAsStr protects against circular dependencies in an executed graph
-    #    res = ObjectAsStr(res, str(res))
     return res
 
 
@@ -251,12 +248,11 @@ class ExecuteGraph:
 
         exec_graph = {}
         for node_id, properties in self._nxgraph.nodes(data=True):
-            key = node_id
-            from dask.base import tokenize
-
+            # don't use nodes in our graph as some schedulers (dask
+            # distributed as per dask.core.validate_key) support only a subset
+            # of types (tuples, bytes, int, float and str).
             key = tokenize(node_id)
-            args = list(self._nxgraph.predecessors(node_id))
-            args = [tokenize(arg) for arg in args]
+            args = [tokenize(arg) for arg in self._nxgraph.predecessors(node_id)]
             exec_graph[key] = (apply, executor, args, properties)
 
         # handle_clobber(graph, workflow, no_clobber, verbose)
@@ -266,8 +262,9 @@ class ExecuteGraph:
         _attempt_visualise_graph(self._exec_graph, output_filepath)
 
     def __call__(self):
-        logger.ServerContext(sqlite_filepath=self._sqlite_filepath)
-        with TimeIt(verbose=True), self._scheduler(
+        with logger.ServerContext(sqlite_filepath=self._sqlite_filepath), TimeIt(
+            verbose=True
+        ), self._scheduler(
             self._num_workers, profiler_filepath=self._profiler_output
         ) as scheduler:
             try:

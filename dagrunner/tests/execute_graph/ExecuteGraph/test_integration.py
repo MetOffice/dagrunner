@@ -1,5 +1,11 @@
+# (C) Crown Copyright, Met Office. All rights reserved.
+#
+# This file is part of 'dagrunner' and is released under the BSD 3-Clause license.
+# See LICENSE in the root of the repository for full licensing details.
 from dataclasses import dataclass
 import json
+import time
+from unittest.mock import patch
 
 import pytest
 
@@ -13,12 +19,19 @@ MINUTE = 60
 
 # Basic processing plugin
 class ProcessID(Plugin):
-    """Concatenate node id together"""
+    """
+    Concatenate node IDs together
 
-    def __call__(self, *args, id=None):
-        import time
+    Most straightforward plugin possible that can demonstrate taking some input,
+    modifying it and returning that updated state.  This enables us to demonstrate
+    the passing of data between nodes in the graph.
+    Additionally, if debug is True, sleep for 1 second to simulate a long running.
+    This facilitates testing of the parallel execution of the graph.
+    """
 
-        time.sleep(1)
+    def __call__(self, *args, id=None, debug=False):
+        if debug:
+            time.sleep(1)
         concat_arg_id = str(id)
         if args and args[0]:
             concat_arg_id = "_".join([str(arg) for arg in args if arg]) + f"_{id}"
@@ -66,7 +79,7 @@ def graph(tmp_path_factory):
         for nodenum in range(1, 6):
             node = vars()[f"node{nodenum}"]
             SETTINGS[node] = {
-                "call": tuple([ProcessID, {"id": nodenum}]),
+                "call": tuple([ProcessID, {"id": nodenum, "debug": False}]),
             }
 
         node_save = Node(step="save", leadtime=leadtime)
@@ -83,34 +96,32 @@ def graph(tmp_path_factory):
 
 @pytest.mark.parametrize(
     "scheduler",
-    ["multiprocessing"],  # ["single-threaded", "processes", "distributed"]
-)  # , "ray", "distributed", "multiprocessing"])
+    ["single-threaded", "processes", "multiprocessing", "distributed"],  # , "ray"]
+)
 def test_execution(graph, scheduler):
+    """
+    Test scheduler execution of a simple graph
+
+    This also ensures that data is passed in memory between nodes for the range of
+    schedulers being tested.  The simple graph has a SaveJson node at the end of each
+    branch for recording the final state.  It is this that we verify to ensure that
+    the graph has be executed correctly and respected dependencies.
+    """
+    # when debug==True, ProcessID does a sleep.  This is useful for testing parallel execution.
+    debug = False
     EDGES, SETTINGS, output_files = graph
-    graph = ExecuteGraph(
-        (EDGES, SETTINGS), num_workers=3, scheduler=scheduler, verbose=True
-    )
-    graph()
+    with patch("dagrunner.execute_graph.logger.ServerContext"):
+        graph = ExecuteGraph(
+            (EDGES, SETTINGS),
+            num_workers=3,
+            scheduler=scheduler,
+            verbose=False,
+            debug=debug,
+        )
+        graph()
     for output_file in output_files:
         with open(output_file, "r") as file:
             # two of them are expected since we have to leadtime branches
             res = json.load(file)
             assert len(res) == 1
             assert res[0] == "1_2_3_4_5"
-
-
-# def execution(graph, scheduler):
-#     EDGES, SETTINGS, output_files = graph
-#     graph = ExecuteGraph((EDGES, SETTINGS), num_workers=1, scheduler=scheduler)
-#     graph.visualize()
-#     graph()
-#     for output_file in output_files:
-#         with open(output_file, "r") as file:
-#             # two of them are expected since we have to leadtime branches
-#             res = json.load(file)
-#             assert len(res) == 1
-#             assert res[0] == "1_2_3_4_5"
-
-
-# if __name__ == "__main__":
-#     execution(grapha(), "distributed")

@@ -120,10 +120,8 @@ class Distributed:
             from dask.distributed import performance_report
 
             with performance_report(filename=self._profiler_output):
-                # with patch("dask.core.iskey", side_effect=lambda key: True):
                 res = dask_container.compute()
         else:
-            # with patch("dask.core.iskey", side_effect=lambda key: True):
             res = dask_container.compute()
         return res
 

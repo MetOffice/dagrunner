@@ -3,10 +3,23 @@
 # This file is part of 'dagrunner' and is released under the BSD 3-Clause license.
 # See LICENSE in the root of the repository for full licensing details.
 from multiprocessing import Pool
+from typing import Iterable, Any
 from time import sleep
 import warnings
 
 from dask.core import get_deps
+
+
+def _insert_results(args: Any, result_lookup: dict):
+    """Insert results into arguments by using the provided lookup"""
+    if isinstance(args, Iterable) and not isinstance(args, (str, bytes, dict)):
+        return [_insert_results(item, result_lookup) for item in args]
+    try:
+        res = result_lookup.get(args, args)
+    except TypeError:
+        # not hashable
+        res = args
+    return res
 
 
 class AsyncMP:
@@ -33,7 +46,7 @@ class AsyncMP:
 
         Keyword Args:
         - fail_fast (bool):
-          When a job is found to raise an exception, stop submiting new jobs
+          When a job is found to raise an exception, stop submitting new jobs
           to the queue.  If fail_fast is True, terminate all currently running
           jobs.  If False, wait for already queued jobs to complete.
         - **kwargs:
@@ -68,7 +81,7 @@ class AsyncMP:
             warnings.warn("profiler output not supported for multiprocessing scheduler")
 
         pred_deps, succ_deps = get_deps(graph)
-        completed = {target: False for target in pred_deps.keys()}
+        pass_data_in_memory = True  # pass data between processes in memory (flag provided to make testing easier)
         data_map = {}  # map between target and result
 
         # Submit initial nodes
@@ -99,10 +112,23 @@ class AsyncMP:
                             raise RuntimeError(
                                 f"Command failure, key: '{target}'\ncommand:{command}"
                             ) from err
-                    data_map[target] = async_res.get()  # store result
                     pred_deps.pop(target)
                     completed.append(target)
                     node_queue.extend(succ_deps[target])  # nodes we want to run next
+
+                    if pass_data_in_memory:
+                        # manage data being held
+                        # throw away data no longer needed - when all successors are completed
+                        data_map[target] = async_res.get()  # store result
+                        for d_tgt in list(data_map.keys()):
+                            succ_deps[d_tgt] = [
+                                s_tgt for s_tgt in succ_deps[d_tgt] if s_tgt != target
+                            ]
+                            if not succ_deps[d_tgt]:
+                                if verbose:
+                                    print(f"Removing {d_tgt} from data_map")
+                                data_map.pop(d_tgt)
+
             [async_results.pop(target) for target in completed]  # update async results
 
             # Run any targets in our 'queue', then update this 'queue'
@@ -120,39 +146,13 @@ class AsyncMP:
                         running_nodes.append(target)
                         if verbose:
                             print(f"Executing: {target}")
-                        # processed_args = graph[target][1:]
-                        # if len(processed_args) == 3:
-                        #     processed_args = list(processed_args)
-                        #     processed_args[1] = [data_map[input] if input in data_map else input for input in processed_args[1]]
 
-                        def feedback_results(obj):
-                            from typing import Iterable
-
-                            for ind, ob in enumerate(obj):
-                                if isinstance(ob, Iterable) and not isinstance(
-                                    ob, (str, bytes)
-                                ):
-                                    obj[ind] = list(feedback_results(ob))
-                                elif ob in data_map:
-                                    obj[ind] = data_map[ob]
-                            return obj
-
-                        # processed_args = [data_map[arg] if arg in data_map else arg for arg in list(graph[target][1:])]  # graph[target][1:]
-                        # special case where we have a list of inputs as an argument
                         processed_args = graph[target][1:]
-                        if len(processed_args) == 3 and isinstance(
-                            processed_args[1], list
-                        ):
-                            processed_args = list(processed_args)
-                            processed_args[1] = [
-                                data_map[input] if input in data_map else input
-                                for input in processed_args[1]
-                            ]
-                        # processed_args[1] = [data_map[input] if input in data_map else input for input in processed_args[1]]
-                        # processed_args = feedback_results(list(graph[target][1:]))
+                        if pass_data_in_memory:
+                            processed_args = _insert_results(processed_args, data_map)
                         async_results[target] = self._pool.apply_async(
                             graph[target][0],
-                            args=processed_args,  # graph[target][1:]
+                            args=processed_args,
                         )
             if running_nodes:
                 node_queue = list(
