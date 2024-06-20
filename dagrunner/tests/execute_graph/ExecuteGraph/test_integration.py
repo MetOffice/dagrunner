@@ -105,7 +105,7 @@ def test_execution(graph, scheduler):
     This also ensures that data is passed in memory between nodes for the range of
     schedulers being tested.  The simple graph has a SaveJson node at the end of each
     branch for recording the final state.  It is this that we verify to ensure that
-    the graph has be executed correctly and respected dependencies.
+    the graph has been executed correctly and respected dependencies.
     """
     # when debug==True, ProcessID does a sleep.  This is useful for testing parallel execution.
     debug = False
@@ -121,7 +121,7 @@ def test_execution(graph, scheduler):
         graph()
     for output_file in output_files:
         with open(output_file, "r") as file:
-            # two of them are expected since we have to leadtime branches
+            # two of them are expected since we have two leadtime branches
             res = json.load(file)
             assert len(res) == 1
             assert res[0] == "1_2_3_4_5"
