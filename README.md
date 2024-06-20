@@ -141,10 +141,12 @@ from dagrunner.execute_graph import ExecuteGraph
 graph = ExecuteGraph((EDGES, SETTINGS), num_workers=None, scheduler="single-threaded", verbose=True)
 ```
 
-Let's visualise our Networkx first:
+Let's visualise our Networkx first - save a `png` image of the graph:
 ```python
+import matplotlib.pyplot as plt
 import networkx as nx
 nx.draw(graph.nxgraph, with_labels=True)
+plt.savefig("graph.png")
 ```
 ![image](https://github.com/MetOffice/dagrunner/assets/2071643/de103edd-16c9-487a-bf22-3d50d81c908c)
 
