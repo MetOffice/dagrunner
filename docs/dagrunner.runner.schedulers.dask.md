@@ -15,7 +15,7 @@ See the following useful background reading:
 
 ## class: `DaskOnRay`
 
-[Source](../dagrunner/runner/schedulers/dask.py#L200)
+[Source](../dagrunner/runner/schedulers/dask.py#L204)
 
 ### Call Signature:
 
@@ -27,7 +27,7 @@ A class to run dask graphs using the 'dak-on-ray' scheduler.
 
 ### function: `__enter__`
 
-[Source](../dagrunner/runner/schedulers/dask.py#L208)
+[Source](../dagrunner/runner/schedulers/dask.py#L212)
 
 #### Call Signature:
 
@@ -37,7 +37,7 @@ __enter__(self)
 
 ### function: `__exit__`
 
-[Source](../dagrunner/runner/schedulers/dask.py#L211)
+[Source](../dagrunner/runner/schedulers/dask.py#L215)
 
 #### Call Signature:
 
@@ -47,7 +47,7 @@ __exit__(self, exc_type, exc_value, exc_traceback)
 
 ### function: `__init__`
 
-[Source](../dagrunner/runner/schedulers/dask.py#L203)
+[Source](../dagrunner/runner/schedulers/dask.py#L207)
 
 #### Call Signature:
 
@@ -59,7 +59,7 @@ Initialize self.  See help(type(self)) for accurate signature.
 
 ### function: `run`
 
-[Source](../dagrunner/runner/schedulers/dask.py#L216)
+[Source](../dagrunner/runner/schedulers/dask.py#L220)
 
 #### Call Signature:
 
@@ -80,7 +80,7 @@ Returns:
 
 ## class: `Distributed`
 
-[Source](../dagrunner/runner/schedulers/dask.py#L80)
+[Source](../dagrunner/runner/schedulers/dask.py#L84)
 
 ### Call Signature:
 
@@ -92,7 +92,7 @@ A class to run dask graphs on a distributed cluster.
 
 ### function: `__enter__`
 
-[Source](../dagrunner/runner/schedulers/dask.py#L89)
+[Source](../dagrunner/runner/schedulers/dask.py#L93)
 
 #### Call Signature:
 
@@ -104,7 +104,7 @@ Create a local cluster and connect a client to it.
 
 ### function: `__exit__`
 
-[Source](../dagrunner/runner/schedulers/dask.py#L100)
+[Source](../dagrunner/runner/schedulers/dask.py#L104)
 
 #### Call Signature:
 
@@ -114,7 +114,7 @@ __exit__(self)
 
 ### function: `__init__`
 
-[Source](../dagrunner/runner/schedulers/dask.py#L83)
+[Source](../dagrunner/runner/schedulers/dask.py#L87)
 
 #### Call Signature:
 
@@ -126,7 +126,7 @@ Initialize self.  See help(type(self)) for accurate signature.
 
 ### function: `run`
 
-[Source](../dagrunner/runner/schedulers/dask.py#L104)
+[Source](../dagrunner/runner/schedulers/dask.py#L108)
 
 #### Call Signature:
 
@@ -147,7 +147,7 @@ Returns:
 
 ## class: `SingleMachine`
 
-[Source](../dagrunner/runner/schedulers/dask.py#L129)
+[Source](../dagrunner/runner/schedulers/dask.py#L133)
 
 ### Call Signature:
 
@@ -159,7 +159,7 @@ A class to run dask graphs on a single machine.
 
 ### function: `__enter__`
 
-[Source](../dagrunner/runner/schedulers/dask.py#L141)
+[Source](../dagrunner/runner/schedulers/dask.py#L145)
 
 #### Call Signature:
 
@@ -169,7 +169,7 @@ __enter__(self)
 
 ### function: `__exit__`
 
-[Source](../dagrunner/runner/schedulers/dask.py#L196)
+[Source](../dagrunner/runner/schedulers/dask.py#L200)
 
 #### Call Signature:
 
@@ -179,7 +179,7 @@ __exit__(self, exc_type, exc_value, exc_traceback)
 
 ### function: `__init__`
 
-[Source](../dagrunner/runner/schedulers/dask.py#L132)
+[Source](../dagrunner/runner/schedulers/dask.py#L136)
 
 #### Call Signature:
 
@@ -191,7 +191,7 @@ Initialize self.  See help(type(self)) for accurate signature.
 
 ### function: `run`
 
-[Source](../dagrunner/runner/schedulers/dask.py#L144)
+[Source](../dagrunner/runner/schedulers/dask.py#L148)
 
 #### Call Signature:
 
@@ -212,7 +212,7 @@ Returns:
 
 ## function: `add_dummy_tasks`
 
-[Source](../dagrunner/runner/schedulers/dask.py#L34)
+[Source](../dagrunner/runner/schedulers/dask.py#L38)
 
 ### Call Signature:
 
@@ -242,7 +242,7 @@ TODO:
 
 ## function: `no_op`
 
-[Source](../dagrunner/runner/schedulers/dask.py#L26)
+[Source](../dagrunner/runner/schedulers/dask.py#L30)
 
 ### Call Signature:
 
