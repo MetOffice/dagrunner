@@ -4,7 +4,7 @@
 
 ## class: `AsyncMP`
 
-[Source](../dagrunner/runner/schedulers/asyncmp.py#L12)
+[Source](../dagrunner/runner/schedulers/asyncmp.py#L25)
 
 ### Call Signature:
 
@@ -20,7 +20,7 @@ itself.
 
 ### function: `__enter__`
 
-[Source](../dagrunner/runner/schedulers/asyncmp.py#L137)
+[Source](../dagrunner/runner/schedulers/asyncmp.py#L170)
 
 #### Call Signature:
 
@@ -32,7 +32,7 @@ Initiate the pool of workers.
 
 ### function: `__exit__`
 
-[Source](../dagrunner/runner/schedulers/asyncmp.py#L142)
+[Source](../dagrunner/runner/schedulers/asyncmp.py#L175)
 
 #### Call Signature:
 
@@ -46,7 +46,7 @@ exit.
 
 ### function: `__init__`
 
-[Source](../dagrunner/runner/schedulers/asyncmp.py#L22)
+[Source](../dagrunner/runner/schedulers/asyncmp.py#L35)
 
 #### Call Signature:
 
@@ -64,7 +64,7 @@ Args:
 
 Keyword Args:
 - fail_fast (bool):
-  When a job is found to raise an exception, stop submiting new jobs
+  When a job is found to raise an exception, stop submitting new jobs
   to the queue.  If fail_fast is True, terminate all currently running
   jobs.  If False, wait for already queued jobs to complete.
 - **kwargs:
@@ -72,7 +72,7 @@ Keyword Args:
 
 ### function: `run`
 
-[Source](../dagrunner/runner/schedulers/asyncmp.py#L51)
+[Source](../dagrunner/runner/schedulers/asyncmp.py#L64)
 
 #### Call Signature:
 

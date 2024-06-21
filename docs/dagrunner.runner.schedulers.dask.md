@@ -109,7 +109,7 @@ Create a local cluster and connect a client to it.
 #### Call Signature:
 
 ```python
-__exit__(self)
+__exit__(self, exc_type, exc_value, exc_traceback)
 ```
 
 ### function: `__init__`

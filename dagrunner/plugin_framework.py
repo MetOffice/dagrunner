@@ -3,6 +3,7 @@
 # This file is part of 'dagrunner' and is released under the BSD 3-Clause license.
 # See LICENSE in the root of the repository for full licensing details.
 from abc import ABC, abstractmethod
+import json
 import os
 from glob import glob
 import string
@@ -138,3 +139,30 @@ class Input(NodeAwarePlugin):
         return os.path.expanduser(
             string.Template(filepath.format(**kwargs)).substitute(os.environ)
         )
+
+
+class SaveJson(Input):
+    def __call__(self, *args, filepath=None, node_properties=None, **kwargs):
+        """
+        Save data to a JSON file
+
+        Save the provided data to a JSON file at the specified filepath.  The filepath
+        is expanded using the keyword arguments and environment variables.  Note that
+        this plugin is 'node aware' since it is derived from the `NodeAwarePlugin`.
+
+        Args:
+        - *args: Positional arguments (data) to be saved.
+        - filepath (str): The filepath to save the data to.
+        - data (Any): The data to be saved.
+        - **kwargs: Keyword arguments to be used in the expansion.  Node
+          properties/attributes are additionally included here as a node aware plugin.
+
+        Returns:
+        - None
+        """
+        if not args:
+            return None
+        filepath = super().__call__(filepath=filepath, **(kwargs | node_properties))
+        with open(filepath, "w") as f:
+            json.dump(args, f)
+        return None

@@ -101,7 +101,7 @@ class Distributed:
         Client(self._cluster)
         return self
 
-    def __exit__(self):
+    def __exit__(self, exc_type, exc_value, exc_traceback):
         self._cluster.close()
         self._cluster = None
 
@@ -118,7 +118,7 @@ class Distributed:
         Returns:
         - Any: The output of the graph execution.
         """
-        graph, target = add_dummy_tasks(dask_graph)
+        graph, target = add_dummy_tasks(dask_graph.copy())
         dask_container = Delayed(target, graph)
         if self._profiler_output:
             from dask.distributed import performance_report

@@ -12,6 +12,7 @@ version: 0.0.1dev
       - [class: Input](dagrunner.plugin_framework.md#class-input)
       - [class: NodeAwarePlugin](dagrunner.plugin_framework.md#class-nodeawareplugin)
       - [class: Plugin](dagrunner.plugin_framework.md#class-plugin)
+      - [class: SaveJson](dagrunner.plugin_framework.md#class-savejson)
       - [class: Shell](dagrunner.plugin_framework.md#class-shell)
     - [module: runner](dagrunner.runner.md#module-dagrunnerrunner)
       - [module: schedulers](dagrunner.runner.schedulers.md#module-dagrunnerrunnerschedulers)

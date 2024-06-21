@@ -12,15 +12,16 @@ import importlib
 import networkx as nx
 
 import dask
+from dask.base import tokenize
 from dask.utils import apply
 from dagrunner.utils import (
     TimeIt,
     function_to_argparse,
-    logger,
 )
 from dagrunner.plugin_framework import NodeAwarePlugin
 from dagrunner.runner.schedulers import SCHEDULERS
 from dagrunner.utils.visualisation import visualise_graph
+from dagrunner.utils import logger
 
 
 class SkipBranch(Exception):
@@ -101,16 +102,15 @@ def plugin_executor(
             if key in inspect.signature(callable_obj).parameters
         }  # based on function signature
 
+        msg = f"{obj_name}{call_msg}(*{args}, **{callable_kwargs})"
         if verbose:
-            msg = f"{obj_name}{call_msg}(*{args}, **{callable_kwargs})"
             print(msg)
         with TimeIt() as timer:
             res = callable_obj(*args, **callable_kwargs)
         logging.info(f"{str(timer)}; {msg}")
 
-    # if res and not isinstance(res, ObjectAsStr):
-    #     # ObjectAsStr protects against circular dependencies in an executed graph
-    #     res = ObjectAsStr(res, str(res))
+    if verbose:
+        print(f"result: {res}")
     return res
 
 
@@ -248,9 +248,11 @@ class ExecuteGraph:
 
         exec_graph = {}
         for node_id, properties in self._nxgraph.nodes(data=True):
-            key = node_id
-            # quoted_key = ObjectAsStr(node_id)
-            args = list(self._nxgraph.predecessors(node_id))
+            # don't use nodes in our graph as some schedulers (dask
+            # distributed as per dask.core.validate_key) support only a subset
+            # of types (tuples, bytes, int, float and str).
+            key = tokenize(node_id)
+            args = [tokenize(arg) for arg in self._nxgraph.predecessors(node_id)]
             exec_graph[key] = (apply, executor, args, properties)
 
         # handle_clobber(graph, workflow, no_clobber, verbose)
