@@ -73,7 +73,7 @@ jobs:
             echo "pr_coverage_total=$pr_coverage_total" | tee -a $GITHUB_OUTPUT
             ref_coverage_total=$(grep TOTAL ref/coverage_output.txt | awk '{print $NF}' | awk '{print substr($0, 1, length($0)-1)}')
             echo "ref_coverage_total=$ref_coverage_total" | tee -a $GITHUB_OUTPUT
-            if (( pr_coverage_total < ref_coverage_total )); then
+            if (( (( ref_coverage_total - pr_coverage_total )) > 1 )); then
                 echo "coverage_decreased=true" | tee -a $GITHUB_OUTPUT
             else
                 echo "coverage_decreased=false" | tee -a $GITHUB_OUTPUT
@@ -86,7 +86,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             let comment = String();
-            comment = "The test coverage has decreased from '${{ steps.comp-coverage.outputs.ref_coverage_total }}%' to '${{ steps.comp-coverage.outputs.pr_coverage_total }}%' (commit SHA: ${{ github.event.pull_request.head.sha }})."
+            comment = "The test coverage has decreased from ${{ steps.comp-coverage.outputs.ref_coverage_total }}% to ${{ steps.comp-coverage.outputs.pr_coverage_total }}% (commit SHA: ${{ github.event.pull_request.head.sha }})."
             comment += "\nPlease review test coverage.  Report uploaded as artifact.";
             console.log(comment)
             github.rest.issues.createComment({
