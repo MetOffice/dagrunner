@@ -42,7 +42,7 @@ jobs:
 
       # TESTS (inc. test coverage)
       - name: Run pytest + coverage report gen
-        run: pytest --cov=dagrunner --cov-report=term | tee coverage_output.txt
+        run: pytest --cov=dagrunner --cov-report=term --cov-report=html | tee coverage_output.txt
 
       # TESTS (main branch)
       - name: Cache ref branch coverage report
@@ -67,23 +67,29 @@ jobs:
 
       # TESTS (compare coverage)
       - name: Compare coverage
+        id: comp-coverage
         run: |
-            echo "pr_coverage_total=$(grep TOTAL coverage_output.txt | awk '{print $NF}' | awk '{print substr($0, 1, length($0)-1)}')" | tee -a $GITHUB_ENV
-            echo "ref_coverage_total=$(grep TOTAL ref/coverage_output.txt | awk '{print $NF}' | awk '{print substr($0, 1, length($0)-1)}')" | tee -a $GITHUB_ENV
-            if (( $pr_coverage_total > $ref_coverage_total )); then
-                echo "COVERAGE_DECREASED=true" | tee -a $GITHUB_ENV
+            pr_coverage_total=$(grep TOTAL coverage_output.txt | awk '{print $NF}' | awk '{print substr($0, 1, length($0)-1)}')
+            echo "pr_coverage_total=$pr_coverage_total" | tee -a $GITHUB_OUTPUT
+            ref_coverage_total=$(grep TOTAL ref/coverage_output.txt | awk '{print $NF}' | awk '{print substr($0, 1, length($0)-1)}')
+            echo "ref_coverage_total=$ref_coverage_total" | tee -a $GITHUB_OUTPUT
+            if (( pr_coverage_total < ref_coverage_total )); then
+                echo "coverage_decreased=true" | tee -a $GITHUB_OUTPUT
             else
-                echo "COVERAGE_DECREASED=false" | tee -a $GITHUB_ENV
+                echo "coverage_decreased=false" | tee -a $GITHUB_OUTPUT
             fi
 
       - name: Comment coverage report
-        if: env.COVERAGE_DECREASED == 'true'
+        if: steps.comp-coverage.outputs.coverage_decreased == 'true'
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const comment = "The test coverage has decreased from '${{ env.main_coverage_total }}%' to '${{ env.pr_coverage_total }}%'.\nPlease review test coverage.  Summary report uploaded as artifact.";
-            github.issues.createComment({
+            let comment = String();
+            comment = "The test coverage has decreased from '${{ steps.comp-coverage.outputs.ref_coverage_total }}%' to '${{ steps.comp-coverage.outputs.pr_coverage_total }}%' (commit SHA: ${{ github.event.pull_request.head.sha }})."
+            comment += "\nPlease review test coverage.  Report uploaded as artifact.";
+            console.log(comment)
+            github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -91,11 +97,13 @@ jobs:
             });
 
       - name: Upload coverage report
-        if: env.COVERAGE_DECREASED == 'true'
+        if: steps.comp-coverage.outputs.coverage_decreased == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report-pr
-          path: coverage_output.txt
+          path: |
+            coverage_output.txt
+            htmlcov/
 
       # PRE-COMMIT
 
@@ -126,7 +134,7 @@ jobs:
       - name: Check if documentation has changed
         id: check-docs
         run: |
-          git diff --quiet --exit-code || echo "::set-output name=changed::true"
+          echo "changed=$(git diff --quiet --exit-code || echo true)" | tee -a $GITHUB_OUTPUT
 
       # https://github.com/orgs/community/discussions/26560#discussioncomment-3531273
       - name: Commit and push documentation changes
