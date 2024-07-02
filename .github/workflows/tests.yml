@@ -33,15 +33,57 @@ jobs:
       # TESTS (inc. test coverage)
 
       - name: Run pytest + coverage report gen
-        run: pytest --cov=dagrunner --cov-report=term --cov-report=xml
+        run: pytest --cov=dagrunner --cov-report=term | tee pr_coverage_output.txt
 
-      - name: Upload to Codecov
-        uses: codecov/codecov-action@v4
+      # TESTS (main branch)
+      - name: Cache main branch coverage report
+        id: cache-main-coverage
+        uses: actions/cache@v4
         with:
-          file: coverage.xml
-          flags: unittests
-          name: codecov-umbrella
-          fail_ci_if_error: true
+          path: base_coverage_output.txt
+          key: base-coverage-${{ github.event.pull_request.base.sha }}
+
+      - name: Checkout main branch
+        if: steps.cache-main-coverage.outputs.cache-hit != 'true'
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Run tests with coverage for main branch
+        if: steps.cache-main-coverage.outputs.cache-hit != 'true'
+        run: pytest --cov=dagrunner --cov-report=term | tee main_coverage_output.txt
+
+      # TESTS (compare coverage)
+      - name: Compare coverage
+        run: |
+            echo "pr_coverage_total=$(grep TOTAL pr_coverage_output.txt | awk '{print $NF}' | awk '{print substr($0, 1, length($0)-1)}')" | tee -a $GITHUB_ENV
+            echo "main_coverage_total=$(grep TOTAL main_coverage_output.txt | awk '{print $NF}' | awk '{print substr($0, 1, length($0)-1)}')" | tee -a $GITHUB_ENV
+            if (( $pr_coverage_total > $main_coverage_total )); then
+                echo "COVERAGE_DECREASED=true" | tee -a $GITHUB_ENV
+            else
+                echo "COVERAGE_DECREASED=false" | tee -a $GITHUB_ENV
+            fi
+
+      - name: Comment coverage report
+        if: env.COVERAGE_DECREASED == 'true'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const comment = "The test coverage has decreased from '${{ env.main_coverage_total }}%' to '${{ env.pr_coverage_total }}%'.\nPlease review test coverage.  Summary report uploaded as artifact.";
+            github.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+      - name: Upload coverage report
+        if: env.COVERAGE_DECREASED == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report-pr
+          path: pr_coverage_output.txt
 
       # PRE-COMMIT
 
