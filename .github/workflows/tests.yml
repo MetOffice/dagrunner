@@ -25,13 +25,22 @@ jobs:
       - name: Add checkout directory to PYTHONPATH
         run: echo "PYTHONPATH=$(pwd):$PYTHONPATH" >> $GITHUB_ENV
 
+      - name: Cache pip environment
+        id: cache-pip-env
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ hashFiles('pyproject.toml') }}
+          restore-keys: pip-
+
       - name: Install dependencies
+        if: steps.cache-pip-env.outputs.cache-hit != 'true'
+        id: install-dependencies
         run: |
           pip install .[tests,dev]
           pip uninstall dagrunner -y
 
       # TESTS (inc. test coverage)
-
       - name: Run pytest + coverage report gen
         run: pytest --cov=dagrunner --cov-report=term | tee pr_coverage_output.txt
 
@@ -47,17 +56,18 @@ jobs:
         if: steps.cache-main-coverage.outputs.cache-hit != 'true'
         uses: actions/checkout@v4
         with:
+          path: main
           ref: main
 
       - name: Run tests with coverage for main branch
         if: steps.cache-main-coverage.outputs.cache-hit != 'true'
-        run: pytest --cov=dagrunner --cov-report=term | tee main_coverage_output.txt
+        run: cd main; pytest --cov=dagrunner --cov-report=term | tee main_coverage_output.txt
 
       # TESTS (compare coverage)
       - name: Compare coverage
         run: |
             echo "pr_coverage_total=$(grep TOTAL pr_coverage_output.txt | awk '{print $NF}' | awk '{print substr($0, 1, length($0)-1)}')" | tee -a $GITHUB_ENV
-            echo "main_coverage_total=$(grep TOTAL main_coverage_output.txt | awk '{print $NF}' | awk '{print substr($0, 1, length($0)-1)}')" | tee -a $GITHUB_ENV
+            echo "main_coverage_total=$(grep TOTAL main/main_coverage_output.txt | awk '{print $NF}' | awk '{print substr($0, 1, length($0)-1)}')" | tee -a $GITHUB_ENV
             if (( $pr_coverage_total > $main_coverage_total )); then
                 echo "COVERAGE_DECREASED=true" | tee -a $GITHUB_ENV
             else
