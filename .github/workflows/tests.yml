@@ -2,10 +2,6 @@ name: Pull Request Tests
 
 on: [pull_request]
 
-env:
-  # ${{ github.base_ref }}: base branch of the pull request (e.g. master/main).
-  # ${{ github.head_ref }}: branch the pull request targets (e.g. feature branch).
-  TARGET_REF: ${{ github.base_ref }}
 
 jobs:
   test:
@@ -39,7 +35,6 @@ jobs:
           restore-keys: pip-
 
       - name: Install dependencies
-        if: steps.cache-pip-env.outputs.cache-hit != 'true'
         id: install-dependencies
         run: |
           pip install .[tests,dev]
@@ -55,18 +50,20 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ref/coverage_output.txt
-            key: ref-${{ env.TARGET_REF }}
+          key: ref-${{ github.event.pull_request.base.sha }}
 
       - name: Checkout ref branch
         if: steps.cache-ref-coverage.outputs.cache-hit != 'true'
         uses: actions/checkout@v4
         with:
           path: ref
-          ref: ${{ env.TARGET_REF }}
+          ref: ${{ github.base_ref }}
 
       - name: Run tests with coverage for ref branch
         if: steps.cache-ref-coverage.outputs.cache-hit != 'true'
-        run: cd ref; pytest --cov=dagrunner --cov-report=term | tee coverage_output.txt
+        run: |
+          cd ref
+          pytest --cov=dagrunner --cov-report=term | tee coverage_output.txt
 
       # TESTS (compare coverage)
       - name: Compare coverage
@@ -113,7 +110,6 @@ jobs:
           key: pre-commit|${{ env.PYSHA }}|${{ hashFiles('.pre-commit-config.yaml') }}
 
       - name: pre-commit install
-        if: steps.pre-commit-cache.outputs.cache-hit != 'true'
         run: |
           pre-commit install
 
