@@ -2,6 +2,11 @@ name: Pull Request Tests
 
 on: [pull_request]
 
+env:
+  # ${{ github.base_ref }}: base branch of the pull request (e.g. master/main).
+  # ${{ github.head_ref }}: branch the pull request targets (e.g. feature branch).
+  TARGET_REF: ${{ github.base_ref }}
+
 jobs:
   test:
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
@@ -42,33 +47,33 @@ jobs:
 
       # TESTS (inc. test coverage)
       - name: Run pytest + coverage report gen
-        run: pytest --cov=dagrunner --cov-report=term | tee pr_coverage_output.txt
+        run: pytest --cov=dagrunner --cov-report=term | tee coverage_output.txt
 
       # TESTS (main branch)
-      - name: Cache main branch coverage report
-        id: cache-main-coverage
+      - name: Cache ref branch coverage report
+        id: cache-ref-coverage
         uses: actions/cache@v4
         with:
-          path: base_coverage_output.txt
-          key: base-coverage-${{ github.event.pull_request.base.sha }}
+          path: ref/coverage_output.txt
+            key: ref-${{ env.TARGET_REF }}
 
-      - name: Checkout main branch
-        if: steps.cache-main-coverage.outputs.cache-hit != 'true'
+      - name: Checkout ref branch
+        if: steps.cache-ref-coverage.outputs.cache-hit != 'true'
         uses: actions/checkout@v4
         with:
-          path: main
-          ref: main
+          path: ref
+          ref: ${{ env.TARGET_REF }}
 
-      - name: Run tests with coverage for main branch
-        if: steps.cache-main-coverage.outputs.cache-hit != 'true'
-        run: cd main; pytest --cov=dagrunner --cov-report=term | tee main_coverage_output.txt
+      - name: Run tests with coverage for ref branch
+        if: steps.cache-ref-coverage.outputs.cache-hit != 'true'
+        run: cd ref; pytest --cov=dagrunner --cov-report=term | tee coverage_output.txt
 
       # TESTS (compare coverage)
       - name: Compare coverage
         run: |
-            echo "pr_coverage_total=$(grep TOTAL pr_coverage_output.txt | awk '{print $NF}' | awk '{print substr($0, 1, length($0)-1)}')" | tee -a $GITHUB_ENV
-            echo "main_coverage_total=$(grep TOTAL main/main_coverage_output.txt | awk '{print $NF}' | awk '{print substr($0, 1, length($0)-1)}')" | tee -a $GITHUB_ENV
-            if (( $pr_coverage_total > $main_coverage_total )); then
+            echo "pr_coverage_total=$(grep TOTAL coverage_output.txt | awk '{print $NF}' | awk '{print substr($0, 1, length($0)-1)}')" | tee -a $GITHUB_ENV
+            echo "ref_coverage_total=$(grep TOTAL ref/coverage_output.txt | awk '{print $NF}' | awk '{print substr($0, 1, length($0)-1)}')" | tee -a $GITHUB_ENV
+            if (( $pr_coverage_total > $ref_coverage_total )); then
                 echo "COVERAGE_DECREASED=true" | tee -a $GITHUB_ENV
             else
                 echo "COVERAGE_DECREASED=false" | tee -a $GITHUB_ENV
@@ -93,7 +98,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report-pr
-          path: pr_coverage_output.txt
+          path: coverage_output.txt
 
       # PRE-COMMIT
 
