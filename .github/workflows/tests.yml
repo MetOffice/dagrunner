@@ -30,10 +30,18 @@ jobs:
           pip install .[tests,dev]
           pip uninstall dagrunner -y
 
-      # TESTS
+      # TESTS (inc. test coverage)
 
-      - name: Run pytest
-        run: pytest
+      - name: Run pytest + coverage report gen
+        run: pytest --cov=dagrunner --cov-report=term --cov-report=xml
+
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: true
 
       # PRE-COMMIT
 
