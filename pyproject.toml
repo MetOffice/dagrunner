@@ -21,11 +21,15 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# for testing the project
 tests = [
   "pytest"
 ]
+# for project development
 dev = [
-  "pre-commit"
+  "pytest",
+  "pre-commit",
+  "pytest-cov"
 ]
 
 [project.urls]

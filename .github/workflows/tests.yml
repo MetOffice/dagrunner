@@ -2,6 +2,7 @@ name: Pull Request Tests
 
 on: [pull_request]
 
+
 jobs:
   test:
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
@@ -25,15 +26,84 @@ jobs:
       - name: Add checkout directory to PYTHONPATH
         run: echo "PYTHONPATH=$(pwd):$PYTHONPATH" >> $GITHUB_ENV
 
+      - name: Cache pip environment
+        id: cache-pip-env
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ hashFiles('pyproject.toml') }}
+          restore-keys: pip-
+
       - name: Install dependencies
+        id: install-dependencies
         run: |
           pip install .[tests,dev]
           pip uninstall dagrunner -y
 
-      # TESTS
+      # TESTS (inc. test coverage)
+      - name: Run pytest + coverage report gen
+        run: pytest --cov=dagrunner --cov-report=term --cov-report=html | tee coverage_output.txt
 
-      - name: Run pytest
-        run: pytest
+      # TESTS (main branch)
+      - name: Cache ref branch coverage report
+        id: cache-ref-coverage
+        uses: actions/cache@v4
+        with:
+          path: ref/coverage_output.txt
+          key: ref-${{ github.event.pull_request.base.sha }}
+
+      - name: Checkout ref branch
+        if: steps.cache-ref-coverage.outputs.cache-hit != 'true'
+        uses: actions/checkout@v4
+        with:
+          path: ref
+          ref: ${{ github.base_ref }}
+
+      - name: Run tests with coverage for ref branch
+        if: steps.cache-ref-coverage.outputs.cache-hit != 'true'
+        run: |
+          cd ref
+          pytest --cov=dagrunner --cov-report=term | tee coverage_output.txt
+
+      # TESTS (compare coverage)
+      - name: Compare coverage
+        id: comp-coverage
+        run: |
+            pr_coverage_total=$(grep TOTAL coverage_output.txt | awk '{print $NF}' | awk '{print substr($0, 1, length($0)-1)}')
+            echo "pr_coverage_total=$pr_coverage_total" | tee -a $GITHUB_OUTPUT
+            ref_coverage_total=$(grep TOTAL ref/coverage_output.txt | awk '{print $NF}' | awk '{print substr($0, 1, length($0)-1)}')
+            echo "ref_coverage_total=$ref_coverage_total" | tee -a $GITHUB_OUTPUT
+            if (( (( ref_coverage_total - pr_coverage_total )) > 1 )); then
+                echo "coverage_decreased=true" | tee -a $GITHUB_OUTPUT
+            else
+                echo "coverage_decreased=false" | tee -a $GITHUB_OUTPUT
+            fi
+
+      - name: Comment coverage report
+        if: steps.comp-coverage.outputs.coverage_decreased == 'true'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            let comment = String();
+            comment = "The test coverage has decreased from ${{ steps.comp-coverage.outputs.ref_coverage_total }}% to ${{ steps.comp-coverage.outputs.pr_coverage_total }}% (commit SHA: ${{ github.event.pull_request.head.sha }})."
+            comment += "\nPlease review test coverage.  Report uploaded as artifact.";
+            console.log(comment)
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+      - name: Upload coverage report
+        if: steps.comp-coverage.outputs.coverage_decreased == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report-pr
+          path: |
+            coverage_output.txt
+            htmlcov/
 
       # PRE-COMMIT
 
@@ -48,7 +118,6 @@ jobs:
           key: pre-commit|${{ env.PYSHA }}|${{ hashFiles('.pre-commit-config.yaml') }}
 
       - name: pre-commit install
-        if: steps.pre-commit-cache.outputs.cache-hit != 'true'
         run: |
           pre-commit install
 
@@ -65,7 +134,7 @@ jobs:
       - name: Check if documentation has changed
         id: check-docs
         run: |
-          git diff --quiet --exit-code || echo "::set-output name=changed::true"
+          echo "changed=$(git diff --quiet --exit-code || echo true)" | tee -a $GITHUB_OUTPUT
 
       # https://github.com/orgs/community/discussions/26560#discussioncomment-3531273
       - name: Commit and push documentation changes
