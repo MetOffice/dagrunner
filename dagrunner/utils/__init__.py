@@ -178,17 +178,20 @@ def function_to_argparse(func, parser=None, exclude=None):
             arg_num = "*" if arg_optional else "+"
             arg_kwargs.update(dict(nargs=arg_num))
             arg_kwargs["type"] = str
-        elif param.kind == inspect.Parameter.VAR_KEYWORD:
+        elif param.kind == inspect.Parameter.VAR_KEYWORD or arg_type is dict:
             arg_kwargs.pop("type")
             arg_kwargs["nargs"] = 2
             arg_kwargs["action"] = KeyValueAction
             arg_kwargs["metavar"] = ("key", "value")
             arg_kwargs["help"] += "\n Key-value pair argument."
-            arg_optional = True
+            arg_optional = (
+                True if param.kind == inspect.Parameter.VAR_KEYWORD else arg_optional
+            )
 
         if (
             param.default is not param.empty
             or param.kind == inspect.Parameter.VAR_KEYWORD
+            or arg_type is dict
         ):
             # is a keywarg
             arg_kwargs["dest"] = name

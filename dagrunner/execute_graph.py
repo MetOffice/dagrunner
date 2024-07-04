@@ -112,29 +112,32 @@ def plugin_executor(
             print(f"imported module '{module}', callable '{function_name}'")
         callable_obj = getattr(module, function_name)
 
-    with dask.config.set(scheduler="single-threaded"):
-        call_msg = ""
-        obj_name = callable_obj.__name__
-        if isinstance(callable_obj, type):
-            if issubclass(callable_obj, NodeAwarePlugin):
-                callable_kwargs["node_properties"] = node_properties
-            callable_kwargs_init = (
-                callable_kwargs_init
-                | _get_common_args_matching_signature(callable_obj, common_kwargs)
-            )
-            callable_obj = callable_obj(**callable_kwargs_init)
-            call_msg = f"(**{callable_kwargs_init})"
-
-        callable_kwargs = callable_kwargs | _get_common_args_matching_signature(
-            callable_obj, common_kwargs
+    call_msg = ""
+    obj_name = callable_obj.__name__
+    if isinstance(callable_obj, type):
+        if issubclass(callable_obj, NodeAwarePlugin):
+            callable_kwargs["node_properties"] = node_properties
+        callable_kwargs_init = (
+            callable_kwargs_init
+            | _get_common_args_matching_signature(callable_obj, common_kwargs)
         )
+        callable_obj = callable_obj(**callable_kwargs_init)
+        call_msg = f"(**{callable_kwargs_init})"
 
-        msg = f"{obj_name}{call_msg}(*{args}, **{callable_kwargs})"
-        if verbose:
-            print(msg)
+    callable_kwargs = callable_kwargs | _get_common_args_matching_signature(
+        callable_obj, common_kwargs
+    )
+
+    msg = f"{obj_name}{call_msg}(*{args}, **{callable_kwargs})"
+    if verbose:
+        print(msg)
+    res = None
+    if not dry_run:
         with TimeIt() as timer:
-            res = callable_obj(*args, **callable_kwargs)
-        logging.info(f"{str(timer)}; {msg}")
+            with dask.config.set(scheduler="single-threaded"):
+                res = callable_obj(*args, **callable_kwargs)
+        msg = f"{str(timer)}; {msg}"
+    logging.info(msg)
 
     if verbose:
         print(f"result: {res}")
@@ -198,6 +201,7 @@ class ExecuteGraph:
     def __init__(
         self,
         networkx_graph: str,
+        networkx_graph_kwargs: dict = None,
         plugin_executor: callable = plugin_executor,
         scheduler: str = "processes",
         num_workers: int = 1,
@@ -215,6 +219,8 @@ class ExecuteGraph:
           A networkx graph; dot path to a networkx graph or callable that returns
           one; tuple representing (edges, nodes) or callable object that
           returns a networkx.
+        - `networkx_graph_kwargs` (dict):
+          Keyword arguments to pass to the networkx graph callable.  Optional.
         - `plugin_executor` (callable):
           A callable object that executes a plugin function or method with the provided
           arguments and keyword arguments.  By default, uses the `plugin_executor` function.
@@ -239,6 +245,7 @@ class ExecuteGraph:
           Optional global keyword arguments to apply to all applicable plugins.
         """
         self._nxgraph = _get_networkx(networkx_graph)
+        self._nxgraph_kwargs = networkx_graph_kwargs
         self._plugin_executor = plugin_executor
         if scheduler not in SCHEDULERS:
             raise ValueError(
@@ -271,7 +278,7 @@ class ExecuteGraph:
         )
 
         if callable(self._nxgraph):
-            self._nxgraph = self._nxgraph()
+            self._nxgraph = self._nxgraph(self._nxgraph_kwargs)
 
         exec_graph = {}
         for node_id, properties in self._nxgraph.nodes(data=True):
