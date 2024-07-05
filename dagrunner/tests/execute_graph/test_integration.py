@@ -111,7 +111,7 @@ def test_execution(graph, scheduler):
     branch for recording the final state.  It is this that we verify to ensure that
     the graph has been executed correctly and respected dependencies.
     """
-    # set debug to true to intriduce a 'sleep' to ProcessID.  Useful for verifying rough
+    # set debug to true to introduce a 'sleep' to ProcessID.  Useful for verifying rough
     # parallel execution performance.
     debug = False
     EDGES, SETTINGS, output_files = graph
