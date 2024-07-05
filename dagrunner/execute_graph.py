@@ -38,6 +38,15 @@ class SkipBranch(Exception):
     pass
 
 
+def _get_common_args_matching_signature(callable_obj, common_kwargs):
+    """Get subset of arguments which match the callable signature."""
+    return {
+        key: value
+        for key, value in common_kwargs.items()
+        if key in inspect.signature(callable_obj).parameters
+    }
+
+
 def plugin_executor(
     *args,
     call=None,
@@ -51,12 +60,14 @@ def plugin_executor(
 
     Args:
     - `*args`: Positional arguments to be passed to the plugin function or method.
-    - `call`: A tuple containing the callable object or python dot path to one, and its keyword arguments.
+    - `call`: A tuple containing the callable object or python dot path to one, keyword arguments
+      to instantiate this class (optional and where this callable is a class) and finally the keyword
+      arguments to be passed to this callable.
     - `verbose`: A boolean indicating whether to print verbose output.
     - `dry_run`: A boolean indicating whether to perform a dry run without executing the plugin.
     - `common_kwargs`: A dictionary of optional keyword arguments to apply to all applicable plugins.
-      That is, being passed to the plugin call if such keywords are expected from the plugin.
-      This is a useful alternative to global or environment variable usage.
+      That is, being passed to the plugin initialisation and or call if such keywords are expected
+      from the plugin.  This is a useful alternative to global or environment variable usage.
     - `**node_properties`: Node properties.  These will be passed to 'node-aware' plugins.
 
     Returns:
@@ -67,6 +78,10 @@ def plugin_executor(
     """
     logger.client_attach_socket_handler()
 
+    if common_kwargs is None:
+        common_kwargs = {}
+    common_kwargs.update({"verbose": verbose, "dry_run": dry_run})
+
     args = [
         arg for arg in args if arg is not None
     ]  # support plugins that have no return value
@@ -75,7 +90,19 @@ def plugin_executor(
     if verbose:
         print(f"args: {args}")
         print(f"call: {call}")
-    callable_obj, callable_kwargs = call
+
+    # Handle call tuple unpacking (length 2, no class init kwargs
+    # or length 3 with class init kwargs).
+    try:
+        callable_obj, callable_kwargs_init, callable_kwargs = call
+    except ValueError as e:
+        if (
+            str(e) == "not enough values to unpack (expected 3, got 2)"
+        ):  # no class init kwargs
+            callable_obj, callable_kwargs = call
+            callable_kwargs_init = {}
+        else:
+            raise e
 
     if isinstance(callable_obj, str):
         # import callable if a string is provided
@@ -91,16 +118,16 @@ def plugin_executor(
         if isinstance(callable_obj, type):
             if issubclass(callable_obj, NodeAwarePlugin):
                 callable_kwargs["node_properties"] = node_properties
-            callable_obj = callable_obj()
-            call_msg = "()"
-        callable_kwargs = callable_kwargs | {
-            key: value for key, value in common_kwargs.items() if key in callable_kwargs
-        }  # based on overriding arguments
-        callable_kwargs = callable_kwargs | {
-            key: value
-            for key, value in {"verbose": verbose, "dry_run": dry_run}.items()
-            if key in inspect.signature(callable_obj).parameters
-        }  # based on function signature
+            callable_kwargs_init = (
+                callable_kwargs_init
+                | _get_common_args_matching_signature(callable_obj, common_kwargs)
+            )
+            callable_obj = callable_obj(**callable_kwargs_init)
+            call_msg = f"(**{callable_kwargs_init})"
+
+        callable_kwargs = callable_kwargs | _get_common_args_matching_signature(
+            callable_obj, common_kwargs
+        )
 
         msg = f"{obj_name}{call_msg}(*{args}, **{callable_kwargs})"
         if verbose:

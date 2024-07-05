@@ -29,8 +29,12 @@ class ProcessID(Plugin):
     This facilitates testing of the parallel execution of the graph.
     """
 
-    def __call__(self, *args, id=None, debug=False):
-        if debug:
+    def __init__(self, debug=False) -> None:
+        self._debug = debug
+        super().__init__()
+
+    def __call__(self, *args, id=None):
+        if self._debug:
             time.sleep(1)
         concat_arg_id = str(id)
         if args and args[0]:
@@ -79,7 +83,7 @@ def graph(tmp_path_factory):
         for nodenum in range(1, 6):
             node = vars()[f"node{nodenum}"]
             SETTINGS[node] = {
-                "call": tuple([ProcessID, {"id": nodenum, "debug": False}]),
+                "call": tuple([ProcessID, {"id": nodenum}]),
             }
 
         node_save = Node(step="save", leadtime=leadtime)
@@ -107,7 +111,8 @@ def test_execution(graph, scheduler):
     branch for recording the final state.  It is this that we verify to ensure that
     the graph has been executed correctly and respected dependencies.
     """
-    # when debug==True, ProcessID does a sleep.  This is useful for testing parallel execution.
+    # set debug to true to introduce a 'sleep' to ProcessID.  Useful for verifying rough
+    # parallel execution performance.
     debug = False
     EDGES, SETTINGS, output_files = graph
     with patch("dagrunner.execute_graph.logger.ServerContext"):
