@@ -14,17 +14,17 @@ see [function: dagrunner.utils.visualisation.visualise_graph](dagrunner.utils.vi
 
 ## class: `ExecuteGraph`
 
-[Source](../dagrunner/execute_graph.py#L197)
+[Source](../dagrunner/execute_graph.py#L200)
 
 ### Call Signature:
 
 ```python
-ExecuteGraph(networkx_graph: str, <function plugin_executor>, scheduler: str = 'processes', num_workers: int = 1, profiler_filepath: str = None, dry_run: bool = False, verbose: bool = False, sqlite_filepath: str = None, **kwargs)
+ExecuteGraph(networkx_graph: str, networkx_graph_kwargs: dict = None, <function plugin_executor>, scheduler: str = 'processes', num_workers: int = 1, profiler_filepath: str = None, dry_run: bool = False, verbose: bool = False, sqlite_filepath: str = None, **kwargs)
 ```
 
 ### function: `__call__`
 
-[Source](../dagrunner/execute_graph.py#L291)
+[Source](../dagrunner/execute_graph.py#L298)
 
 #### Call Signature:
 
@@ -36,12 +36,12 @@ Call self as a function.
 
 ### function: `__init__`
 
-[Source](../dagrunner/execute_graph.py#L198)
+[Source](../dagrunner/execute_graph.py#L201)
 
 #### Call Signature:
 
 ```python
-__init__(self, networkx_graph: str, <function plugin_executor>, scheduler: str = 'processes', num_workers: int = 1, profiler_filepath: str = None, dry_run: bool = False, verbose: bool = False, sqlite_filepath: str = None, **kwargs)
+__init__(self, networkx_graph: str, networkx_graph_kwargs: dict = None, <function plugin_executor>, scheduler: str = 'processes', num_workers: int = 1, profiler_filepath: str = None, dry_run: bool = False, verbose: bool = False, sqlite_filepath: str = None, **kwargs)
 ```
 
 Execute a networkx graph using a chosen scheduler.
@@ -51,6 +51,8 @@ Args:
   A networkx graph; dot path to a networkx graph or callable that returns
   one; tuple representing (edges, nodes) or callable object that
   returns a networkx.
+- `networkx_graph_kwargs` (dict):
+  Keyword arguments to pass to the networkx graph callable.  Optional.
 - `plugin_executor` (callable):
   A callable object that executes a plugin function or method with the provided
   arguments and keyword arguments.  By default, uses the `plugin_executor` function.
@@ -76,7 +78,7 @@ Args:
 
 ### function: `visualise`
 
-[Source](../dagrunner/execute_graph.py#L288)
+[Source](../dagrunner/execute_graph.py#L295)
 
 #### Call Signature:
 
@@ -99,7 +101,7 @@ subsequent tasks.
 
 ## function: `main`
 
-[Source](../dagrunner/execute_graph.py#L304)
+[Source](../dagrunner/execute_graph.py#L311)
 
 ### Call Signature:
 
