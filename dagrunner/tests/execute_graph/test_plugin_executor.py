@@ -57,3 +57,37 @@ def test_pass_common_args():
         res
         == "iarg1=sentinel.iarg1; ikwarg1=sentinel.ikwarg1; args=(sentinel.arg1, sentinel.arg2); kwarg1=sentinel.kwarg1; kwargs={}"
     )
+
+
+class DummyPlugin2:
+    """Plugin that is reliant on data not explicitly defined in its UI."""
+
+    def __call__(self, *args, **kwargs):
+        return f"args={args}; kwargs={kwargs}"
+
+
+def test_pass_common_args_via_override():
+    """
+    Passing 'common args' to a plugin that doesn't have such arguments
+    defined in its signature.  Instead, filter out those that aren't
+    specified in the graph.
+    """
+    common_kwargs = {
+        "kwarg1": mock.sentinel.kwarg1,
+        "kwarg2": mock.sentinel.kwarg2,
+        "kwarg3": mock.sentinel.kwarg3,
+    }
+    args = []
+    call = tuple(
+        [
+            DummyPlugin2,
+            {
+                "kwarg1": mock.sentinel.kwarg1,
+                "kwarg2": mock.sentinel.kwarg2,
+            },
+        ]
+    )
+    res = plugin_executor(*args, call=call, common_kwargs=common_kwargs)
+    assert (
+        res == "args=(); kwargs={'kwarg1': sentinel.kwarg1, 'kwarg2': sentinel.kwarg2}"
+    )
