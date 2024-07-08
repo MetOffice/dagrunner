@@ -245,7 +245,7 @@ class ExecuteGraph:
           Optional global keyword arguments to apply to all applicable plugins.
         """
         self._nxgraph = _get_networkx(networkx_graph)
-        self._nxgraph_kwargs = networkx_graph_kwargs
+        self._nxgraph_kwargs = networkx_graph_kwargs or {}
         self._plugin_executor = plugin_executor
         if scheduler not in SCHEDULERS:
             raise ValueError(
@@ -278,7 +278,7 @@ class ExecuteGraph:
         )
 
         if callable(self._nxgraph):
-            self._nxgraph = self._nxgraph(self._nxgraph_kwargs)
+            self._nxgraph = self._nxgraph(**self._nxgraph_kwargs)
 
         exec_graph = {}
         for node_id, properties in self._nxgraph.nodes(data=True):
