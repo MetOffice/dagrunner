@@ -124,9 +124,9 @@ def plugin_executor(
         callable_obj = callable_obj(**callable_kwargs_init)
         call_msg = f"(**{callable_kwargs_init})"
 
-    callable_kwargs = callable_kwargs | _get_common_args_matching_signature(
-        callable_obj, common_kwargs
-    )
+    callable_kwargs = callable_kwargs | {
+        key: value for key, value in common_kwargs.items() if key in callable_kwargs
+    }  # based on overriding arguments
 
     msg = f"{obj_name}{call_msg}(*{args}, **{callable_kwargs})"
     if verbose:
