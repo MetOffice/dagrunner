@@ -14,7 +14,7 @@ see [function: dagrunner.utils.visualisation.visualise_graph](dagrunner.utils.vi
 
 ## class: `ExecuteGraph`
 
-[Source](../dagrunner/execute_graph.py#L200)
+[Source](../dagrunner/execute_graph.py#L208)
 
 ### Call Signature:
 
@@ -24,7 +24,7 @@ ExecuteGraph(networkx_graph: str, networkx_graph_kwargs: dict = None, <function 
 
 ### function: `__call__`
 
-[Source](../dagrunner/execute_graph.py#L298)
+[Source](../dagrunner/execute_graph.py#L309)
 
 #### Call Signature:
 
@@ -36,7 +36,7 @@ Call self as a function.
 
 ### function: `__init__`
 
-[Source](../dagrunner/execute_graph.py#L201)
+[Source](../dagrunner/execute_graph.py#L209)
 
 #### Call Signature:
 
@@ -55,8 +55,8 @@ Args:
   Keyword arguments to pass to the networkx graph callable.  Optional.
 - `plugin_executor` (callable):
   A callable object that executes a plugin function or method with the provided
-  arguments and keyword arguments.  By default, uses the `plugin_executor` function.
-  Optional.
+  arguments and keyword arguments.  By default, uses the `plugin_executor`
+  function.  Optional.
 - `scheduler` (str):
   Accepted values include "ray", "multiprocessing" and those recognised
   by dask: "threads", "processes" and "single-threaded" (useful for debugging).
@@ -78,7 +78,7 @@ Args:
 
 ### function: `visualise`
 
-[Source](../dagrunner/execute_graph.py#L295)
+[Source](../dagrunner/execute_graph.py#L306)
 
 #### Call Signature:
 
@@ -101,7 +101,7 @@ subsequent tasks.
 
 ## function: `main`
 
-[Source](../dagrunner/execute_graph.py#L311)
+[Source](../dagrunner/execute_graph.py#L322)
 
 ### Call Signature:
 
@@ -114,7 +114,7 @@ Parses command line arguments and executes the graph using the ExecuteGraph clas
 
 ## function: `plugin_executor`
 
-[Source](../dagrunner/execute_graph.py#L50)
+[Source](../dagrunner/execute_graph.py#L55)
 
 ### Call Signature:
 
@@ -122,19 +122,22 @@ Parses command line arguments and executes the graph using the ExecuteGraph clas
 plugin_executor(*args, call=None, verbose=False, dry_run=False, common_kwargs=None, **node_properties)
 ```
 
-Executes a plugin function or method with the provided arguments and keyword arguments.
+Executes a plugin callable with the provided arguments and keyword arguments.
 
 Args:
-- `*args`: Positional arguments to be passed to the plugin function or method.
-- `call`: A tuple containing the callable object or python dot path to one, keyword arguments
-  to instantiate this class (optional and where this callable is a class) and finally the keyword
-  arguments to be passed to this callable.
+- `*args`: Positional arguments to be passed to the plugin callable.
+- `call`: A tuple containing the callable object or python dot path to one, keyword
+  arguments to instantiate this class (optional and where this callable is a class)
+  and finally the keyword arguments to be passed to this callable.
 - `verbose`: A boolean indicating whether to print verbose output.
-- `dry_run`: A boolean indicating whether to perform a dry run without executing the plugin.
-- `common_kwargs`: A dictionary of optional keyword arguments to apply to all applicable plugins.
-  That is, being passed to the plugin initialisation and or call if such keywords are expected
-  from the plugin.  This is a useful alternative to global or environment variable usage.
-- `**node_properties`: Node properties.  These will be passed to 'node-aware' plugins.
+- `dry_run`: A boolean indicating whether to perform a dry run without executing
+  the plugin.
+- `common_kwargs`: A dictionary of optional keyword arguments to apply to all
+  applicable plugins.  That is, being passed to the plugin initialisation and or
+  call if such keywords are expected from the plugin.  This is a useful alternative
+  to global or environment variable usage.
+- `**node_properties`: Node properties.  These will be passed to 'node-aware'
+  plugins.
 
 Returns:
 - The result of executing the plugin function or method.

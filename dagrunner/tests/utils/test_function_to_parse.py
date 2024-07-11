@@ -12,6 +12,24 @@ from dagrunner.utils import function_to_argparse
 CALLING_MOD = os.path.basename(sys.argv[0])
 
 
+def assert_help_str(help_str, tar):
+    # Remove line wraps for easier comparison
+    formatted_help_str = []
+    help_strs = help_str.split("\n")
+    for line in help_strs:
+        if line.startswith("   "):
+            # more than 2 space indent
+            formatted_help_str[-1] += f" {line.lstrip()}"
+        else:
+            formatted_help_str.append(line)
+    help_str = "\n".join(formatted_help_str)
+
+    if "optional arguments:" in help_str:
+        # older versions of argparse use "optional arguments: instead of options:"
+        tar = tar.replace("options:", "optional arguments:")
+    assert help_str == tar
+
+
 def get_parser_help_string(parser):
     buffer = StringIO()
     parser.print_help(file=buffer)
@@ -56,7 +74,7 @@ options:
   --arg2 ARG2  Description of arg2.
   --arg3       Description of arg3. Optional.
 """
-    assert help_str == tar
+    assert_help_str(help_str, tar)
 
     args = parser.parse_args(["3", "--arg2", "arg2", "--arg3"])
     assert args.arg1 == 3
@@ -93,10 +111,9 @@ Extended description of function.
 
 options:
   -h, --help          show this help message and exit
-  --kwargs key value  Optional global keyword arguments to apply to all
-                      applicable plugins. Key-value pair argument.
+  --kwargs key value  Optional global keyword arguments to apply to all applicable plugins. Key-value pair argument.
 """
-    assert help_str == tar
+    assert_help_str(help_str, tar)
 
     args = parser.parse_args(["--kwargs", "key1", "val1", "--kwargs", "key2", "val2"])
     assert "kwargs" in args
@@ -133,11 +150,10 @@ Extended description of function.
 
 options:
   -h, --help           show this help message and exit
-  --dkwarg1 key value  Description of kwarg1. Optional. Key-value pair
-                       argument.
+  --dkwarg1 key value  Description of kwarg1. Optional. Key-value pair argument.
   --dkwarg2 key value  Description of kwarg2. Key-value pair argument.
 """
-    assert help_str == tar
+    assert_help_str(help_str, tar)
     args = parser.parse_args(
         [
             "--dkwarg1",
