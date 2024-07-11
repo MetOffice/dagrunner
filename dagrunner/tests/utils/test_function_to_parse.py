@@ -2,12 +2,11 @@
 #
 # This file is part of 'dagrunner' and is released under the BSD 3-Clause license.
 # See LICENSE in the root of the repository for full licensing details.
-from io import StringIO
 import os
 import sys
+from io import StringIO
 
 from dagrunner.utils import function_to_argparse
-
 
 CALLING_MOD = os.path.basename(sys.argv[0])
 

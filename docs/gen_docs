@@ -6,9 +6,9 @@ Example usage:
     python generate_docs.py my_module /path/to/docs
 """
 
-import inspect
 import importlib
 import importlib.util
+import inspect
 import os
 import sys
 
@@ -87,10 +87,10 @@ def gen_obj_heading(level, obj, obname):
 
 def gen_obj_link(obj, obname, rel_mod_path=None):
     """
-    Generate a markdown link to an object i.e. to an objects corresponding markdown file.
+    Generate markdown link to an object i.e. to an objects corresponding markdown file.
 
-    rel_mod_path makes the link name relative to this module.  If None, the
-    link name is the full module path, while setting it to "" will remove the module path.
+    rel_mod_path makes the link name relative to this module.  If None, the link name
+    is the full module path, while setting it to "" will remove the module path.
     """
     heading = gen_obj_heading(0, obj, obname)
     heading = heading.strip().lower()
@@ -251,12 +251,14 @@ def generate_markdown_recursive(module_dot_path, target_root):
     toc_filepath = os.path.join(target_root, f"{module_dot_path}_index.md")
     with open(toc_filepath, "w") as f:
         f.write(
-            f"# Index for '{module_dot_path}' reference documentation\nversion: {module.__version__}\n\n"
+            f"# Index for '{module_dot_path}' reference documentation\nversion: "
+            "{module.__version__}\n\n"
         )
     index = []
 
     for root, _, filenames in os.walk(module.__path__[0]):
-        # Check if any component of the root path is hidden ('.'), private ('_') or is testing ('tests')
+        # Check if any component of the root path is hidden ('.'), private ('_') or is
+        # testing ('tests')
         if any(
             part.startswith(".") or part.startswith("_") or part.startswith("tests")
             for part in root.split(os.path.sep)

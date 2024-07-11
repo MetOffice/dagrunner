@@ -2,13 +2,13 @@
 #
 # This file is part of 'dagrunner' and is released under the BSD 3-Clause license.
 # See LICENSE in the root of the repository for full licensing details.
-from abc import ABC, abstractmethod
 import json
 import os
-from glob import glob
 import string
 import subprocess
 import time
+from abc import ABC, abstractmethod
+from glob import glob
 
 
 class Plugin(ABC):
@@ -72,12 +72,12 @@ class DataPolling(Plugin):
         Args:
         - *args: Variable length argument list of file patterns to be checked.
         - timeout (int): Timeout in seconds (default is 120 seconds).
-        - polling (int): Time interval in seconds between each poll (default is 1 second).
+        - polling (int): Time interval in seconds between each poll (default is 1
+          second).
         - file_count (int): Expected number of files to be found (default is None).
             If specified, the total number of files found can be greater than the
             number of arguments.  Each argument is expected to return a minimum of
             1 match each in either case.
-
 
         Returns:
         - None
@@ -102,7 +102,8 @@ class DataPolling(Plugin):
                 indx += 1
             elif verbose:
                 print(
-                    f"polling for '{fpattern}', time taken: {time_taken}s of limit {timeout}s"
+                    f"polling for '{fpattern}', time taken: {time_taken}s of limit "
+                    f"{timeout}s"
                 )
                 time.sleep(polling)
                 time_taken += polling
@@ -119,8 +120,9 @@ class Input(NodeAwarePlugin):
         """
         Given a filepath, expand it and return this string
 
-        Expand the provided filepath using the keyword arguments and environment variables.
-        Note that this plugin is 'node aware' since it is derived from the `NodeAwarePlugin`.
+        Expand the provided filepath using the keyword arguments and environment
+        variables.  Note that this plugin is 'node aware' since it is derived from the
+        `NodeAwarePlugin`.
 
         Args:
         - *args: Positional arguments are not accepted.

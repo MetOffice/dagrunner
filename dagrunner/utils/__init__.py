@@ -152,7 +152,8 @@ def function_to_argparse(func, parser=None, exclude=None):
     for name, param in singature_param:
         if param.kind == inspect.Parameter.VAR_POSITIONAL:
             print(
-                f"'function_to_argparse' parameter expansion '{param}' not supported yet"
+                f"'function_to_argparse' parameter expansion '{param}' not "
+                "supported yet"
             )
             continue
         if name in exclude:

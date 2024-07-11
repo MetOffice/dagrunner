@@ -2,11 +2,12 @@
 #
 # This file is part of 'dagrunner' and is released under the BSD 3-Clause license.
 # See LICENSE in the root of the repository for full licensing details.
+import logging
+import os
 import sqlite3
 import subprocess
 import time
-import logging
-import os
+
 import pytest
 
 from dagrunner.utils.logger import ServerContext
@@ -70,8 +71,10 @@ def test_sqlitedb(test_inputs, sqlite_filepath, caplog):
     assert count > 0, "At least one log record should be stored in the database"
 
     # Verify database records
-    # (record.created, record.name, record.levelname, record.getMessage(), record.hostname, record.process, record.thread)
-    # Verify against expected values and ensure dynamic values are of the expected type.
+    # (record.created, record.name, record.levelname, record.getMessage(),
+    #  record.hostname, record.process, record.thread)
+    # Verify against expected values and ensure dynamic values are of the expected
+    # type.
     records = cursor.execute("SELECT * FROM logs").fetchall()
     for test_input, record in zip(test_inputs, records):
         tar_format = (
