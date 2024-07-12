@@ -43,6 +43,7 @@ def gen_client_code(loggers):
         ),
     ],
 )
+@pytest.mark.serial
 def test_sqlitedb(test_inputs, sqlite_filepath, caplog):
     client_code = gen_client_code(test_inputs)
 

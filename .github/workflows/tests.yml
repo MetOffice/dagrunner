@@ -44,7 +44,7 @@ jobs:
 
       # excluded logging as per https://github.com/MetOffice/dagrunner/issues/39
       - name: Run pytest + coverage report gen
-        run: pytest --cov=dagrunner --cov-report=term --cov-report=html --ignore=dagrunner/tests/utils/logging/test_integration.py | tee coverage_output.txt; test ${PIPESTATUS[0]} -eq 0
+        run: pytest --cov=dagrunner --cov-report=term --cov-report=html | tee coverage_output.txt; test ${PIPESTATUS[0]} -eq 0
 
 
       # TESTS (main branch)
@@ -68,7 +68,7 @@ jobs:
         if: steps.cache-ref-coverage.outputs.cache-hit != 'true'
         run: |
           cd ref
-          pytest --cov=dagrunner --cov-report=term --cov-report=html --ignore=dagrunner/tests/utils/logging/test_integration.py | tee coverage_output.txt; test ${PIPESTATUS[0]} -eq 0
+          pytest --cov=dagrunner --cov-report=term --cov-report=html | tee coverage_output.txt; test ${PIPESTATUS[0]} -eq 0
 
       # TESTS (compare coverage)
 

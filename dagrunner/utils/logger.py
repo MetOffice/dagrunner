@@ -142,16 +142,18 @@ class LogRecordSocketReceiver(socketserver.ThreadingTCPServer):
 
 
 class SQLiteQueueHandler:
-    def __init__(self, sqfile="logs.sqlite"):
+    def __init__(self, sqfile="logs.sqlite", verbose=False):
         self._sqfile = sqfile
         self._conn = None
+        self._verbose = verbose
 
     @property
     def db(self):
         if self._conn is None:
             import sqlite3
 
-            print(f"Writing sqlite file: {self._sqfile}")
+            if self._verbose:
+                print(f"Writing sqlite file: {self._sqfile}")
             self._conn = sqlite3.connect(self._sqfile)  # Connect to the SQLite database
             cursor = self._conn.cursor()
             cursor.execute("""
@@ -168,10 +170,12 @@ class SQLiteQueueHandler:
         return self._conn
 
     def write(self, log_queue):
-        print("Writing to sqlite file")
+        if self._verbose:
+            print("Writing to sqlite file")
         while not log_queue.empty():
             record = log_queue.get()
-            print("Dequeued item:", record)
+            if self._verbose:
+                print("Dequeued item:", record)
             cursor = self.db.cursor()
             cursor.execute(
                 "\n"
@@ -210,10 +214,11 @@ class ServerContext:
 
     """
 
-    def __init__(self, sqlite_filepath=None):
+    def __init__(self, sqlite_filepath=None, verbose=False):
         self.tcpserver = None
         self.server_thread = None
         self._sqlite_filepath = sqlite_filepath
+        self._verbose = verbose
 
     def __enter__(self):
         logging.basicConfig(
@@ -231,7 +236,8 @@ class ServerContext:
             sqlitequeue = SQLiteQueueHandler(sqfile=self._sqlite_filepath)
 
         self.tcpserver = LogRecordSocketReceiver(log_queue=self.log_queue)
-        print("About to start TCP server...")
+        if self._verbose:
+            print("About to start TCP server...")
         self.server_thread = threading.Thread(
             target=self.tcpserver.serve_until_stopped,
             kwargs={"queue_handler": sqlitequeue},
@@ -249,7 +255,7 @@ def main():
     """
     Demonstrate how to start a TCP server to receive log records.
     """
-    with ServerContext():
+    with ServerContext(verbose=True):
         print("Doing something while the server is running")
         input("Press Enter to stop the server...")
     print("Server stopped")
