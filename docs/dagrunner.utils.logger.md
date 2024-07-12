@@ -12,7 +12,7 @@ https://docs.python.org/3/howto/logging-cookbook.html#sending-and-receiving-logg
 
 ## class: `LogRecordSocketReceiver`
 
-[Source](../dagrunner/utils/logger.py#L105)
+[Source](../dagrunner/utils/logger.py#L104)
 
 ### Call Signature:
 
@@ -27,7 +27,7 @@ log records.
 
 ### function: `__init__`
 
-[Source](../dagrunner/utils/logger.py#L115)
+[Source](../dagrunner/utils/logger.py#L114)
 
 #### Call Signature:
 
@@ -39,7 +39,7 @@ Constructor.  May be extended, do not override.
 
 ### function: `serve_until_stopped`
 
-[Source](../dagrunner/utils/logger.py#L128)
+[Source](../dagrunner/utils/logger.py#L127)
 
 #### Call Signature:
 
@@ -49,7 +49,7 @@ serve_until_stopped(self, queue_handler=None)
 
 ### function: `stop`
 
-[Source](../dagrunner/utils/logger.py#L140)
+[Source](../dagrunner/utils/logger.py#L139)
 
 #### Call Signature:
 
@@ -59,7 +59,7 @@ stop(self)
 
 ## class: `LogRecordStreamHandler`
 
-[Source](../dagrunner/utils/logger.py#L56)
+[Source](../dagrunner/utils/logger.py#L55)
 
 ### Call Signature:
 
@@ -74,7 +74,7 @@ records and customise logging events.
 
 ### function: `handle`
 
-[Source](../dagrunner/utils/logger.py#L64)
+[Source](../dagrunner/utils/logger.py#L63)
 
 #### Call Signature:
 
@@ -88,7 +88,7 @@ according to whatever policy is configured locally.
 
 ### function: `handle_log_record`
 
-[Source](../dagrunner/utils/logger.py#L90)
+[Source](../dagrunner/utils/logger.py#L89)
 
 #### Call Signature:
 
@@ -98,7 +98,7 @@ handle_log_record(self, record)
 
 ### function: `unpickle`
 
-[Source](../dagrunner/utils/logger.py#L87)
+[Source](../dagrunner/utils/logger.py#L86)
 
 #### Call Signature:
 
@@ -108,7 +108,7 @@ unpickle(self, data)
 
 ## class: `SQLiteQueueHandler`
 
-[Source](../dagrunner/utils/logger.py#L145)
+[Source](../dagrunner/utils/logger.py#L144)
 
 ### Call Signature:
 
@@ -118,7 +118,7 @@ SQLiteQueueHandler(sqfile='logs.sqlite')
 
 ### function: `__init__`
 
-[Source](../dagrunner/utils/logger.py#L146)
+[Source](../dagrunner/utils/logger.py#L145)
 
 #### Call Signature:
 
@@ -130,7 +130,7 @@ Initialize self.  See help(type(self)) for accurate signature.
 
 ### function: `close`
 
-[Source](../dagrunner/utils/logger.py#L194)
+[Source](../dagrunner/utils/logger.py#L193)
 
 #### Call Signature:
 
@@ -140,7 +140,7 @@ close(self)
 
 ### function: `write`
 
-[Source](../dagrunner/utils/logger.py#L171)
+[Source](../dagrunner/utils/logger.py#L170)
 
 #### Call Signature:
 
@@ -150,7 +150,7 @@ write(self, log_queue)
 
 ## class: `ServerContext`
 
-[Source](../dagrunner/utils/logger.py#L199)
+[Source](../dagrunner/utils/logger.py#L198)
 
 ### Call Signature:
 
@@ -166,7 +166,8 @@ console.  The TC server is run in a separate thread enabling the main thread to
 continue running other tasks.
 
 Log format is:
-%(relativeCreated)5d %(name)-15s %(levelname)-8s %(hostname)s %(process)d %(asctime)s %(message)s
+%(relativeCreated)5d %(name)-15s %(levelname)-8s %(hostname)s %(process)d
+%(asctime)s %(message)s
 
 ### function: `__enter__`
 
@@ -180,7 +181,7 @@ __enter__(self)
 
 ### function: `__exit__`
 
-[Source](../dagrunner/utils/logger.py#L240)
+[Source](../dagrunner/utils/logger.py#L243)
 
 #### Call Signature:
 
@@ -202,7 +203,7 @@ Initialize self.  See help(type(self)) for accurate signature.
 
 ## function: `client_attach_socket_handler`
 
-[Source](../dagrunner/utils/logger.py#L28)
+[Source](../dagrunner/utils/logger.py#L27)
 
 ### Call Signature:
 
@@ -228,7 +229,7 @@ application:
 
 ## function: `main`
 
-[Source](../dagrunner/utils/logger.py#L245)
+[Source](../dagrunner/utils/logger.py#L248)
 
 ### Call Signature:
 

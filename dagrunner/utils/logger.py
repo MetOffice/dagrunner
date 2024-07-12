@@ -15,12 +15,11 @@ https://docs.python.org/3/howto/logging-cookbook.html#sending-and-receiving-logg
 import logging
 import logging.handlers
 import pickle
+import queue
 import socket
 import socketserver
 import struct
 import threading
-import queue
-
 
 __all__ = ["client_attach_socket_handler", "ServerContext"]
 
@@ -175,10 +174,10 @@ class SQLiteQueueHandler:
             print("Dequeued item:", record)
             cursor = self.db.cursor()
             cursor.execute(
-                """
-                INSERT INTO logs (created, name, level, message, hostname, process, thread)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            """,
+                "\n"
+                "INSERT INTO logs "
+                "(created, name, level, message, hostname, process, thread)\n"
+                "VALUES (?, ?, ?, ?, ?, ?, ?)\n",
                 (
                     record.created,
                     record.name,
@@ -206,7 +205,8 @@ class ServerContext:
     continue running other tasks.
 
     Log format is:
-    %(relativeCreated)5d %(name)-15s %(levelname)-8s %(hostname)s %(process)d %(asctime)s %(message)s
+    %(relativeCreated)5d %(name)-15s %(levelname)-8s %(hostname)s %(process)d
+    %(asctime)s %(message)s
 
     """
 
@@ -217,7 +217,10 @@ class ServerContext:
 
     def __enter__(self):
         logging.basicConfig(
-            format="%(relativeCreated)5d %(name)-15s %(levelname)-8s %(hostname)s %(process)d %(asctime)s %(message)s",
+            format=(
+                "%(relativeCreated)5d %(name)-15s %(levelname)-8s %(hostname)s "
+                "%(process)d %(asctime)s %(message)s"
+            ),
             datefmt="%Y-%m-%dT%H:%M:%S",
         )  # Date in ISO 8601 format
 

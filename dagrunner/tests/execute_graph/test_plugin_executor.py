@@ -13,7 +13,10 @@ class DummyPlugin:
         self._ikwarg1 = ikwarg1
 
     def __call__(self, *args, kwarg1=None, **kwargs):
-        return f"iarg1={self._iarg1}; ikwarg1={self._ikwarg1}; args={args}; kwarg1={kwarg1}; kwargs={kwargs}"
+        return (
+            f"iarg1={self._iarg1}; ikwarg1={self._ikwarg1}; args={args}; "
+            f"kwarg1={kwarg1}; kwargs={kwargs}"
+        )
 
 
 def test_pass_class_arg_kwargs():
@@ -27,9 +30,10 @@ def test_pass_class_arg_kwargs():
         ]
     )
     res = plugin_executor(*args, call=call)
-    assert (
-        res
-        == "iarg1=sentinel.iarg1; ikwarg1=sentinel.ikwarg1; args=(sentinel.arg1, sentinel.arg2); kwarg1=sentinel.kwarg1; kwargs={}"
+    assert res == (
+        "iarg1=sentinel.iarg1; ikwarg1=sentinel.ikwarg1; "
+        "args=(sentinel.arg1, sentinel.arg2); kwarg1=sentinel.kwarg1; "
+        "kwargs={}"
     )
 
 
@@ -45,17 +49,18 @@ def test_pass_common_args():
     # call without common args (iarg1 is positional so non-optional)
     call = tuple([DummyPlugin, {"iarg1": mock.sentinel.iarg1}, {}])
     res = plugin_executor(*args, call=call)
-    assert (
-        res
-        == "iarg1=sentinel.iarg1; ikwarg1=None; args=(sentinel.arg1, sentinel.arg2); kwarg1=None; kwargs={}"
+    assert res == (
+        "iarg1=sentinel.iarg1; ikwarg1=None; args=(sentinel.arg1, "
+        "sentinel.arg2); kwarg1=None; kwargs={}"
     )
 
     # call with common args
     call = tuple([DummyPlugin, {}, {}])
     res = plugin_executor(*args, call=call, common_kwargs=common_kwargs)
-    assert (
-        res
-        == "iarg1=sentinel.iarg1; ikwarg1=sentinel.ikwarg1; args=(sentinel.arg1, sentinel.arg2); kwarg1=sentinel.kwarg1; kwargs={}"
+    assert res == (
+        "iarg1=sentinel.iarg1; ikwarg1=sentinel.ikwarg1; "
+        "args=(sentinel.arg1, sentinel.arg2); kwarg1=sentinel.kwarg1; "
+        "kwargs={}"
     )
 
 

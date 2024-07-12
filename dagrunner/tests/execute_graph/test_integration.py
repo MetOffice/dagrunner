@@ -2,16 +2,15 @@
 #
 # This file is part of 'dagrunner' and is released under the BSD 3-Clause license.
 # See LICENSE in the root of the repository for full licensing details.
-from dataclasses import dataclass
 import json
 import time
+from dataclasses import dataclass
 from unittest.mock import patch
 
 import pytest
 
-from dagrunner.plugin_framework import Plugin, SaveJson
 from dagrunner.execute_graph import ExecuteGraph
-
+from dagrunner.plugin_framework import Plugin, SaveJson
 
 HOUR = 3600
 MINUTE = 60

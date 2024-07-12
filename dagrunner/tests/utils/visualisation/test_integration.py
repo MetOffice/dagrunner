@@ -4,9 +4,9 @@
 # See LICENSE in the root of the repository for full licensing details.
 import tempfile
 
+from dagrunner.tests import assert_text_file_equal
 from dagrunner.utils import ObjectAsStr
 from dagrunner.utils.visualisation import visualise_graph
-from dagrunner.tests import assert_text_file_equal
 
 
 def test_basic():

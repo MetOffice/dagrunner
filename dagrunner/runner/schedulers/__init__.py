@@ -16,8 +16,8 @@ name-scheduler lookup:
 """
 
 from functools import partial
-from . import asyncmp
-from . import dask
+
+from . import asyncmp, dask
 
 # Schedulers that can be used with the runner, a name-lookup.
 SCHEDULERS = {

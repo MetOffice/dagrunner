@@ -41,12 +41,14 @@ jobs:
           pip uninstall dagrunner -y
 
       # TESTS (inc. test coverage)
+
       # excluded logging as per https://github.com/MetOffice/dagrunner/issues/39
       - name: Run pytest + coverage report gen
         run: pytest --cov=dagrunner --cov-report=term --cov-report=html --ignore=dagrunner/tests/utils/logging/test_integration.py | tee coverage_output.txt; test ${PIPESTATUS[0]} -eq 0
 
 
       # TESTS (main branch)
+
       - name: Cache ref branch coverage report
         id: cache-ref-coverage
         uses: actions/cache@v4
@@ -61,13 +63,15 @@ jobs:
           path: ref
           ref: ${{ github.base_ref }}
 
+      # excluded logging as per https://github.com/MetOffice/dagrunner/issues/39
       - name: Run tests with coverage for ref branch
         if: steps.cache-ref-coverage.outputs.cache-hit != 'true'
         run: |
           cd ref
-          pytest --cov=dagrunner --cov-report=term | tee coverage_output.txt
+          pytest --cov=dagrunner --cov-report=term --cov-report=html --ignore=dagrunner/tests/utils/logging/test_integration.py | tee coverage_output.txt; test ${PIPESTATUS[0]} -eq 0
 
       # TESTS (compare coverage)
+
       - name: Compare coverage
         id: comp-coverage
         run: |
@@ -139,6 +143,9 @@ jobs:
           echo "changed=$(git diff --quiet --exit-code || echo true)" | tee -a $GITHUB_OUTPUT
 
       # https://github.com/orgs/community/discussions/26560#discussioncomment-3531273
+      # This must be our very final step to ensure that it runs only on condition of
+      # success of all previous steps.  A pushed commit will not trigger the re-running
+      # of this workflow.
       - name: Commit and push documentation changes
         if: steps.check-docs.outputs.changed == 'true'
         run: |

@@ -2,10 +2,10 @@
 #
 # This file is part of 'dagrunner' and is released under the BSD 3-Clause license.
 # See LICENSE in the root of the repository for full licensing details.
-from multiprocessing import Pool
-from typing import Iterable, Any
-from time import sleep
 import warnings
+from multiprocessing import Pool
+from time import sleep
+from typing import Any, Iterable
 
 from dask.core import get_deps
 
@@ -81,7 +81,7 @@ class AsyncMP:
             warnings.warn("profiler output not supported for multiprocessing scheduler")
 
         pred_deps, succ_deps = get_deps(graph)
-        pass_data_in_memory = True  # pass data between processes in memory (flag provided to make testing easier)
+        pass_data_in_memory = True  # pass data between processes in memory
         data_map = {}  # map between target and result
 
         # Submit initial nodes
@@ -117,8 +117,8 @@ class AsyncMP:
                     node_queue.extend(succ_deps[target])  # nodes we want to run next
 
                     if pass_data_in_memory:
-                        # manage data being held
-                        # throw away data no longer needed - when all successors are completed
+                        # manage data being held - throw away data no longer needed,
+                        # when all successors are completed
                         data_map[target] = async_res.get()  # store result
                         for d_tgt in list(data_map.keys()):
                             succ_deps[d_tgt] = [

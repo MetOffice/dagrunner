@@ -32,12 +32,12 @@ exception if the timeout is reached.
 Args:
 - *args: Variable length argument list of file patterns to be checked.
 - timeout (int): Timeout in seconds (default is 120 seconds).
-- polling (int): Time interval in seconds between each poll (default is 1 second).
+- polling (int): Time interval in seconds between each poll (default is 1
+  second).
 - file_count (int): Expected number of files to be found (default is None).
     If specified, the total number of files found can be greater than the
     number of arguments.  Each argument is expected to return a minimum of
     1 match each in either case.
-
 
 Returns:
 - None
@@ -47,7 +47,7 @@ Raises:
 
 ## class: `Input`
 
-[Source](../dagrunner/plugin_framework.py#L117)
+[Source](../dagrunner/plugin_framework.py#L118)
 
 ### Call Signature:
 
@@ -61,7 +61,7 @@ that are 'node aware'.
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L118)
+[Source](../dagrunner/plugin_framework.py#L119)
 
 #### Call Signature:
 
@@ -71,8 +71,9 @@ __call__(self, *args, filepath=None, **kwargs)
 
 Given a filepath, expand it and return this string
 
-Expand the provided filepath using the keyword arguments and environment variables.
-Note that this plugin is 'node aware' since it is derived from the `NodeAwarePlugin`.
+Expand the provided filepath using the keyword arguments and environment
+variables.  Note that this plugin is 'node aware' since it is derived from the
+`NodeAwarePlugin`.
 
 Args:
 - *args: Positional arguments are not accepted.
@@ -158,7 +159,7 @@ Returns:
 
 ## class: `SaveJson`
 
-[Source](../dagrunner/plugin_framework.py#L144)
+[Source](../dagrunner/plugin_framework.py#L146)
 
 ### Call Signature:
 
@@ -172,7 +173,7 @@ that are 'node aware'.
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L145)
+[Source](../dagrunner/plugin_framework.py#L147)
 
 #### Call Signature:
 

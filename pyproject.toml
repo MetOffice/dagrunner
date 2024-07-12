@@ -37,3 +37,10 @@ Repository = "https://github.com/MetOffice/dagrunner"
 
 [project.scripts]
 dagrunner-execute-graph = "dagrunner.execute_graph:main"
+
+[tool.ruff.lint]
+extend-select = ["E", "F", "W", "I"]
+
+[tool.ruff.format]
+# Enable reformatting of code snippets in docstrings.
+docstring-code-format = true
