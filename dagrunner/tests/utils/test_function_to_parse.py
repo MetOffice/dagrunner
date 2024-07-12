@@ -111,7 +111,7 @@ Extended description of function.
 options:
   -h, --help          show this help message and exit
   --kwargs key value  Optional global keyword arguments to apply to all applicable plugins. Key-value pair argument.
-"""
+"""  # noqa: E501
     assert_help_str(help_str, tar)
 
     args = parser.parse_args(["--kwargs", "key1", "val1", "--kwargs", "key2", "val2"])
