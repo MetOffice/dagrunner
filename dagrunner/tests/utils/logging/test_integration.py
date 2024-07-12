@@ -31,26 +31,18 @@ def gen_client_code(loggers):
     return code
 
 
-@pytest.mark.parametrize(
-    "test_inputs",
-    [
-        (
-            ("Python is versatile and powerful.", "root", "info"),
-            ("Lists store collections of items.", "myapp.area1", "debug"),
-            ("Functions encapsulate reusable code.", "myapp.area1", "info"),
-            ("Indentation defines code blocks.", "myapp.area2", "warning"),
-            ("Libraries extend Pythons capabilities.", "myapp.area2", "error"),
-        ),
-    ],
-)
-@pytest.mark.serial
-def test_sqlitedb(test_inputs, sqlite_filepath, caplog):
-    client_code = gen_client_code(test_inputs)
+def test_sqlitedb(sqlite_filepath, caplog):
+    test_inputs = (
+        ["Python is versatile and powerful.", "root", "info"],
+        ["Lists store collections of items.", "myapp.area1", "debug"],
+        ["Functions encapsulate reusable code.", "myapp.area1", "info"],
+        ["Indentation defines code blocks.", "myapp.area2", "warning"],
+        ["Libraries extend Pythons capabilities.", "myapp.area2", "error"],
+    )
 
+    client_code = gen_client_code(test_inputs)
     with ServerContext(sqlite_filepath=sqlite_filepath):
-        # Wait for server to start
-        time.sleep(0.5)
-        # Run client in subprocess
+        time.sleep(3)
         subprocess.run(
             ["python", "-c", client_code], capture_output=True, text=True, check=True
         )
@@ -64,6 +56,7 @@ def test_sqlitedb(test_inputs, sqlite_filepath, caplog):
             == record
         )
 
+    time.sleep(3)
     # Check there are any records in the database
     conn = sqlite3.connect(sqlite_filepath)
     cursor = conn.cursor()

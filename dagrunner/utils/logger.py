@@ -6,10 +6,20 @@
 This module takes much from the Python logging cookbook:
 https://docs.python.org/3/howto/logging-cookbook.html#sending-and-receiving-logging-events-across-a-network
 
-- `client_attach_socket_handler`, a function that attaches a socket handler to the root
-  logger.
-- `ServerContext`, a context manager that starts and manages the TCP server on its own
-  thread to receive log records.
+## Overview
+
+- `client_attach_socket_handler`, a function that attaches a socket handler
+  `logging.handlers.SocketHandler` to the root logger with the specified host name and
+  port number.
+- `ServerContext`, a context manager that starts and manages the TCP server
+  `LogRecordSocketReceiver` on its own thread, ready to receive log records.
+  - `SQLiteQueueHandler`, which is managed by the server context and writes log records
+    to an SQLite database.
+  - `LogRecordSocketReceiver(socketserver.ThreadingTCPServer)`, the TCP server running
+    on a specified host and port, managed by the server context that receives log
+    records and utilises the `LogRecordStreamHandler` handler.
+    - `LogRecordStreamHandler`, a specialisation of the
+      `socketserver.StreamRequestHandler`, responsible for 'getting' log records.
 """
 
 import logging
@@ -24,7 +34,9 @@ import threading
 __all__ = ["client_attach_socket_handler", "ServerContext"]
 
 
-def client_attach_socket_handler():
+def client_attach_socket_handler(
+    host: str = "localhost", port: int = logging.handlers.DEFAULT_TCP_LOGGING_PORT
+):
     """
     Attach a SocketHandler instance to the root logger at the sending end.
 
@@ -41,12 +53,15 @@ def client_attach_socket_handler():
         logger1.info('How quickly daft jumping zebras vex.')
         logger2.warning('Jail zesty vixen who grabbed pay from quack.')
         logger2.error('The five boxing wizards jump quickly.')
+
+    Args:
+    - `host`: The host name of the server.  Optional.
+    - `port`: The port number the server is listening on.  Optional.
+
     """
     rootLogger = logging.getLogger("")
     rootLogger.setLevel(logging.DEBUG)
-    socketHandler = logging.handlers.SocketHandler(
-        "localhost", logging.handlers.DEFAULT_TCP_LOGGING_PORT
-    )
+    socketHandler = logging.handlers.SocketHandler(host, port)
     # don't bother with a formatter, since a socket handler sends the event as
     # an unformatted pickle
     rootLogger.addHandler(socketHandler)
@@ -212,9 +227,22 @@ class ServerContext:
     %(relativeCreated)5d %(name)-15s %(levelname)-8s %(hostname)s %(process)d
     %(asctime)s %(message)s
 
+    Args:
+    - `host`: The host name of the server.  Optional.
+    - `port`: The port number the server is listening on.  Optional.
+    - `sqlite_filepath`: The path to the SQLite database file.  Don't write to a
+      file if not provided.  Optional.
+    - `verbose`: Whether to print verbose output.  Optional.
+
     """
 
-    def __init__(self, sqlite_filepath=None, verbose=False):
+    def __init__(
+        self,
+        host: str = "localhost",
+        port: int = logging.handlers.DEFAULT_TCP_LOGGING_PORT,
+        sqlite_filepath: str = None,
+        verbose: bool = False,
+    ):
         self.tcpserver = None
         self.server_thread = None
         self._sqlite_filepath = sqlite_filepath
@@ -235,7 +263,9 @@ class ServerContext:
         if self._sqlite_filepath:
             sqlitequeue = SQLiteQueueHandler(sqfile=self._sqlite_filepath)
 
-        self.tcpserver = LogRecordSocketReceiver(log_queue=self.log_queue)
+        self.tcpserver = LogRecordSocketReceiver(
+            host=self._host, port=self._port, log_queue=self.log_queue
+        )
         if self._verbose:
             print("About to start TCP server...")
         self.server_thread = threading.Thread(
