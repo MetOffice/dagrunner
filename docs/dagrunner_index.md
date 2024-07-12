@@ -1,5 +1,5 @@
 # Index for 'dagrunner' reference documentation
-version: 0.0.1dev
+version: {module.__version__}
 
   - [module: dagrunner](dagrunner.md#module-dagrunner)
     - [module: execute_graph](dagrunner.execute_graph.md#module-dagrunnerexecute_graph)
