@@ -138,9 +138,16 @@ class Input(NodeAwarePlugin):
         """
         if args:
             raise ValueError("Input plugin does not accept positional arguments")
-        return os.path.expanduser(
-            string.Template(filepath.format(**kwargs)).substitute(os.environ)
-        )
+
+        def expand(pstring):
+            res = os.path.expanduser(
+                string.Template(pstring.format(**kwargs)).substitute(os.environ)
+            )
+            if "{" in res and "}" in res:
+                return expand(res)
+            return res
+
+        return expand(filepath)
 
 
 class SaveJson(Input):

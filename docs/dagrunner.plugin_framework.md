@@ -159,7 +159,7 @@ Returns:
 
 ## class: `SaveJson`
 
-[Source](../dagrunner/plugin_framework.py#L146)
+[Source](../dagrunner/plugin_framework.py#L153)
 
 ### Call Signature:
 
@@ -173,7 +173,7 @@ that are 'node aware'.
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L147)
+[Source](../dagrunner/plugin_framework.py#L154)
 
 #### Call Signature:
 
