@@ -149,11 +149,13 @@ class LogRecordSocketReceiver(socketserver.ThreadingTCPServer):
                 self.handle_request()
                 queue_handler.write(self.log_queue)
             abort = self.abort
-        queue_handler.close()
+        if queue_handler:
+            queue_handler.write(self.log_queue)  # Ensure all records are written
+            queue_handler.close()
 
     def stop(self):
-        self.server_close()  # Close the server socket
         self.abort = 1  # Set abort flag to stop the server loop
+        self.server_close()  # Close the server socket
 
 
 class SQLiteQueueHandler:
@@ -247,6 +249,8 @@ class ServerContext:
         self.server_thread = None
         self._sqlite_filepath = sqlite_filepath
         self._verbose = verbose
+        self._host = host
+        self._port = port
 
     def __enter__(self):
         logging.basicConfig(
@@ -261,7 +265,9 @@ class ServerContext:
 
         sqlitequeue = None
         if self._sqlite_filepath:
-            sqlitequeue = SQLiteQueueHandler(sqfile=self._sqlite_filepath)
+            sqlitequeue = SQLiteQueueHandler(
+                sqfile=self._sqlite_filepath, verbose=self._verbose
+            )
 
         self.tcpserver = LogRecordSocketReceiver(
             host=self._host, port=self._port, log_queue=self.log_queue

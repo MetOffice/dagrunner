@@ -37,6 +37,7 @@ Repository = "https://github.com/MetOffice/dagrunner"
 
 [project.scripts]
 dagrunner-execute-graph = "dagrunner.execute_graph:main"
+dagrunner-logger = "dagrunner.utils.logger:main"
 
 [tool.ruff.lint]
 extend-select = ["E", "F", "W", "I"]

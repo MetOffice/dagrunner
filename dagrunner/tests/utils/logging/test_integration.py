@@ -6,7 +6,6 @@ import logging
 import os
 import sqlite3
 import subprocess
-import time
 
 import pytest
 
@@ -39,10 +38,8 @@ def test_sqlitedb(sqlite_filepath, caplog):
         ["Indentation defines code blocks.", "myapp.area2", "warning"],
         ["Libraries extend Pythons capabilities.", "myapp.area2", "error"],
     )
-
     client_code = gen_client_code(test_inputs)
-    with ServerContext(sqlite_filepath=sqlite_filepath):
-        time.sleep(3)
+    with ServerContext(sqlite_filepath=sqlite_filepath, verbose=True):
         subprocess.run(
             ["python", "-c", client_code], capture_output=True, text=True, check=True
         )
@@ -56,7 +53,6 @@ def test_sqlitedb(sqlite_filepath, caplog):
             == record
         )
 
-    time.sleep(3)
     # Check there are any records in the database
     conn = sqlite3.connect(sqlite_filepath)
     cursor = conn.cursor()

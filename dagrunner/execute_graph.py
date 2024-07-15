@@ -17,6 +17,7 @@ from dask.utils import apply
 from dagrunner.plugin_framework import NodeAwarePlugin
 from dagrunner.runner.schedulers import SCHEDULERS
 from dagrunner.utils import (
+    CaptureProcMemory,
     TimeIt,
     function_to_argparse,
     logger,
@@ -141,10 +142,11 @@ def plugin_executor(
         print(msg)
     res = None
     if not dry_run:
-        with TimeIt() as timer:
-            with dask.config.set(scheduler="single-threaded"):
-                res = callable_obj(*args, **callable_kwargs)
-        msg = f"{str(timer)}; {msg}"
+        with TimeIt() as timer, dask.config.set(
+            scheduler="single-threaded"
+        ), CaptureProcMemory() as mem:
+            res = callable_obj(*args, **callable_kwargs)
+        msg = f"{str(timer)}; {msg}; {mem.max()}"
     logging.info(msg)
 
     if verbose:
