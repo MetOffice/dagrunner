@@ -40,7 +40,18 @@ def get_proc_mem_stat(pid=os.getpid()):
 
 
 class _CaptureMemory(ABC):
+    """Abstract class to capture maximum memory statistics."""
+
     def __init__(self, interval=1.0, **kwargs):
+        """
+        Initialize the memory capture.
+
+        Args:
+        - `interval`: Time interval in seconds to capture memory statistics.
+          Note that memory statistics are captured by reading `/proc` files.  It is
+          advised not to reduce the interval too much, otherwise we increase the
+          overhead of reading the files.
+        """
         self._interval = interval
         self._max_memory_stats = {}
         self._stop_event = threading.Event()
@@ -73,12 +84,18 @@ class _CaptureMemory(ABC):
         self._thread.join()
 
     def max(self):
+        """
+        Return maximum memory statistics.
+
+        Returns:
+        - Dictionary with memory statistics in MB.
+        """
         return self._max_memory_stats
 
 
 class CaptureProcMemory(_CaptureMemory):
     """
-    Capture maxmimum process memory statistics.
+    Capture maximum process memory statistics.
 
     See `get_proc_mem_stat` for more information.
     """
@@ -88,6 +105,17 @@ class CaptureProcMemory(_CaptureMemory):
         return get_proc_mem_stat
 
     def __init__(self, interval=1.0, pid=os.getpid()):
+        """
+        Initialize the memory capture.
+
+        Args:
+        - `interval`: Time interval in seconds to capture memory statistics.
+          Note that memory statistics are captured by reading /proc files.  It is
+          advised not to reduce the interval too much, otherwise we increase the
+          overhead of reading the files.
+        - `pid`: Process id.  Optional.  Default is the current process.
+
+        """
         super().__init__(interval=interval, pid=pid)
 
 
@@ -119,7 +147,7 @@ def get_sys_mem_stat():
 
 class CaptureSysMemory(_CaptureMemory):
     """
-    Capture maxmimum system memory statistics.
+    Capture maximum system memory statistics.
 
     See `get_sys_mem_stat` for more information.
     """
