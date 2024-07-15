@@ -4,9 +4,157 @@
 # See LICENSE in the root of the repository for full licensing details.
 import argparse
 import inspect
+import os
+import threading
 import time
+from abc import ABC, abstractmethod
 
 import dagrunner.utils._doc_styles as doc_styles
+
+
+def get_proc_mem_stat(pid=os.getpid()):
+    """
+    Get process memory statistics from /proc/<pid>/status.
+
+    More information can be found at
+    https://github.com/torvalds/linux/blob/master/Documentation/filesystems/proc.txt
+
+    Args:
+    - `pid`: Process id.  Optional.  Default is the current process.
+
+    Returns:
+    - Dictionary with memory statistics in MB.  Fields are VmSize, VmRSS, VmPeak and
+      VmHWM.
+
+    """
+    status_path = f"/proc/{pid}/status"
+    memory_stats = {}
+    with open(status_path, "r") as file:
+        for line in file:
+            if line.startswith(("VmSize:", "VmRSS:", "VmPeak:", "VmHWM:")):
+                key, value = line.split(":", 1)
+                memory_stats[key.strip()] = (
+                    float(value.split()[0].strip()) / 1024.0
+                )  # convert kb to mb
+    return memory_stats
+
+
+class _CaptureMemory(ABC):
+    """Abstract class to capture maximum memory statistics."""
+
+    def __init__(self, interval=1.0, **kwargs):
+        """
+        Initialize the memory capture.
+
+        Args:
+        - `interval`: Time interval in seconds to capture memory statistics.
+          Note that memory statistics are captured by reading `/proc` files.  It is
+          advised not to reduce the interval too much, otherwise we increase the
+          overhead of reading the files.
+        """
+        self._interval = interval
+        self._max_memory_stats = {}
+        self._stop_event = threading.Event()
+        self._params = kwargs
+
+    @property
+    @abstractmethod
+    def METHOD(self):
+        pass
+
+    def _capture_memory(self):
+        while not self._stop_event.is_set():
+            current_stats = self.METHOD(**self._params)
+            if not self._max_memory_stats:
+                self._max_memory_stats = {key: 0 for key in current_stats}
+            for key in current_stats:
+                if current_stats[key] > self._max_memory_stats[key]:
+                    self._max_memory_stats[key] = current_stats[key]
+            # Wait for the interval or until stop event is set
+            if self._stop_event.wait(self._interval):
+                break
+
+    def __enter__(self):
+        self._thread = threading.Thread(target=self._capture_memory)
+        self._thread.start()
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self._stop_event.set()
+        self._thread.join()
+
+    def max(self):
+        """
+        Return maximum memory statistics.
+
+        Returns:
+        - Dictionary with memory statistics in MB.
+        """
+        return self._max_memory_stats
+
+
+class CaptureProcMemory(_CaptureMemory):
+    """
+    Capture maximum process memory statistics.
+
+    See `get_proc_mem_stat` for more information.
+    """
+
+    @property
+    def METHOD(self):
+        return get_proc_mem_stat
+
+    def __init__(self, interval=1.0, pid=os.getpid()):
+        """
+        Initialize the memory capture.
+
+        Args:
+        - `interval`: Time interval in seconds to capture memory statistics.
+          Note that memory statistics are captured by reading /proc files.  It is
+          advised not to reduce the interval too much, otherwise we increase the
+          overhead of reading the files.
+        - `pid`: Process id.  Optional.  Default is the current process.
+
+        """
+        super().__init__(interval=interval, pid=pid)
+
+
+def get_sys_mem_stat():
+    """
+    Get system memory statistics from /proc/meminfo.
+
+    More information can be found at
+    https://github.com/torvalds/linux/blob/master/Documentation/filesystems/proc.txt
+
+    Returns:
+    - Dictionary with memory statistics in MB.  Fields are Committed_AS, MemFree,
+      Buffers, Cached and MemTotal.
+
+    """
+    status_path = "/proc/meminfo"
+    memory_stats = {}
+    with open(status_path, "r") as file:
+        for line in file:
+            if line.startswith(
+                ("Committed_AS:", "MemFree:", "Buffers:", "Cached:", "MemTotal:")
+            ):
+                key, value = line.split(":", 1)
+                memory_stats[key.strip()] = (
+                    float(value.split()[0].strip()) / 1024.0
+                )  # convert kb to mb
+    return memory_stats
+
+
+class CaptureSysMemory(_CaptureMemory):
+    """
+    Capture maximum system memory statistics.
+
+    See `get_sys_mem_stat` for more information.
+    """
+
+    @property
+    def METHOD(self):
+        return get_sys_mem_stat
 
 
 class ObjectAsStr(str):
