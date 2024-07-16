@@ -108,7 +108,7 @@ class AsyncMP:
                             async_res.get()  # remote traceback
                         except Exception as err:
                             self._failures_found = True
-                            command = " ".join(graph[target][2:])
+                            command = str(graph[target])
                             raise RuntimeError(
                                 f"Command failure, key: '{target}'\ncommand:{command}"
                             ) from err
