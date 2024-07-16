@@ -52,7 +52,7 @@ class Node:
         return f"S:{self.step}_L:{self.leadtime}"
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture()
 def graph(tmp_path_factory):
     leadtimes = tuple(range(0, HOUR * 2, HOUR))
 
