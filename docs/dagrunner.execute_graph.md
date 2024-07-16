@@ -2,6 +2,8 @@
 
 [Source](../dagrunner/execute_graph.py#L0)
 
+see [class: dagrunner.utils.CaptureProcMemory](dagrunner.utils.md#class-captureprocmemory)
+
 see [class: dagrunner.plugin_framework.NodeAwarePlugin](dagrunner.plugin_framework.md#class-nodeawareplugin)
 
 see [class: dagrunner.utils.TimeIt](dagrunner.utils.md#class-timeit)
@@ -14,7 +16,7 @@ see [function: dagrunner.utils.visualisation.visualise_graph](dagrunner.utils.vi
 
 ## class: `ExecuteGraph`
 
-[Source](../dagrunner/execute_graph.py#L208)
+[Source](../dagrunner/execute_graph.py#L249)
 
 ### Call Signature:
 
@@ -24,7 +26,7 @@ ExecuteGraph(networkx_graph: str, networkx_graph_kwargs: dict = None, <function 
 
 ### function: `__call__`
 
-[Source](../dagrunner/execute_graph.py#L309)
+[Source](../dagrunner/execute_graph.py#L350)
 
 #### Call Signature:
 
@@ -36,7 +38,7 @@ Call self as a function.
 
 ### function: `__init__`
 
-[Source](../dagrunner/execute_graph.py#L209)
+[Source](../dagrunner/execute_graph.py#L250)
 
 #### Call Signature:
 
@@ -78,7 +80,7 @@ Args:
 
 ### function: `visualise`
 
-[Source](../dagrunner/execute_graph.py#L306)
+[Source](../dagrunner/execute_graph.py#L347)
 
 #### Call Signature:
 
@@ -88,20 +90,26 @@ visualise(self, output_filepath: str)
 
 ## dict: `SCHEDULERS`
 
+## _SKIP_EVENT: `SKIP_EVENT`
+
 ## class: `SkipBranch`
 
-[Source](../dagrunner/execute_graph.py#L27)
+[Source](../dagrunner/execute_graph.py#L53)
 
 This exception is used to skip a branch of the execution graph.
 
-To be used in combination to one of the multiprocessing schedulers.
+To be used in combination to one of the multiprocessing dask schedulers.
 In the single-threaded scheduler, Dask executes tasks sequentially, and
 exceptions will propagate as they occur, potentially halting the execution of
 subsequent tasks.
 
+## Warning
+
+Status: experimental.
+
 ## function: `main`
 
-[Source](../dagrunner/execute_graph.py#L322)
+[Source](../dagrunner/execute_graph.py#L363)
 
 ### Call Signature:
 
@@ -114,7 +122,7 @@ Parses command line arguments and executes the graph using the ExecuteGraph clas
 
 ## function: `plugin_executor`
 
-[Source](../dagrunner/execute_graph.py#L55)
+[Source](../dagrunner/execute_graph.py#L85)
 
 ### Call Signature:
 
@@ -123,6 +131,12 @@ plugin_executor(*args, call=None, verbose=False, dry_run=False, common_kwargs=No
 ```
 
 Executes a plugin callable with the provided arguments and keyword arguments.
+
+Plugins can be functions or classes.  If a class, it is instantiated with the
+keyword arguments provided in the `call` tuple.  The plugin callable is then
+executed with the positional arguments provided in `args` and the keyword arguments
+provided in the `call` tuple.  A plugin call is skipped if 1 or more of the `args`
+is the `SKIP_EVENT` object.
 
 Args:
 - `*args`: Positional arguments to be passed to the plugin callable.

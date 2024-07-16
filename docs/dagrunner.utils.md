@@ -8,9 +8,144 @@ see [module: logger](dagrunner.utils.logger.md#module-dagrunnerutilslogger)
 
 see [module: visualisation](dagrunner.utils.visualisation.md#module-dagrunnerutilsvisualisation)
 
+## class: `CaptureProcMemory`
+
+[Source](../dagrunner/utils/__init__.py#L96)
+
+### Call Signature:
+
+```python
+CaptureProcMemory(interval=1.0, pid=2421)
+```
+
+Capture maximum process memory statistics.
+
+See `get_proc_mem_stat` for more information.
+
+### function: `__enter__`
+
+[Source](../dagrunner/utils/__init__.py#L77)
+
+#### Call Signature:
+
+```python
+__enter__(self)
+```
+
+### function: `__exit__`
+
+[Source](../dagrunner/utils/__init__.py#L82)
+
+#### Call Signature:
+
+```python
+__exit__(self, exc_type, exc_value, traceback)
+```
+
+### function: `__init__`
+
+[Source](../dagrunner/utils/__init__.py#L107)
+
+#### Call Signature:
+
+```python
+__init__(self, interval=1.0, pid=2421)
+```
+
+Initialize the memory capture.
+
+Args:
+- `interval`: Time interval in seconds to capture memory statistics.
+  Note that memory statistics are captured by reading /proc files.  It is
+  advised not to reduce the interval too much, otherwise we increase the
+  overhead of reading the files.
+- `pid`: Process id.  Optional.  Default is the current process.
+
+### function: `max`
+
+[Source](../dagrunner/utils/__init__.py#L86)
+
+#### Call Signature:
+
+```python
+max(self)
+```
+
+Return maximum memory statistics.
+
+Returns:
+- Dictionary with memory statistics in MB.
+
+## class: `CaptureSysMemory`
+
+[Source](../dagrunner/utils/__init__.py#L148)
+
+### Call Signature:
+
+```python
+CaptureSysMemory(interval=1.0, **kwargs)
+```
+
+Capture maximum system memory statistics.
+
+See `get_sys_mem_stat` for more information.
+
+### function: `__enter__`
+
+[Source](../dagrunner/utils/__init__.py#L77)
+
+#### Call Signature:
+
+```python
+__enter__(self)
+```
+
+### function: `__exit__`
+
+[Source](../dagrunner/utils/__init__.py#L82)
+
+#### Call Signature:
+
+```python
+__exit__(self, exc_type, exc_value, traceback)
+```
+
+### function: `__init__`
+
+[Source](../dagrunner/utils/__init__.py#L45)
+
+#### Call Signature:
+
+```python
+__init__(self, interval=1.0, **kwargs)
+```
+
+Initialize the memory capture.
+
+Args:
+- `interval`: Time interval in seconds to capture memory statistics.
+  Note that memory statistics are captured by reading `/proc` files.  It is
+  advised not to reduce the interval too much, otherwise we increase the
+  overhead of reading the files.
+
+### function: `max`
+
+[Source](../dagrunner/utils/__init__.py#L86)
+
+#### Call Signature:
+
+```python
+max(self)
+```
+
+Return maximum memory statistics.
+
+Returns:
+- Dictionary with memory statistics in MB.
+
 ## class: `KeyValueAction`
 
-[Source](../dagrunner/utils/__init__.py#L118)
+[Source](../dagrunner/utils/__init__.py#L266)
 
 ### Call Signature:
 
@@ -69,7 +204,7 @@ Keyword Arguments:
 
 ### function: `__call__`
 
-[Source](../dagrunner/utils/__init__.py#L119)
+[Source](../dagrunner/utils/__init__.py#L267)
 
 #### Call Signature:
 
@@ -81,7 +216,7 @@ Call self as a function.
 
 ## class: `ObjectAsStr`
 
-[Source](../dagrunner/utils/__init__.py#L12)
+[Source](../dagrunner/utils/__init__.py#L160)
 
 ### Call Signature:
 
@@ -93,7 +228,7 @@ Hide object under a string.
 
 ### function: `__hash__`
 
-[Source](../dagrunner/utils/__init__.py#L26)
+[Source](../dagrunner/utils/__init__.py#L174)
 
 #### Call Signature:
 
@@ -105,7 +240,7 @@ Return hash(self).
 
 ### function: `__new__`
 
-[Source](../dagrunner/utils/__init__.py#L17)
+[Source](../dagrunner/utils/__init__.py#L165)
 
 #### Call Signature:
 
@@ -117,7 +252,7 @@ Create and return a new object.  See help(type) for accurate signature.
 
 ### function: `obj_to_name`
 
-[Source](../dagrunner/utils/__init__.py#L30)
+[Source](../dagrunner/utils/__init__.py#L178)
 
 #### Call Signature:
 
@@ -127,7 +262,7 @@ obj_to_name(obj, cls)
 
 ## class: `TimeIt`
 
-[Source](../dagrunner/utils/__init__.py#L38)
+[Source](../dagrunner/utils/__init__.py#L186)
 
 ### Call Signature:
 
@@ -156,7 +291,7 @@ Example as a standalone timer:
 
 ### function: `__enter__`
 
-[Source](../dagrunner/utils/__init__.py#L67)
+[Source](../dagrunner/utils/__init__.py#L215)
 
 #### Call Signature:
 
@@ -166,7 +301,7 @@ __enter__(self)
 
 ### function: `__exit__`
 
-[Source](../dagrunner/utils/__init__.py#L71)
+[Source](../dagrunner/utils/__init__.py#L219)
 
 #### Call Signature:
 
@@ -176,7 +311,7 @@ __exit__(self, *args)
 
 ### function: `__init__`
 
-[Source](../dagrunner/utils/__init__.py#L61)
+[Source](../dagrunner/utils/__init__.py#L209)
 
 #### Call Signature:
 
@@ -188,7 +323,7 @@ Initialize self.  See help(type(self)) for accurate signature.
 
 ### function: `__str__`
 
-[Source](../dagrunner/utils/__init__.py#L96)
+[Source](../dagrunner/utils/__init__.py#L244)
 
 #### Call Signature:
 
@@ -200,7 +335,7 @@ Print elapsed time in seconds.
 
 ### function: `start`
 
-[Source](../dagrunner/utils/__init__.py#L77)
+[Source](../dagrunner/utils/__init__.py#L225)
 
 #### Call Signature:
 
@@ -210,7 +345,7 @@ start(self)
 
 ### function: `stop`
 
-[Source](../dagrunner/utils/__init__.py#L81)
+[Source](../dagrunner/utils/__init__.py#L229)
 
 #### Call Signature:
 
@@ -220,7 +355,7 @@ stop(self)
 
 ## function: `docstring_parse`
 
-[Source](../dagrunner/utils/__init__.py#L101)
+[Source](../dagrunner/utils/__init__.py#L249)
 
 ### Call Signature:
 
@@ -230,7 +365,7 @@ docstring_parse(obj)
 
 ## function: `function_to_argparse`
 
-[Source](../dagrunner/utils/__init__.py#L130)
+[Source](../dagrunner/utils/__init__.py#L278)
 
 ### Call Signature:
 
@@ -239,4 +374,45 @@ function_to_argparse(func, parser=None, exclude=None)
 ```
 
 Generate an argparse from a function signature
+
+## function: `get_proc_mem_stat`
+
+[Source](../dagrunner/utils/__init__.py#L15)
+
+### Call Signature:
+
+```python
+get_proc_mem_stat(pid=2421)
+```
+
+Get process memory statistics from /proc/<pid>/status.
+
+More information can be found at
+https://github.com/torvalds/linux/blob/master/Documentation/filesystems/proc.txt
+
+Args:
+- `pid`: Process id.  Optional.  Default is the current process.
+
+Returns:
+- Dictionary with memory statistics in MB.  Fields are VmSize, VmRSS, VmPeak and
+  VmHWM.
+
+## function: `get_sys_mem_stat`
+
+[Source](../dagrunner/utils/__init__.py#L122)
+
+### Call Signature:
+
+```python
+get_sys_mem_stat()
+```
+
+Get system memory statistics from /proc/meminfo.
+
+More information can be found at
+https://github.com/torvalds/linux/blob/master/Documentation/filesystems/proc.txt
+
+Returns:
+- Dictionary with memory statistics in MB.  Fields are Committed_AS, MemFree,
+  Buffers, Cached and MemTotal.
 

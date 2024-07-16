@@ -25,14 +25,43 @@ from dagrunner.utils import (
 from dagrunner.utils.visualisation import visualise_graph
 
 
+class _SKIP_EVENT:
+    """
+    This object is used to indicate to `plugin_executor` to skip execution of its node.
+    """
+
+    _instance = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(_SKIP_EVENT, cls).__new__(cls)
+        return cls._instance
+
+    def __repr__(self):
+        return "SKIP_EVENT"
+
+    def __hash__(self):
+        return hash("SKIP_EVENT")
+
+    def __reduce__(self):
+        return (self.__class__, ())
+
+
+SKIP_EVENT = _SKIP_EVENT()
+
+
 class SkipBranch(Exception):
     """
     This exception is used to skip a branch of the execution graph.
 
-    To be used in combination to one of the multiprocessing schedulers.
+    To be used in combination to one of the multiprocessing dask schedulers.
     In the single-threaded scheduler, Dask executes tasks sequentially, and
     exceptions will propagate as they occur, potentially halting the execution of
     subsequent tasks.
+
+    ## Warning
+
+    Status: experimental.
 
     """
 
@@ -63,6 +92,12 @@ def plugin_executor(
 ):
     """
     Executes a plugin callable with the provided arguments and keyword arguments.
+
+    Plugins can be functions or classes.  If a class, it is instantiated with the
+    keyword arguments provided in the `call` tuple.  The plugin callable is then
+    executed with the positional arguments provided in `args` and the keyword arguments
+    provided in the `call` tuple.  A plugin call is skipped if 1 or more of the `args`
+    is the `SKIP_EVENT` object.
 
     Args:
     - `*args`: Positional arguments to be passed to the plugin callable.
@@ -99,6 +134,10 @@ def plugin_executor(
     if verbose:
         print(f"args: {args}")
         print(f"call: {call}")
+    if SKIP_EVENT in args:
+        if verbose:
+            print(f"Skipping node {call[0]}")
+        return SKIP_EVENT
 
     # Handle call tuple unpacking (length 2, no class init kwargs
     # or length 3 with class init kwargs).
