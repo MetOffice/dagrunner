@@ -71,6 +71,7 @@ class DataPolling(Plugin):
 
         Args:
         - *args: Variable length argument list of file patterns to be checked.
+          `<hostname>:<path>` syntax supported for files on a remote host.
         - timeout (int): Timeout in seconds (default is 120 seconds).
         - polling (int): Time interval in seconds between each poll (default is 1
           second).
@@ -94,7 +95,22 @@ class DataPolling(Plugin):
             and time_taken < timeout
         ):
             fpattern = args[indx]
-            expanded_paths = glob(fpattern)
+            if ":" in fpattern:
+                host, pattern = fpattern.split(":")
+                # bash equivalent to python glob (glob on remote host)
+                expanded_paths = (
+                    subprocess.run(
+                        f"ssh {host} \"printf '%s\n' {pattern} | grep -v '*'\" || true",
+                        shell=True,
+                        check=True,
+                        text=True,
+                        capture_output=True,
+                    )
+                    .stdout.strip()
+                    .split("\n")
+                )
+            else:
+                expanded_paths = glob(fpattern)
             if expanded_paths:
                 fpaths_found.extend(expanded_paths)
                 patterns_found += 1
