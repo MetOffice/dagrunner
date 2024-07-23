@@ -89,12 +89,8 @@ class DataPolling(Plugin):
         time_taken = indx = patterns_found = files_found = 0
         fpaths_found = []
         file_count = len(args) if file_count is None else max(file_count, len(args))
-        while (
-            patterns_found < len(args)
-            and files_found < file_count
-            and time_taken < timeout
-        ):
-            fpattern = args[indx]
+        while time_taken < timeout:
+            fpattern = str(args[indx])
             if ":" in fpattern:
                 host, pattern = fpattern.split(":")
                 # bash equivalent to python glob (glob on remote host)
@@ -121,11 +117,13 @@ class DataPolling(Plugin):
                     f"polling for '{fpattern}', time taken: {time_taken}s of limit "
                     f"{timeout}s"
                 )
-                time.sleep(polling)
-                time_taken += polling
+            if patterns_found >= len(args) or files_found >= file_count:
+                break
+            time.sleep(polling)
+            time_taken += polling
 
         if patterns_found < len(args):
-            raise RuntimeError(f"Timeout waiting for: '{fpattern}'")
+            raise FileNotFoundError(f"Timeout waiting for: '{fpattern}'")
         if verbose and fpaths_found:
             print(f"The following files were polled and found: {fpaths_found}")
         return None
