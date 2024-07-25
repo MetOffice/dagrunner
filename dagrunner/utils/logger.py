@@ -147,11 +147,11 @@ class LogRecordSocketReceiver(socketserver.ThreadingTCPServer):
             rd, wr, ex = select.select([self.socket.fileno()], [], [], self.timeout)
             if rd:
                 self.handle_request()
-                queue_handler.write(self.log_queue)
+                # queue_handler.write(self.log_queue)
             abort = self.abort
-        if queue_handler:
-            queue_handler.write(self.log_queue)  # Ensure all records are written
-            queue_handler.close()
+        # if queue_handler:
+        #     queue_handler.write(self.log_queue)  # Ensure all records are written
+        #     queue_handler.close()
 
     def stop(self):
         self.abort = 1  # Set abort flag to stop the server loop

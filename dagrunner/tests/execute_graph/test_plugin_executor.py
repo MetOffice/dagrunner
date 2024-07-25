@@ -19,7 +19,8 @@ class DummyPlugin:
         )
 
 
-def test_pass_class_arg_kwargs():
+@mock.patch("dagrunner.execute_graph.logger.client_attach_socket_handler")
+def test_pass_class_arg_kwargs(mock_client_attach_socket_handler):
     """Test passing named parameters to plugin class and __call__ method."""
     args = (mock.sentinel.arg1, mock.sentinel.arg2)
     call = tuple(
@@ -37,7 +38,8 @@ def test_pass_class_arg_kwargs():
     )
 
 
-def test_pass_common_args():
+@mock.patch("dagrunner.execute_graph.logger.client_attach_socket_handler")
+def test_pass_common_args(mock_client_attach_socket_handler):
     """Passing 'common args', some relevant to class init and some to call method."""
     args = (mock.sentinel.arg1, mock.sentinel.arg2)
     common_kwargs = {
@@ -71,7 +73,8 @@ class DummyPlugin2:
         return f"args={args}; kwargs={kwargs}"
 
 
-def test_pass_common_args_via_override():
+@mock.patch("dagrunner.execute_graph.logger.client_attach_socket_handler")
+def test_pass_common_args_via_override(mock_client_attach_socket_handler):
     """
     Passing 'common args' to a plugin that doesn't have such arguments
     defined in its signature.  Instead, filter out those that aren't
