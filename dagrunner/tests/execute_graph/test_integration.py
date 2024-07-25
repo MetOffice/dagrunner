@@ -128,8 +128,7 @@ def test_execution(graph, scheduler):
         with open(output_file, "r") as file:
             # two of them are expected since we have two leadtime branches
             res = json.load(file)
-            assert len(res) == 1
-            assert res[0] == "1_2_3_4_5"
+            assert res == "1_2_3_4_5"
 
 
 class SkipExe(Plugin):
@@ -160,8 +159,7 @@ def test_skip_execution(graph):
     with open(output_file, "r") as file:
         # two of them are expected since we have two leadtime branches
         res = json.load(file)
-        assert len(res) == 1
-        assert res[0] == "1_2_3_4_5"
+        assert res == "1_2_3_4_5"
     assert not os.path.exists(output_files[1])
 
 

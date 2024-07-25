@@ -4,8 +4,10 @@
 # See LICENSE in the root of the repository for full licensing details.
 import json
 import os
+import pickle
 import string
 import subprocess
+import tempfile
 import time
 from abc import ABC, abstractmethod
 from glob import glob
@@ -57,6 +59,71 @@ class Shell(Plugin):
         - CalledProcessError: If the command returns a non-zero exit status.
         """
         return subprocess.run(*args, **kwargs, shell=True, check=True)
+
+
+def _stage_to_dir(*args, staging_dir, verbose=False):
+    """
+    Copy input (pre-existing) filepaths to staging area and update paths.
+
+    Ignore the copy if files exist unless existing files are older.
+    """
+    args = list(args)
+    for ind, arg in enumerate(args):
+        fpath = arg.split(":")[-1]
+        fnme = os.path.basename(fpath)
+        # copy files to the target location.
+        rsync_command = ["rsync", "-au", arg, f"{staging_dir}/."]
+        subprocess.run(rsync_command, check=True, text=True, capture_output=True)
+
+        args[ind] = os.path.join(staging_dir, fnme)
+        if verbose:
+            print(f"Staged {arg} to {args[ind]}")
+    return args
+
+
+class Load(Plugin):
+    @abstractmethod
+    def load(self, *args, **kwargs):
+        """
+        Load data from a file.
+
+        Args:
+        - *args: Positional arguments.
+        - **kwargs: Keyword arguments.
+
+        Returns:
+        - Any: The loaded data.
+
+        Raises:
+        - NotImplementedError: If the method is not implemented.
+        """
+        raise NotImplementedError
+
+    def __call__(self, *args, staging_dir=None, verbose=False, **kwargs):
+        """
+        Load data from a file or list of files.
+
+        Args:
+        - *args: List of filepaths to load. `<hostname>:<path>` syntax supported
+          for loading files from a remote host.
+        - staging_dir: Directory to stage files in.  If the staging directory doesn't
+          exist, then create it.
+        - verbose: Print verbose output.
+        """
+        if any([":" in str(arg) for arg in args]) and staging_dir is None:
+            raise ValueError(
+                "Staging directory must be specified for loading remote files."
+            )
+
+        if staging_dir and args:
+            os.makedirs(staging_dir, exist_ok=True)
+            tmpdir = tempfile.TemporaryDirectory(
+                dir=staging_dir,
+            ).name
+            os.makedirs(tmpdir, exist_ok=True)
+            args = _stage_to_dir(*args, staging_dir=tmpdir, verbose=verbose)
+
+        return self.load(*args, **kwargs)
 
 
 class DataPolling(Plugin):
@@ -130,7 +197,7 @@ class DataPolling(Plugin):
 
 
 class Input(NodeAwarePlugin):
-    def __call__(self, *args, filepath=None, **kwargs):
+    def __call__(self, filepath, **kwargs):
         """
         Given a filepath, expand it and return this string
 
@@ -139,7 +206,6 @@ class Input(NodeAwarePlugin):
         `NodeAwarePlugin`.
 
         Args:
-        - *args: Positional arguments are not accepted.
         - filepath (str): The filepath to be expanded.
         - **kwargs: Keyword arguments to be used in the expansion.  Node
           properties/attributes are additionally included here as a node aware plugin.
@@ -150,8 +216,6 @@ class Input(NodeAwarePlugin):
         Raises:
         - ValueError: If positional arguments are provided.
         """
-        if args:
-            raise ValueError("Input plugin does not accept positional arguments")
 
         def expand(pstring):
             res = os.path.expanduser(
@@ -161,11 +225,22 @@ class Input(NodeAwarePlugin):
                 return expand(res)
             return res
 
-        return expand(filepath)
+        return expand(str(filepath))
+
+
+class LoadJson(Load):
+    """Load json file."""
+
+    def load(self, *args):
+        res = []
+        for arg in args:
+            with open(arg, "r") as f:
+                res.append(json.load(f))
+        return res[0] if len(res) == 1 else res
 
 
 class SaveJson(Input):
-    def __call__(self, *args, filepath=None, node_properties=None, **kwargs):
+    def __call__(self, *args, filepath, node_properties=None, **kwargs):
         """
         Save data to a JSON file
 
@@ -174,18 +249,56 @@ class SaveJson(Input):
         this plugin is 'node aware' since it is derived from the `NodeAwarePlugin`.
 
         Args:
-        - *args: Positional arguments (data) to be saved.
-        - filepath (str): The filepath to save the data to.
-        - data (Any): The data to be saved.
-        - **kwargs: Keyword arguments to be used in the expansion.  Node
-          properties/attributes are additionally included here as a node aware plugin.
+        - `*args`: Positional arguments (data) to be saved.
+        - `filepath`: The filepath to save the data to.
+        - `node_properties`: node properties passed by the plugin executor.
+        - `**kwargs`: Keyword arguments to be used in the expansion.
 
         Returns:
         - None
         """
         if not args:
             return None
+        node_properties = {} if node_properties is None else node_properties
         filepath = super().__call__(filepath=filepath, **(kwargs | node_properties))
         with open(filepath, "w") as f:
-            json.dump(args, f)
+            json.dump(args if len(args) > 1 else args[0], f)
+        return None
+
+
+class LoadPickle(Load):
+    """Load pickle file."""
+
+    def load(self, *args):
+        res = []
+        for arg in args:
+            with open(arg, "rb") as f:
+                res.append(pickle.load(f))
+        return res[0] if len(res) == 1 else res
+
+
+class SavePickle(Input):
+    def __call__(self, *args, filepath, node_properties=None, **kwargs):
+        """
+        Save data to a Pickle file
+
+        Save the provided data to a pickle file at the specified filepath.  The filepath
+        is expanded using the keyword arguments and environment variables.  Note that
+        this plugin is 'node aware' since it is derived from the `NodeAwarePlugin`.
+
+        Args:
+        - `*args`: Positional arguments (data) to be saved.
+        - `filepath`: The filepath to save the data to.
+        - `node_properties`: node properties passed by the plugin executor.
+        - `**kwargs`: Keyword arguments to be used in the expansion.
+
+        Returns:
+        - None
+        """
+        if not args:
+            return None
+        node_properties = {} if node_properties is None else node_properties
+        filepath = super().__call__(filepath=filepath, **(kwargs | node_properties))
+        with open(filepath, "wb") as f:
+            pickle.dump(args if len(args) > 1 else args[0], f)
         return None
