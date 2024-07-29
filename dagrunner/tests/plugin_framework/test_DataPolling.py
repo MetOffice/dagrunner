@@ -2,8 +2,8 @@
 #
 # This file is part of 'dagrunner' and is released under the BSD 3-Clause license.
 # See LICENSE in the root of the repository for full licensing details.
-from unittest.mock import patch
 import socket
+from unittest.mock import patch
 
 import pytest
 
@@ -50,7 +50,9 @@ def test_specified_host(tmp_file, capsys):
     host_tmp_file = f"{socket.gethostname()}:{tmp_file}"
     # Mocking gethostname() so that our host doesn't match against our local host check
     # internally.
-    with patch("dagrunner.utils.socket.gethostname", return_value='dummy_host.dummy_domain'):
+    with patch(
+        "dagrunner.utils.socket.gethostname", return_value="dummy_host.dummy_domain"
+    ):
         call_dp(host_tmp_file)
     captured = capsys.readouterr()
     assert f"The following files were polled and found: ['{tmp_file}']" in captured.out

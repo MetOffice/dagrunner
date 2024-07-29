@@ -2,7 +2,6 @@
 #
 # This file is part of 'dagrunner' and is released under the BSD 3-Clause license.
 # See LICENSE in the root of the repository for full licensing details.
-from typing import Tuple
 import argparse
 import inspect
 import os
@@ -29,7 +28,7 @@ def process_path(fpath: str) -> str:
     if ":" in fpath:
         host, fpath = fpath.split(":")
         # check against short and full (+domain) hostname
-        if socket.gethostname() != host and socket.gethostname().split('.')[0] != host:
+        if socket.gethostname() != host and socket.gethostname().split(".")[0] != host:
             fpath = f"{host}:{fpath}"
     return fpath
 
