@@ -15,7 +15,7 @@ see [module: visualisation](dagrunner.utils.visualisation.md#module-dagrunneruti
 ### Call Signature:
 
 ```python
-CaptureProcMemory(interval=1.0, pid=2342)
+CaptureProcMemory(interval=1.0, pid=2356)
 ```
 
 Capture maximum process memory statistics.
@@ -49,7 +49,7 @@ __exit__(self, exc_type, exc_value, traceback)
 #### Call Signature:
 
 ```python
-__init__(self, interval=1.0, pid=2342)
+__init__(self, interval=1.0, pid=2356)
 ```
 
 Initialize the memory capture.
@@ -382,7 +382,7 @@ Generate an argparse from a function signature
 ### Call Signature:
 
 ```python
-get_proc_mem_stat(pid=2342)
+get_proc_mem_stat(pid=2356)
 ```
 
 Get process memory statistics from /proc/<pid>/status.

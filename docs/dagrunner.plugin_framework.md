@@ -6,7 +6,7 @@ see [function: dagrunner.utils.process_path](dagrunner.utils.md#function-process
 
 ## class: `DataPolling`
 
-[Source](../dagrunner/plugin_framework.py#L165)
+[Source](../dagrunner/plugin_framework.py#L166)
 
 ### Call Signature:
 
@@ -18,7 +18,7 @@ Abstract base class to define our plugin UI
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L166)
+[Source](../dagrunner/plugin_framework.py#L167)
 
 #### Call Signature:
 
@@ -50,7 +50,7 @@ Raises:
 
 ## class: `Input`
 
-[Source](../dagrunner/plugin_framework.py#L240)
+[Source](../dagrunner/plugin_framework.py#L241)
 
 ### Call Signature:
 
@@ -64,7 +64,7 @@ that are 'node aware'.
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L241)
+[Source](../dagrunner/plugin_framework.py#L242)
 
 #### Call Signature:
 
@@ -91,7 +91,7 @@ Raises:
 
 ## class: `Load`
 
-[Source](../dagrunner/plugin_framework.py#L121)
+[Source](../dagrunner/plugin_framework.py#L122)
 
 ### Call Signature:
 
@@ -103,7 +103,7 @@ Abstract base class to define our plugin UI
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L139)
+[Source](../dagrunner/plugin_framework.py#L140)
 
 #### Call Signature:
 
@@ -122,7 +122,7 @@ Args:
 
 ### function: `load`
 
-[Source](../dagrunner/plugin_framework.py#L122)
+[Source](../dagrunner/plugin_framework.py#L123)
 
 #### Call Signature:
 
@@ -144,7 +144,7 @@ Raises:
 
 ## class: `LoadJson`
 
-[Source](../dagrunner/plugin_framework.py#L272)
+[Source](../dagrunner/plugin_framework.py#L273)
 
 ### Call Signature:
 
@@ -156,7 +156,7 @@ Load json file.
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L139)
+[Source](../dagrunner/plugin_framework.py#L140)
 
 #### Call Signature:
 
@@ -175,7 +175,7 @@ Args:
 
 ### function: `load`
 
-[Source](../dagrunner/plugin_framework.py#L275)
+[Source](../dagrunner/plugin_framework.py#L276)
 
 #### Call Signature:
 
@@ -197,7 +197,7 @@ Raises:
 
 ## class: `LoadPickle`
 
-[Source](../dagrunner/plugin_framework.py#L310)
+[Source](../dagrunner/plugin_framework.py#L311)
 
 ### Call Signature:
 
@@ -209,7 +209,7 @@ Load pickle file.
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L139)
+[Source](../dagrunner/plugin_framework.py#L140)
 
 #### Call Signature:
 
@@ -228,7 +228,7 @@ Args:
 
 ### function: `load`
 
-[Source](../dagrunner/plugin_framework.py#L313)
+[Source](../dagrunner/plugin_framework.py#L314)
 
 #### Call Signature:
 
@@ -320,7 +320,7 @@ Returns:
 
 ## class: `SaveJson`
 
-[Source](../dagrunner/plugin_framework.py#L283)
+[Source](../dagrunner/plugin_framework.py#L284)
 
 ### Call Signature:
 
@@ -334,7 +334,7 @@ that are 'node aware'.
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L284)
+[Source](../dagrunner/plugin_framework.py#L285)
 
 #### Call Signature:
 
@@ -359,7 +359,7 @@ Returns:
 
 ## class: `SavePickle`
 
-[Source](../dagrunner/plugin_framework.py#L321)
+[Source](../dagrunner/plugin_framework.py#L322)
 
 ### Call Signature:
 
@@ -373,7 +373,7 @@ that are 'node aware'.
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L322)
+[Source](../dagrunner/plugin_framework.py#L323)
 
 #### Call Signature:
 
