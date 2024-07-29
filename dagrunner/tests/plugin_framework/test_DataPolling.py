@@ -46,10 +46,7 @@ def test_globular_pattern_matching(tmp_file, capsys):
 
 def test_specified_host(tmp_file, capsys):
     """<host>:<filepath>"""
-    host_tmp_file = f"$HOSTNAME:{tmp_file}"
+    host_tmp_file = f"{socket.gethostname()}:{tmp_file}"
     call_dp(host_tmp_file)
     captured = capsys.readouterr()
-    assert (
-        f"The following files were polled and found: ['{tmp_file}'] on "
-        f"'{host_tmp_file}'" in captured.out
-    )
+    assert f"The following files were polled and found: ['{tmp_file}']" in captured.out

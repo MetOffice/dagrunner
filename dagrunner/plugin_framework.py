@@ -161,7 +161,6 @@ class DataPolling(Plugin):
             if ":" in fpattern:
                 host, pattern = fpattern.split(":")
                 # bash equivalent to python glob (glob on remote host)
-                print(f"ssh {host} \"printf '%s\n' {pattern} | grep -v '*'\" || true")
                 expanded_paths = (
                     subprocess.run(
                         f"ssh {host} \"printf '%s\n' {pattern} | grep -v '*'\" || true",
@@ -173,7 +172,6 @@ class DataPolling(Plugin):
                     .stdout.strip()
                     .split("\n")
                 )
-                print(f"expanded_paths: {expanded_paths}")
             else:
                 expanded_paths = glob(fpattern)
             if expanded_paths:
