@@ -6,10 +6,8 @@ import json
 import os
 import pickle
 import shutil
-import socket
 import string
 import subprocess
-import tempfile
 import time
 import warnings
 from abc import ABC, abstractmethod
@@ -68,36 +66,52 @@ class Shell(Plugin):
 
 def _stage_to_dir(*args, staging_dir, verbose=False):
     """
-    Copy input (pre-existing) filepaths to staging area and update paths.
+    Copy input filepaths to a staging area and update paths.
 
-    rsync is used for remote copies, and hard links are preferred for same host
-    copying.  An ordinary copy operation is used as fallback if hardlink copying fails
-    for some reason.  Note that where the staged file exists already, the copy is
-    ignored when this file is newer that the source file we are copying, otherwise
-    it is removed first.
+    Hard link copies are preferred (same host) and physical copies are made otherwise.
+    File name, size and modification time are used to evaluate if the destination file
+    exists already (matching criteria of rsync), in which case, the copy is skipped.
+    Staged files are named: `<modification-time>_<file-size>_<filename>`.
     """
+    os.makedirs(staging_dir, exist_ok=True)
     args = list(args)
     for ind, arg in enumerate(args):
-        if ':' in arg:
-            host, fpath = arg.split(':')
-            target = os.path.join(staging_dir, os.path.basename(fpath))
-            rsync_command = ["rsync", "-au", f"{host}:{fpath}", f"{staging_dir}/."]
-            subprocess.run(rsync_command, check=True, text=True, capture_output=True)
-        else:
-            target = os.path.join(staging_dir, os.path.basename(arg))
-            if os.path.exists(target):
-                # Compare modification times
-                source_mtime = os.path.getmtime(fpath)
-                target_mtime = os.path.getmtime(target)
-                if target_mtime < source_mtime:
-                    os.remove(target)
+        host, fpath = None, arg
+        if ":" in arg:
+            host, fpath = arg.split(":")
 
-            if not os.path.exists(target):
+        if host:
+            source_mtime_size = subprocess.run(
+                ["ssh", host, "stat", "-c", "%Y_%s", fpath],
+                check=True,
+                text=True,
+                capture_output=True,
+            ).stdout.strip()
+        else:
+            source_mtime_size = (
+                f"{int(os.path.getmtime(fpath))}_{os.path.getsize(fpath)}"
+            )
+
+        target = os.path.join(
+            staging_dir, f"{source_mtime_size}_{os.path.basename(fpath)}"
+        )
+        if not os.path.exists(target):
+            if host:
+                rsync_command = ["scp", "-p", f"{host}:{fpath}", target]
+                subprocess.run(
+                    rsync_command, check=True, text=True, capture_output=True
+                )
+            else:
                 try:
                     os.link(arg, target)
                 except Exception:
-                    warnings.warn(f"Failed to hard link {arg} to {target}. Copying instead.")
+                    warnings.warn(
+                        f"Failed to hard link {arg} to {target}. Copying instead."
+                    )
                     shutil.copy2(arg, target)
+        else:
+            warnings.warn(f"Staged file {target} already exists. Skipping copy.")
+
         args[ind] = target
         if verbose:
             print(f"Staged {arg} to {args[ind]}")
@@ -134,18 +148,16 @@ class Load(Plugin):
         - verbose: Print verbose output.
         """
         args = list(map(process_path, args))
-        if any([arg.split(':')[0] for arg in args if ':' in arg]) and staging_dir is None:
+        if (
+            any([arg.split(":")[0] for arg in args if ":" in arg])
+            and staging_dir is None
+        ):
             raise ValueError(
                 "Staging directory must be specified for loading remote files."
             )
 
         if staging_dir and args:
-            os.makedirs(staging_dir, exist_ok=True)
-            tmpdir = tempfile.TemporaryDirectory(
-                dir=staging_dir,
-            ).name
-            os.makedirs(tmpdir, exist_ok=True)
-            args = _stage_to_dir(*args, staging_dir=tmpdir, verbose=verbose)
+            args = _stage_to_dir(*args, staging_dir=staging_dir, verbose=verbose)
 
         return self.load(*args, **kwargs)
 
@@ -180,13 +192,13 @@ class DataPolling(Plugin):
         time_taken = indx = patterns_found = files_found = 0
         fpaths_found = []
         file_count = len(args) if file_count is None else max(file_count, len(args))
-        
+
         args = list(map(process_path, args))
         while time_taken < timeout:
             pattern = args[indx]
             host = None
-            if ':' in pattern:
-                host, pattern = pattern.split(':')
+            if ":" in pattern:
+                host, pattern = pattern.split(":")
 
             if host:
                 # bash equivalent to python glob (glob on remote host)
