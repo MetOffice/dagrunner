@@ -70,8 +70,9 @@ def _stage_to_dir(*args, staging_dir, verbose=False):
 
     Hard link copies are preferred (same host) and physical copies are made otherwise.
     File name, size and modification time are used to evaluate if the destination file
-    exists already (matching criteria of rsync), in which case, the copy is skipped.
-    Staged files are named: `<modification-time>_<file-size>_<filename>`.
+    exists already (matching criteria of rsync).  If exists already, skip the copy.
+    Staged files are named: `<modification-time>_<file-size>_<filename>` to avoid
+    collision with identically names files.
     """
     os.makedirs(staging_dir, exist_ok=True)
     args = list(args)
