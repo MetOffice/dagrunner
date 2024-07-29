@@ -2,9 +2,11 @@
 
 [Source](../dagrunner/plugin_framework.py#L0)
 
+see [function: dagrunner.utils.process_path](dagrunner.utils.md#function-process_path)
+
 ## class: `DataPolling`
 
-[Source](../dagrunner/plugin_framework.py#L62)
+[Source](../dagrunner/plugin_framework.py#L165)
 
 ### Call Signature:
 
@@ -16,7 +18,7 @@ Abstract base class to define our plugin UI
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L63)
+[Source](../dagrunner/plugin_framework.py#L166)
 
 #### Call Signature:
 
@@ -31,6 +33,7 @@ exception if the timeout is reached.
 
 Args:
 - *args: Variable length argument list of file patterns to be checked.
+  `<hostname>:<path>` syntax supported for files on a remote host.
 - timeout (int): Timeout in seconds (default is 120 seconds).
 - polling (int): Time interval in seconds between each poll (default is 1
   second).
@@ -47,7 +50,7 @@ Raises:
 
 ## class: `Input`
 
-[Source](../dagrunner/plugin_framework.py#L118)
+[Source](../dagrunner/plugin_framework.py#L240)
 
 ### Call Signature:
 
@@ -61,12 +64,12 @@ that are 'node aware'.
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L119)
+[Source](../dagrunner/plugin_framework.py#L241)
 
 #### Call Signature:
 
 ```python
-__call__(self, *args, filepath=None, **kwargs)
+__call__(self, filepath, **kwargs)
 ```
 
 Given a filepath, expand it and return this string
@@ -76,7 +79,6 @@ variables.  Note that this plugin is 'node aware' since it is derived from the
 `NodeAwarePlugin`.
 
 Args:
-- *args: Positional arguments are not accepted.
 - filepath (str): The filepath to be expanded.
 - **kwargs: Keyword arguments to be used in the expansion.  Node
   properties/attributes are additionally included here as a node aware plugin.
@@ -87,9 +89,168 @@ Returns:
 Raises:
 - ValueError: If positional arguments are provided.
 
+## class: `Load`
+
+[Source](../dagrunner/plugin_framework.py#L121)
+
+### Call Signature:
+
+```python
+Load()
+```
+
+Abstract base class to define our plugin UI
+
+### function: `__call__`
+
+[Source](../dagrunner/plugin_framework.py#L139)
+
+#### Call Signature:
+
+```python
+__call__(self, *args, staging_dir=None, verbose=False, **kwargs)
+```
+
+Load data from a file or list of files.
+
+Args:
+- *args: List of filepaths to load. `<hostname>:<path>` syntax supported
+  for loading files from a remote host.
+- staging_dir: Directory to stage files in.  If the staging directory doesn't
+  exist, then create it.
+- verbose: Print verbose output.
+
+### function: `load`
+
+[Source](../dagrunner/plugin_framework.py#L122)
+
+#### Call Signature:
+
+```python
+load(self, *args, **kwargs)
+```
+
+Load data from a file.
+
+Args:
+- *args: Positional arguments.
+- **kwargs: Keyword arguments.
+
+Returns:
+- Any: The loaded data.
+
+Raises:
+- NotImplementedError: If the method is not implemented.
+
+## class: `LoadJson`
+
+[Source](../dagrunner/plugin_framework.py#L272)
+
+### Call Signature:
+
+```python
+LoadJson()
+```
+
+Load json file.
+
+### function: `__call__`
+
+[Source](../dagrunner/plugin_framework.py#L139)
+
+#### Call Signature:
+
+```python
+__call__(self, *args, staging_dir=None, verbose=False, **kwargs)
+```
+
+Load data from a file or list of files.
+
+Args:
+- *args: List of filepaths to load. `<hostname>:<path>` syntax supported
+  for loading files from a remote host.
+- staging_dir: Directory to stage files in.  If the staging directory doesn't
+  exist, then create it.
+- verbose: Print verbose output.
+
+### function: `load`
+
+[Source](../dagrunner/plugin_framework.py#L275)
+
+#### Call Signature:
+
+```python
+load(self, *args)
+```
+
+Load data from a file.
+
+Args:
+- *args: Positional arguments.
+- **kwargs: Keyword arguments.
+
+Returns:
+- Any: The loaded data.
+
+Raises:
+- NotImplementedError: If the method is not implemented.
+
+## class: `LoadPickle`
+
+[Source](../dagrunner/plugin_framework.py#L310)
+
+### Call Signature:
+
+```python
+LoadPickle()
+```
+
+Load pickle file.
+
+### function: `__call__`
+
+[Source](../dagrunner/plugin_framework.py#L139)
+
+#### Call Signature:
+
+```python
+__call__(self, *args, staging_dir=None, verbose=False, **kwargs)
+```
+
+Load data from a file or list of files.
+
+Args:
+- *args: List of filepaths to load. `<hostname>:<path>` syntax supported
+  for loading files from a remote host.
+- staging_dir: Directory to stage files in.  If the staging directory doesn't
+  exist, then create it.
+- verbose: Print verbose output.
+
+### function: `load`
+
+[Source](../dagrunner/plugin_framework.py#L313)
+
+#### Call Signature:
+
+```python
+load(self, *args)
+```
+
+Load data from a file.
+
+Args:
+- *args: Positional arguments.
+- **kwargs: Keyword arguments.
+
+Returns:
+- Any: The loaded data.
+
+Raises:
+- NotImplementedError: If the method is not implemented.
+
 ## class: `NodeAwarePlugin`
 
-[Source](../dagrunner/plugin_framework.py#L36)
+[Source](../dagrunner/plugin_framework.py#L41)
 
 ### Call Signature:
 
@@ -103,7 +264,7 @@ that are 'node aware'.
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L17)
+[Source](../dagrunner/plugin_framework.py#L22)
 
 #### Call Signature:
 
@@ -125,7 +286,7 @@ Returns:
 
 ## class: `Plugin`
 
-[Source](../dagrunner/plugin_framework.py#L14)
+[Source](../dagrunner/plugin_framework.py#L19)
 
 ### Call Signature:
 
@@ -137,7 +298,7 @@ Abstract base class to define our plugin UI
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L17)
+[Source](../dagrunner/plugin_framework.py#L22)
 
 #### Call Signature:
 
@@ -159,7 +320,7 @@ Returns:
 
 ## class: `SaveJson`
 
-[Source](../dagrunner/plugin_framework.py#L153)
+[Source](../dagrunner/plugin_framework.py#L283)
 
 ### Call Signature:
 
@@ -173,12 +334,12 @@ that are 'node aware'.
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L154)
+[Source](../dagrunner/plugin_framework.py#L284)
 
 #### Call Signature:
 
 ```python
-__call__(self, *args, filepath=None, node_properties=None, **kwargs)
+__call__(self, *args, filepath, node_properties=None, **kwargs)
 ```
 
 Save data to a JSON file
@@ -188,18 +349,56 @@ is expanded using the keyword arguments and environment variables.  Note that
 this plugin is 'node aware' since it is derived from the `NodeAwarePlugin`.
 
 Args:
-- *args: Positional arguments (data) to be saved.
-- filepath (str): The filepath to save the data to.
-- data (Any): The data to be saved.
-- **kwargs: Keyword arguments to be used in the expansion.  Node
-  properties/attributes are additionally included here as a node aware plugin.
+- `*args`: Positional arguments (data) to be saved.
+- `filepath`: The filepath to save the data to.
+- `node_properties`: node properties passed by the plugin executor.
+- `**kwargs`: Keyword arguments to be used in the expansion.
+
+Returns:
+- None
+
+## class: `SavePickle`
+
+[Source](../dagrunner/plugin_framework.py#L321)
+
+### Call Signature:
+
+```python
+SavePickle()
+```
+
+An abstract base class plugin that is of type that instructs the plugin
+executor to pass it node parameters.  This enables the definition of plugins
+that are 'node aware'.
+
+### function: `__call__`
+
+[Source](../dagrunner/plugin_framework.py#L322)
+
+#### Call Signature:
+
+```python
+__call__(self, *args, filepath, node_properties=None, **kwargs)
+```
+
+Save data to a Pickle file
+
+Save the provided data to a pickle file at the specified filepath.  The filepath
+is expanded using the keyword arguments and environment variables.  Note that
+this plugin is 'node aware' since it is derived from the `NodeAwarePlugin`.
+
+Args:
+- `*args`: Positional arguments (data) to be saved.
+- `filepath`: The filepath to save the data to.
+- `node_properties`: node properties passed by the plugin executor.
+- `**kwargs`: Keyword arguments to be used in the expansion.
 
 Returns:
 - None
 
 ## class: `Shell`
 
-[Source](../dagrunner/plugin_framework.py#L44)
+[Source](../dagrunner/plugin_framework.py#L49)
 
 ### Call Signature:
 
@@ -211,7 +410,7 @@ Abstract base class to define our plugin UI
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L45)
+[Source](../dagrunner/plugin_framework.py#L50)
 
 #### Call Signature:
 
