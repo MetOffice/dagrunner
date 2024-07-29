@@ -5,12 +5,17 @@
 import json
 import os
 import pickle
+import shutil
+import socket
 import string
 import subprocess
 import tempfile
 import time
+import warnings
 from abc import ABC, abstractmethod
 from glob import glob
+
+from dagrunner.utils import process_path
 
 
 class Plugin(ABC):
@@ -65,17 +70,35 @@ def _stage_to_dir(*args, staging_dir, verbose=False):
     """
     Copy input (pre-existing) filepaths to staging area and update paths.
 
-    Ignore the copy if files exist unless existing files are older.
+    rsync is used for remote copies, and hard links are preferred for same host
+    copying.  An ordinary copy operation is used as fallback if hardlink copying fails
+    for some reason.  Note that where the staged file exists already, the copy is
+    ignored when this file is newer that the source file we are copying, otherwise
+    it is removed first.
     """
     args = list(args)
     for ind, arg in enumerate(args):
-        fpath = arg.split(":")[-1]
-        fnme = os.path.basename(fpath)
-        # copy files to the target location.
-        rsync_command = ["rsync", "-au", arg, f"{staging_dir}/."]
-        subprocess.run(rsync_command, check=True, text=True, capture_output=True)
+        if ':' in arg:
+            host, fpath = arg.split(':')
+            target = os.path.join(staging_dir, os.path.basename(fpath))
+            rsync_command = ["rsync", "-au", f"{host}:{fpath}", f"{staging_dir}/."]
+            subprocess.run(rsync_command, check=True, text=True, capture_output=True)
+        else:
+            target = os.path.join(staging_dir, os.path.basename(arg))
+            if os.path.exists(target):
+                # Compare modification times
+                source_mtime = os.path.getmtime(fpath)
+                target_mtime = os.path.getmtime(target)
+                if target_mtime < source_mtime:
+                    os.remove(target)
 
-        args[ind] = os.path.join(staging_dir, fnme)
+            if not os.path.exists(target):
+                try:
+                    os.link(arg, target)
+                except Exception:
+                    warnings.warn(f"Failed to hard link {arg} to {target}. Copying instead.")
+                    shutil.copy2(arg, target)
+        args[ind] = target
         if verbose:
             print(f"Staged {arg} to {args[ind]}")
     return args
@@ -110,7 +133,8 @@ class Load(Plugin):
           exist, then create it.
         - verbose: Print verbose output.
         """
-        if any([":" in str(arg) for arg in args]) and staging_dir is None:
+        args = list(map(process_path, args))
+        if any([arg.split(':')[0] for arg in args if ':' in arg]) and staging_dir is None:
             raise ValueError(
                 "Staging directory must be specified for loading remote files."
             )
@@ -156,10 +180,15 @@ class DataPolling(Plugin):
         time_taken = indx = patterns_found = files_found = 0
         fpaths_found = []
         file_count = len(args) if file_count is None else max(file_count, len(args))
+        
+        args = list(map(process_path, args))
         while time_taken < timeout:
-            fpattern = str(args[indx])
-            if ":" in fpattern:
-                host, pattern = fpattern.split(":")
+            pattern = args[indx]
+            host = None
+            if ':' in pattern:
+                host, pattern = pattern.split(':')
+
+            if host:
                 # bash equivalent to python glob (glob on remote host)
                 expanded_paths = (
                     subprocess.run(
@@ -173,7 +202,7 @@ class DataPolling(Plugin):
                     .split("\n")
                 )
             else:
-                expanded_paths = glob(fpattern)
+                expanded_paths = glob(pattern)
             if expanded_paths:
                 fpaths_found.extend(expanded_paths)
                 patterns_found += 1
@@ -181,7 +210,7 @@ class DataPolling(Plugin):
                 indx += 1
             elif verbose:
                 print(
-                    f"polling for '{fpattern}', time taken: {time_taken}s of limit "
+                    f"polling for '{pattern}', time taken: {time_taken}s of limit "
                     f"{timeout}s"
                 )
             if patterns_found >= len(args) or files_found >= file_count:
@@ -190,7 +219,7 @@ class DataPolling(Plugin):
             time_taken += polling
 
         if patterns_found < len(args):
-            raise FileNotFoundError(f"Timeout waiting for: '{fpattern}'")
+            raise FileNotFoundError(f"Timeout waiting for: '{pattern}'")
         if verbose and fpaths_found:
             print(f"The following files were polled and found: {fpaths_found}")
         return None

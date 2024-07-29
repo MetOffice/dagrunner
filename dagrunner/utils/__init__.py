@@ -2,14 +2,36 @@
 #
 # This file is part of 'dagrunner' and is released under the BSD 3-Clause license.
 # See LICENSE in the root of the repository for full licensing details.
+from typing import Tuple
 import argparse
 import inspect
 import os
+import socket
 import threading
 import time
 from abc import ABC, abstractmethod
 
 import dagrunner.utils._doc_styles as doc_styles
+
+
+def process_path(fpath: str) -> str:
+    """
+    Process path.
+
+    Args:
+    - `fpath`: Remote path in the format <host>:<path>.  If host corresponds to
+      the local host, then the host element will be removed.
+
+    Returns:
+    - Processed path
+    """
+    fpath = str(fpath)
+    if ":" in fpath:
+        host, fpath = fpath.split(":")
+        # check against short and full (+domain) hostname
+        if socket.gethostname() != host and socket.gethostname().split('.')[0] != host:
+            fpath = f"{host}:{fpath}"
+    return fpath
 
 
 def get_proc_mem_stat(pid=os.getpid()):

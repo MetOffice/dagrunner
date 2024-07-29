@@ -2,7 +2,11 @@
 #
 # This file is part of 'dagrunner' and is released under the BSD 3-Clause license.
 # See LICENSE in the root of the repository for full licensing details.
+from glob import glob
 import json
+import os
+import socket
+from unittest.mock import patch
 
 import pytest
 
@@ -34,3 +38,40 @@ def test_load_single_json(tmp_files):
     tmp_file1, _ = tmp_files
     res = LoadJson()(tmp_file1)
     assert res == {"key1": "value1"}
+
+
+def test_load_remote_not_staged():
+    """Test loading a remote file that isn't setup to be staged."""
+    with pytest.raises(ValueError, match=f"Staging directory must be specified for loading remote files."):
+        LoadJson()("host:file.json")
+
+
+@pytest.fixture()
+def staged_directory(tmp_path_factory):
+    """Create a staging directory."""
+    tmp_dir = tmp_path_factory.mktemp("staging")
+    return tmp_dir
+
+
+def test_load_remote_rsync(tmp_files, staged_directory):
+    """Test loading a remote file that has been staged using rsync."""
+    tmp_file1, _ = tmp_files
+    # Mocking gethostname() so that our host doesn't match against our local host check
+    # internally.
+    fpath = f"{socket.gethostname()}:{str(tmp_file1)}"
+    with patch("dagrunner.utils.socket.gethostname", return_value='dummy_host.dummy_domain'):
+        res = LoadJson()(fpath, staging_dir=staged_directory)
+    assert res == {"key1": "value1"}
+    staged_files = glob(str(staged_directory / '*' / tmp_file1.name))
+    assert len(staged_files) == 1
+    assert os.stat(staged_files[0]).st_nlink == 1
+
+
+def test_load_local_staged_hardlink(tmp_files, staged_directory):
+    """Test staging a local file, hardlinking that file."""
+    tmp_file1, _ = tmp_files
+    res = LoadJson()(tmp_file1, staging_dir=staged_directory)
+    assert res == {"key1": "value1"}
+    staged_files = glob(str(staged_directory / '*' / tmp_file1.name))
+    assert len(staged_files) == 1
+    assert os.stat(staged_files[0]).st_nlink == 2
