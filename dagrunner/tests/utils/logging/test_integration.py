@@ -45,6 +45,7 @@ def test_sqlitedb(sqlite_filepath, caplog):
         )
 
     # Check log messages
+    assert len(caplog.record_tuples) == len(test_inputs)
     for test_input, record in zip(test_inputs, caplog.record_tuples):
         assert (
             tuple(

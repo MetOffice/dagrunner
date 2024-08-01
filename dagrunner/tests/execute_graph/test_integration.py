@@ -115,21 +115,21 @@ def test_execution(graph, scheduler):
     # parallel execution performance.
     debug = False
     EDGES, SETTINGS, output_files = graph
-    with patch("dagrunner.execute_graph.logger.ServerContext"):
+    with patch("dagrunner.execute_graph.logger.ServerContext"), patch(
+        "dagrunner.execute_graph.logger.client_attach_socket_handler"
+    ):
         graph = ExecuteGraph(
             (EDGES, SETTINGS),
             num_workers=3,
             scheduler=scheduler,
             verbose=False,
             debug=debug,
-        )
-        graph()
+        )()
     for output_file in output_files:
         with open(output_file, "r") as file:
             # two of them are expected since we have two leadtime branches
             res = json.load(file)
-            assert len(res) == 1
-            assert res[0] == "1_2_3_4_5"
+            assert res == "1_2_3_4_5"
 
 
 class SkipExe(Plugin):
@@ -147,21 +147,20 @@ def test_skip_execution(graph):
     SETTINGS[Node(step="step2", leadtime=HOUR)] = {
         "call": tuple([SkipExe, {"id": 2}]),
     }
-
-    with patch("dagrunner.execute_graph.logger.ServerContext"):
+    with patch("dagrunner.execute_graph.logger.ServerContext"), patch(
+        "dagrunner.execute_graph.logger.client_attach_socket_handler"
+    ):
         graph = ExecuteGraph(
             (EDGES, SETTINGS),
             num_workers=3,
             scheduler=scheduler,
             verbose=False,
-        )
-        graph()
+        )()
     output_file = output_files[0]
     with open(output_file, "r") as file:
         # two of them are expected since we have two leadtime branches
         res = json.load(file)
-        assert len(res) == 1
-        assert res[0] == "1_2_3_4_5"
+        assert res == "1_2_3_4_5"
     assert not os.path.exists(output_files[1])
 
 
@@ -181,8 +180,9 @@ def test_multiprocessing_error_handling(graph):
     SETTINGS[Node(step="step2", leadtime=HOUR)] = {
         "call": tuple([RaiseErr, {"id": 2}]),
     }
-
-    with patch("dagrunner.execute_graph.logger.ServerContext"):
+    with patch("dagrunner.execute_graph.logger.ServerContext"), patch(
+        "dagrunner.execute_graph.logger.client_attach_socket_handler"
+    ):
         graph = ExecuteGraph(
             (EDGES, SETTINGS),
             num_workers=3,

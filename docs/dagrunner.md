@@ -14,3 +14,5 @@ see [class: plugin_framework.Shell](dagrunner.plugin_framework.md#class-shell)
 
 see [module: plugin_framework](dagrunner.plugin_framework.md#module-dagrunnerplugin_framework)
 
+see [module: utils](dagrunner.utils.md#module-dagrunnerutils)
+
