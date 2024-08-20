@@ -11,7 +11,7 @@ from unittest.mock import patch
 import pytest
 
 from dagrunner.execute_graph import SKIP_EVENT, ExecuteGraph
-from dagrunner.plugin_framework import Plugin, SaveJson
+from dagrunner.plugin_framework import Input, Plugin, SaveJson
 
 HOUR = 3600
 MINUTE = 60
@@ -143,7 +143,7 @@ def test_skip_execution(graph):
     scheduler = "multiprocessing"
     EDGES, SETTINGS, output_files = graph
 
-    # # skip execution of the second branch
+    # skip execution of the second branch
     SETTINGS[Node(step="step2", leadtime=HOUR)] = {
         "call": tuple([SkipExe, {"id": 2}]),
     }
@@ -191,3 +191,42 @@ def test_multiprocessing_error_handling(graph):
         )
         with pytest.raises(RuntimeError, match="RaiseErr"):
             graph()
+
+
+@pytest.fixture()
+def graph_input():
+    SETTINGS = {}
+    EDGES = []
+
+    # node1 -> node2
+    node1 = Node(step="step1", leadtime=1)
+    node2 = Node(step="dummy", leadtime=1)
+    EDGES.append([node1, node2])
+
+    SETTINGS[node1] = {
+        "call": tuple([Input, {"filepath": "{step}_{leadtime}"}]),
+    }
+    SETTINGS[node2] = {
+        "call": tuple([lambda x: x, {}]),
+    }
+    return EDGES, SETTINGS
+
+
+def test_override_node_property_with_setting(graph_input, capsys):
+    scheduler = "single-threaded"
+    EDGES, SETTINGS = graph_input
+
+    new_step = "altered_step"
+    SETTINGS[Node(step="step1", leadtime=1)] |= {"step": new_step}
+
+    with patch("dagrunner.execute_graph.logger.ServerContext"), patch(
+        "dagrunner.execute_graph.logger.client_attach_socket_handler"
+    ):
+        _ = ExecuteGraph(
+            (EDGES, SETTINGS),
+            num_workers=1,
+            scheduler=scheduler,
+            verbose=True,
+        )()
+    output = capsys.readouterr()
+    assert f"result: {new_step}_1" in output.out

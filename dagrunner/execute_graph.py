@@ -235,7 +235,7 @@ def _get_networkx(networkx_graph):
     else:
         try:
             edges, nodes = networkx_graph
-            nodes = {k: nodes[k] | _process_nodes(k) for k in nodes.keys()}.items()
+            nodes = {k: _process_nodes(k) | nodes[k] for k in nodes.keys()}.items()
             nxgraph = nx.DiGraph()
             nxgraph.add_edges_from(edges)
             nxgraph.add_nodes_from(nodes)

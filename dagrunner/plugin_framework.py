@@ -239,7 +239,7 @@ class DataPolling(Plugin):
 
 
 class Input(NodeAwarePlugin):
-    def __call__(self, filepath, **kwargs):
+    def __call__(self, filepath, node_properties=None, **kwargs):
         """
         Given a filepath, expand it and return this string
 
@@ -248,7 +248,8 @@ class Input(NodeAwarePlugin):
         `NodeAwarePlugin`.
 
         Args:
-        - filepath (str): The filepath to be expanded.
+        - `filepath` (str): The filepath to be expanded.
+        - `node_properties`: node properties passed by the plugin executor.
         - **kwargs: Keyword arguments to be used in the expansion.  Node
           properties/attributes are additionally included here as a node aware plugin.
 
@@ -261,7 +262,9 @@ class Input(NodeAwarePlugin):
 
         def expand(pstring):
             res = os.path.expanduser(
-                string.Template(pstring.format(**kwargs)).substitute(os.environ)
+                string.Template(
+                    pstring.format(**(kwargs | (node_properties or {})))
+                ).substitute(os.environ)
             )
             if "{" in res and "}" in res:
                 return expand(res)
@@ -301,8 +304,9 @@ class SaveJson(Input):
         """
         if not args:
             return None
-        node_properties = {} if node_properties is None else node_properties
-        filepath = super().__call__(filepath=filepath, **(kwargs | node_properties))
+        filepath = super().__call__(
+            filepath=filepath, **(kwargs | (node_properties or {}))
+        )
         with open(filepath, "w") as f:
             json.dump(args if len(args) > 1 else args[0], f)
         return None
