@@ -4,13 +4,13 @@ on: [pull_request]
 
 
 jobs:
-  test:
+  lower-bound-packages:
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
     runs-on: ubuntu-latest
 
     steps:
       # SETUP
-
+      ############################
       - name: Checkout code
         uses: actions/checkout@v4
         with:
@@ -26,13 +26,46 @@ jobs:
       - name: Add checkout directory to PYTHONPATH
         run: echo "PYTHONPATH=$(pwd):$PYTHONPATH" >> $GITHUB_ENV
 
-      - name: Cache pip environment
-        id: cache-pip-env
-        uses: actions/cache@v4
+      - name: Install dependencies
+        id: install-dependencies
+        run: |
+          pip install .[tests,minver]
+          pip uninstall dagrunner -y
+
+      - name: Set up SSH for localhost
+        run: |
+          ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa
+          cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+          ssh-keyscan -H $(hostname) >> ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/authorized_keys
+
+      # TESTS
+      ############################
+      - name: Run pytest
+        run: pytest .
+
+
+  unpinned-packages:
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    runs-on: ubuntu-latest
+
+    steps:
+      # SETUP
+      ############################
+      - name: Checkout code
+        uses: actions/checkout@v4
         with:
-          path: ~/.cache/pip
-          key: pip-${{ hashFiles('pyproject.toml') }}
-          restore-keys: pip-
+          ref: ${{ github.head_ref }}  # Ensure branch is checked out, not detached state (so we can push a commit later)
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.x
+          cache: 'pip'
+
+      - name: Add checkout directory to PYTHONPATH
+        run: echo "PYTHONPATH=$(pwd):$PYTHONPATH" >> $GITHUB_ENV
 
       - name: Install dependencies
         id: install-dependencies
@@ -48,14 +81,12 @@ jobs:
           chmod 600 ~/.ssh/authorized_keys
 
       # TESTS (inc. test coverage)
-
-      # excluded logging as per https://github.com/MetOffice/dagrunner/issues/39
+      ############################
       - name: Run pytest + coverage report gen
         run: pytest --cov=dagrunner --cov-report=term --cov-report=html | tee coverage_output.txt; test ${PIPESTATUS[0]} -eq 0
 
-
-      # TESTS (main branch)
-
+      # TESTS ('main' branch)
+      ############################
       - name: Cache ref branch coverage report
         id: cache-ref-coverage
         uses: actions/cache@v4
@@ -70,7 +101,6 @@ jobs:
           path: ref
           ref: ${{ github.base_ref }}
 
-      # excluded logging as per https://github.com/MetOffice/dagrunner/issues/39
       - name: Run tests with coverage for ref branch
         if: steps.cache-ref-coverage.outputs.cache-hit != 'true'
         run: |
@@ -78,7 +108,7 @@ jobs:
           pytest --cov=dagrunner --cov-report=term --cov-report=html | tee coverage_output.txt; test ${PIPESTATUS[0]} -eq 0
 
       # TESTS (compare coverage)
-
+      ############################
       - name: Compare coverage
         id: comp-coverage
         run: |
@@ -119,7 +149,7 @@ jobs:
             htmlcov/
 
       # PRE-COMMIT
-
+      ############################
       - name: Python interpreter version sha (PYSHA)
         run: echo "PYSHA=$(python -VV | sha256sum | cut -d' ' -f1)" >> $GITHUB_ENV
 
@@ -139,7 +169,7 @@ jobs:
           pre-commit run --all-files
 
       # DOCUMENTATION
-
+      ############################
       - name: Build documentation
         run: |
           ./docs/gen_docs dagrunner ./docs

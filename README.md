@@ -1,7 +1,7 @@
+![Python Project](https://img.shields.io/badge/language-Python%20>=3.9-blue?logo=python&logoColor=white)
 [![GitHub Tag](https://img.shields.io/github/v/tag/MetOffice/dagrunner)](https://github.com/MetOffice/dagrunner/tags)
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 ![Experimental](https://img.shields.io/badge/status-experimental-orange)
-![Python Project](https://img.shields.io/badge/language-Python-blue?logo=python&logoColor=white)
 ![Static Badge](https://img.shields.io/badge/install-pip-blue)
 ![PR CI status](https://github.com/MetOffice/dagrunner/actions/workflows/tests.yml/badge.svg)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://github.com/pre-commit/pre-commit)
