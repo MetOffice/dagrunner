@@ -250,8 +250,7 @@ class Input(NodeAwarePlugin):
         Args:
         - `filepath` (str): The filepath to be expanded.
         - `node_properties`: node properties passed by the plugin executor.
-        - **kwargs: Keyword arguments to be used in the expansion.  Node
-          properties/attributes are additionally included here as a node aware plugin.
+        - **kwargs: Keyword arguments to be used in the expansion.
 
         Returns:
         - str: The expanded filepath.

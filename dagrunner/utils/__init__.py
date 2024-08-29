@@ -33,7 +33,7 @@ def process_path(fpath: str) -> str:
     return fpath
 
 
-def get_proc_mem_stat(pid=os.getpid()):
+def get_proc_mem_stat(pid=None):
     """
     Get process memory statistics from /proc/<pid>/status.
 
@@ -48,6 +48,7 @@ def get_proc_mem_stat(pid=os.getpid()):
       VmHWM.
 
     """
+    pid = os.getpid() if pid is None else int(pid)
     status_path = f"/proc/{pid}/status"
     memory_stats = {}
     with open(status_path, "r") as file:
@@ -125,7 +126,7 @@ class CaptureProcMemory(_CaptureMemory):
     def METHOD(self):
         return get_proc_mem_stat
 
-    def __init__(self, interval=1.0, pid=os.getpid()):
+    def __init__(self, interval=1.0, pid=None):
         """
         Initialize the memory capture.
 
