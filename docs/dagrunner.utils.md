@@ -10,12 +10,12 @@ see [module: visualisation](dagrunner.utils.visualisation.md#module-dagrunneruti
 
 ## class: `CaptureProcMemory`
 
-[Source](../dagrunner/utils/__init__.py#L117)
+[Source](../dagrunner/utils/__init__.py#L118)
 
 ### Call Signature:
 
 ```python
-CaptureProcMemory(interval=1.0, pid=2356)
+CaptureProcMemory(interval=1.0, pid=None)
 ```
 
 Capture maximum process memory statistics.
@@ -24,7 +24,7 @@ See `get_proc_mem_stat` for more information.
 
 ### function: `__enter__`
 
-[Source](../dagrunner/utils/__init__.py#L98)
+[Source](../dagrunner/utils/__init__.py#L99)
 
 #### Call Signature:
 
@@ -34,7 +34,7 @@ __enter__(self)
 
 ### function: `__exit__`
 
-[Source](../dagrunner/utils/__init__.py#L103)
+[Source](../dagrunner/utils/__init__.py#L104)
 
 #### Call Signature:
 
@@ -44,12 +44,12 @@ __exit__(self, exc_type, exc_value, traceback)
 
 ### function: `__init__`
 
-[Source](../dagrunner/utils/__init__.py#L128)
+[Source](../dagrunner/utils/__init__.py#L129)
 
 #### Call Signature:
 
 ```python
-__init__(self, interval=1.0, pid=2356)
+__init__(self, interval=1.0, pid=None)
 ```
 
 Initialize the memory capture.
@@ -63,7 +63,7 @@ Args:
 
 ### function: `max`
 
-[Source](../dagrunner/utils/__init__.py#L107)
+[Source](../dagrunner/utils/__init__.py#L108)
 
 #### Call Signature:
 
@@ -78,7 +78,7 @@ Returns:
 
 ## class: `CaptureSysMemory`
 
-[Source](../dagrunner/utils/__init__.py#L169)
+[Source](../dagrunner/utils/__init__.py#L170)
 
 ### Call Signature:
 
@@ -92,7 +92,7 @@ See `get_sys_mem_stat` for more information.
 
 ### function: `__enter__`
 
-[Source](../dagrunner/utils/__init__.py#L98)
+[Source](../dagrunner/utils/__init__.py#L99)
 
 #### Call Signature:
 
@@ -102,7 +102,7 @@ __enter__(self)
 
 ### function: `__exit__`
 
-[Source](../dagrunner/utils/__init__.py#L103)
+[Source](../dagrunner/utils/__init__.py#L104)
 
 #### Call Signature:
 
@@ -112,7 +112,7 @@ __exit__(self, exc_type, exc_value, traceback)
 
 ### function: `__init__`
 
-[Source](../dagrunner/utils/__init__.py#L66)
+[Source](../dagrunner/utils/__init__.py#L67)
 
 #### Call Signature:
 
@@ -130,7 +130,7 @@ Args:
 
 ### function: `max`
 
-[Source](../dagrunner/utils/__init__.py#L107)
+[Source](../dagrunner/utils/__init__.py#L108)
 
 #### Call Signature:
 
@@ -145,7 +145,7 @@ Returns:
 
 ## class: `KeyValueAction`
 
-[Source](../dagrunner/utils/__init__.py#L287)
+[Source](../dagrunner/utils/__init__.py#L288)
 
 ### Call Signature:
 
@@ -204,7 +204,7 @@ Keyword Arguments:
 
 ### function: `__call__`
 
-[Source](../dagrunner/utils/__init__.py#L288)
+[Source](../dagrunner/utils/__init__.py#L289)
 
 #### Call Signature:
 
@@ -216,7 +216,7 @@ Call self as a function.
 
 ## class: `ObjectAsStr`
 
-[Source](../dagrunner/utils/__init__.py#L181)
+[Source](../dagrunner/utils/__init__.py#L182)
 
 ### Call Signature:
 
@@ -228,7 +228,7 @@ Hide object under a string.
 
 ### function: `__hash__`
 
-[Source](../dagrunner/utils/__init__.py#L195)
+[Source](../dagrunner/utils/__init__.py#L196)
 
 #### Call Signature:
 
@@ -240,7 +240,7 @@ Return hash(self).
 
 ### function: `__new__`
 
-[Source](../dagrunner/utils/__init__.py#L186)
+[Source](../dagrunner/utils/__init__.py#L187)
 
 #### Call Signature:
 
@@ -252,7 +252,7 @@ Create and return a new object.  See help(type) for accurate signature.
 
 ### function: `obj_to_name`
 
-[Source](../dagrunner/utils/__init__.py#L199)
+[Source](../dagrunner/utils/__init__.py#L200)
 
 #### Call Signature:
 
@@ -262,7 +262,7 @@ obj_to_name(obj, cls)
 
 ## class: `TimeIt`
 
-[Source](../dagrunner/utils/__init__.py#L207)
+[Source](../dagrunner/utils/__init__.py#L208)
 
 ### Call Signature:
 
@@ -291,7 +291,7 @@ Example as a standalone timer:
 
 ### function: `__enter__`
 
-[Source](../dagrunner/utils/__init__.py#L236)
+[Source](../dagrunner/utils/__init__.py#L237)
 
 #### Call Signature:
 
@@ -301,7 +301,7 @@ __enter__(self)
 
 ### function: `__exit__`
 
-[Source](../dagrunner/utils/__init__.py#L240)
+[Source](../dagrunner/utils/__init__.py#L241)
 
 #### Call Signature:
 
@@ -311,7 +311,7 @@ __exit__(self, *args)
 
 ### function: `__init__`
 
-[Source](../dagrunner/utils/__init__.py#L230)
+[Source](../dagrunner/utils/__init__.py#L231)
 
 #### Call Signature:
 
@@ -323,7 +323,7 @@ Initialize self.  See help(type(self)) for accurate signature.
 
 ### function: `__str__`
 
-[Source](../dagrunner/utils/__init__.py#L265)
+[Source](../dagrunner/utils/__init__.py#L266)
 
 #### Call Signature:
 
@@ -335,7 +335,7 @@ Print elapsed time in seconds.
 
 ### function: `start`
 
-[Source](../dagrunner/utils/__init__.py#L246)
+[Source](../dagrunner/utils/__init__.py#L247)
 
 #### Call Signature:
 
@@ -345,7 +345,7 @@ start(self)
 
 ### function: `stop`
 
-[Source](../dagrunner/utils/__init__.py#L250)
+[Source](../dagrunner/utils/__init__.py#L251)
 
 #### Call Signature:
 
@@ -355,7 +355,7 @@ stop(self)
 
 ## function: `docstring_parse`
 
-[Source](../dagrunner/utils/__init__.py#L270)
+[Source](../dagrunner/utils/__init__.py#L271)
 
 ### Call Signature:
 
@@ -365,7 +365,7 @@ docstring_parse(obj)
 
 ## function: `function_to_argparse`
 
-[Source](../dagrunner/utils/__init__.py#L299)
+[Source](../dagrunner/utils/__init__.py#L300)
 
 ### Call Signature:
 
@@ -382,7 +382,7 @@ Generate an argparse from a function signature
 ### Call Signature:
 
 ```python
-get_proc_mem_stat(pid=2356)
+get_proc_mem_stat(pid=None)
 ```
 
 Get process memory statistics from /proc/<pid>/status.
@@ -399,7 +399,7 @@ Returns:
 
 ## function: `get_sys_mem_stat`
 
-[Source](../dagrunner/utils/__init__.py#L143)
+[Source](../dagrunner/utils/__init__.py#L144)
 
 ### Call Signature:
 

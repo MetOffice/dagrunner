@@ -69,7 +69,7 @@ that are 'node aware'.
 #### Call Signature:
 
 ```python
-__call__(self, filepath, **kwargs)
+__call__(self, filepath, node_properties=None, **kwargs)
 ```
 
 Given a filepath, expand it and return this string
@@ -79,9 +79,9 @@ variables.  Note that this plugin is 'node aware' since it is derived from the
 `NodeAwarePlugin`.
 
 Args:
-- filepath (str): The filepath to be expanded.
-- **kwargs: Keyword arguments to be used in the expansion.  Node
-  properties/attributes are additionally included here as a node aware plugin.
+- `filepath` (str): The filepath to be expanded.
+- `node_properties`: node properties passed by the plugin executor.
+- **kwargs: Keyword arguments to be used in the expansion.
 
 Returns:
 - str: The expanded filepath.
@@ -144,7 +144,7 @@ Raises:
 
 ## class: `LoadJson`
 
-[Source](../dagrunner/plugin_framework.py#L273)
+[Source](../dagrunner/plugin_framework.py#L275)
 
 ### Call Signature:
 
@@ -175,7 +175,7 @@ Args:
 
 ### function: `load`
 
-[Source](../dagrunner/plugin_framework.py#L276)
+[Source](../dagrunner/plugin_framework.py#L278)
 
 #### Call Signature:
 
@@ -197,7 +197,7 @@ Raises:
 
 ## class: `LoadPickle`
 
-[Source](../dagrunner/plugin_framework.py#L311)
+[Source](../dagrunner/plugin_framework.py#L314)
 
 ### Call Signature:
 
@@ -228,7 +228,7 @@ Args:
 
 ### function: `load`
 
-[Source](../dagrunner/plugin_framework.py#L314)
+[Source](../dagrunner/plugin_framework.py#L317)
 
 #### Call Signature:
 
@@ -320,7 +320,7 @@ Returns:
 
 ## class: `SaveJson`
 
-[Source](../dagrunner/plugin_framework.py#L284)
+[Source](../dagrunner/plugin_framework.py#L286)
 
 ### Call Signature:
 
@@ -334,7 +334,7 @@ that are 'node aware'.
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L285)
+[Source](../dagrunner/plugin_framework.py#L287)
 
 #### Call Signature:
 
@@ -359,7 +359,7 @@ Returns:
 
 ## class: `SavePickle`
 
-[Source](../dagrunner/plugin_framework.py#L322)
+[Source](../dagrunner/plugin_framework.py#L325)
 
 ### Call Signature:
 
@@ -373,7 +373,7 @@ that are 'node aware'.
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L323)
+[Source](../dagrunner/plugin_framework.py#L326)
 
 #### Call Signature:
 
