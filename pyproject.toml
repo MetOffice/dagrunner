@@ -31,6 +31,11 @@ dev = [
   "pre-commit",
   "pytest-cov"
 ]
+# specifying lower bound versions of packages (testing purposes)
+minver=[
+  'networkx == 3.2',
+  'dask[distributed] == 2024.1.1',
+]
 
 [project.urls]
 Repository = "https://github.com/MetOffice/dagrunner"

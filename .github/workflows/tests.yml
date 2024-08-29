@@ -7,6 +7,17 @@ jobs:
   test:
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          # lower bound version of packages
+          - python-version: '3.9'
+            pip-args: '.[tests,dev,minver]'
+            label: 'lower-bound'
+          # upper bound version of packages (unpinned)
+          - python-version: '3.x'
+            pip-args: '.[tests,dev]'
+            label: 'unpinned'
 
     steps:
       # SETUP
@@ -20,24 +31,16 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: 3.9
+          python-version: ${{ matrix.python-version }}
           cache: 'pip'
 
       - name: Add checkout directory to PYTHONPATH
         run: echo "PYTHONPATH=$(pwd):$PYTHONPATH" >> $GITHUB_ENV
 
-      - name: Cache pip environment
-        id: cache-pip-env
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: pip-${{ hashFiles('pyproject.toml') }}
-          restore-keys: pip-
-
       - name: Install dependencies
         id: install-dependencies
         run: |
-          pip install .[tests,dev]
+          pip install ${{ matrix.pip-args }}
           pip uninstall dagrunner -y
 
       - name: Set up SSH for localhost
@@ -52,7 +55,6 @@ jobs:
       # excluded logging as per https://github.com/MetOffice/dagrunner/issues/39
       - name: Run pytest + coverage report gen
         run: pytest --cov=dagrunner --cov-report=term --cov-report=html | tee coverage_output.txt; test ${PIPESTATUS[0]} -eq 0
-
 
       # TESTS (main branch)
 
@@ -81,6 +83,7 @@ jobs:
 
       - name: Compare coverage
         id: comp-coverage
+        if: ${{ matrix.label == 'unpinned' }}
         run: |
             pr_coverage_total=$(grep TOTAL coverage_output.txt | awk '{print $NF}' | awk '{print substr($0, 1, length($0)-1)}')
             echo "pr_coverage_total=$pr_coverage_total" | tee -a $GITHUB_OUTPUT
@@ -93,7 +96,7 @@ jobs:
             fi
 
       - name: Comment coverage report
-        if: steps.comp-coverage.outputs.coverage_decreased == 'true'
+        if: ${{ matrix.label == 'unpinned' && steps.comp-coverage.outputs.coverage_decreased == 'true' }}
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -110,7 +113,7 @@ jobs:
             });
 
       - name: Upload coverage report
-        if: steps.comp-coverage.outputs.coverage_decreased == 'true'
+        if: ${{ matrix.label == 'unpinned' && steps.comp-coverage.outputs.coverage_decreased == 'true' }}
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report-pr
@@ -121,9 +124,11 @@ jobs:
       # PRE-COMMIT
 
       - name: Python interpreter version sha (PYSHA)
+        if: ${{ matrix.label == 'unpinned' }}
         run: echo "PYSHA=$(python -VV | sha256sum | cut -d' ' -f1)" >> $GITHUB_ENV
 
       - name: Cache pre-commit
+        if: ${{ matrix.label == 'unpinned' }}
         uses: actions/cache@v3
         id: pre-commit-cache
         with:
@@ -131,21 +136,25 @@ jobs:
           key: pre-commit|${{ env.PYSHA }}|${{ hashFiles('.pre-commit-config.yaml') }}
 
       - name: pre-commit install
+        if: ${{ matrix.label == 'unpinned' }}
         run: |
           pre-commit install
 
       - name: pre-commit run
+        if: ${{ matrix.label == 'unpinned' }}
         run: |
           pre-commit run --all-files
 
       # DOCUMENTATION
 
       - name: Build documentation
+        if: ${{ matrix.label == 'unpinned' }}
         run: |
           ./docs/gen_docs dagrunner ./docs
 
       - name: Check if documentation has changed
         id: check-docs
+        if: ${{ matrix.label == 'unpinned' }}
         run: |
           echo "changed=$(git diff --quiet --exit-code || echo true)" | tee -a $GITHUB_OUTPUT
 
@@ -154,7 +163,7 @@ jobs:
       # success of all previous steps.  A pushed commit will not trigger the re-running
       # of this workflow.
       - name: Commit and push documentation changes
-        if: steps.check-docs.outputs.changed == 'true'
+        if: ${{ matrix.label == 'unpinned' && steps.check-docs.outputs.changed == 'true' }}
         run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
