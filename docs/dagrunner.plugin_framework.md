@@ -50,7 +50,7 @@ Raises:
 
 ## class: `Input`
 
-[Source](../dagrunner/plugin_framework.py#L241)
+[Source](../dagrunner/plugin_framework.py#L240)
 
 ### Call Signature:
 
@@ -64,7 +64,7 @@ that are 'node aware'.
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L242)
+[Source](../dagrunner/plugin_framework.py#L241)
 
 #### Call Signature:
 
@@ -144,7 +144,7 @@ Raises:
 
 ## class: `LoadJson`
 
-[Source](../dagrunner/plugin_framework.py#L275)
+[Source](../dagrunner/plugin_framework.py#L274)
 
 ### Call Signature:
 
@@ -175,7 +175,7 @@ Args:
 
 ### function: `load`
 
-[Source](../dagrunner/plugin_framework.py#L278)
+[Source](../dagrunner/plugin_framework.py#L277)
 
 #### Call Signature:
 
@@ -197,7 +197,7 @@ Raises:
 
 ## class: `LoadPickle`
 
-[Source](../dagrunner/plugin_framework.py#L314)
+[Source](../dagrunner/plugin_framework.py#L313)
 
 ### Call Signature:
 
@@ -228,7 +228,7 @@ Args:
 
 ### function: `load`
 
-[Source](../dagrunner/plugin_framework.py#L317)
+[Source](../dagrunner/plugin_framework.py#L316)
 
 #### Call Signature:
 
@@ -320,7 +320,7 @@ Returns:
 
 ## class: `SaveJson`
 
-[Source](../dagrunner/plugin_framework.py#L286)
+[Source](../dagrunner/plugin_framework.py#L285)
 
 ### Call Signature:
 
@@ -334,7 +334,7 @@ that are 'node aware'.
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L287)
+[Source](../dagrunner/plugin_framework.py#L286)
 
 #### Call Signature:
 
@@ -359,7 +359,7 @@ Returns:
 
 ## class: `SavePickle`
 
-[Source](../dagrunner/plugin_framework.py#L325)
+[Source](../dagrunner/plugin_framework.py#L324)
 
 ### Call Signature:
 
@@ -373,7 +373,7 @@ that are 'node aware'.
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L326)
+[Source](../dagrunner/plugin_framework.py#L325)
 
 #### Call Signature:
 
