@@ -56,3 +56,17 @@ def test_specified_host(tmp_file, capsys):
         call_dp(host_tmp_file)
     captured = capsys.readouterr()
     assert f"The following files were polled and found: ['{tmp_file}']" in captured.out
+
+
+def test_specified_host_missing_file(capsys):
+    """<host>:<filepath>"""
+    filepath = "/dummy/file/path.dat"
+    host_tmp_file = f"{socket.gethostname()}:{filepath}"
+    # Mocking gethostname() so that our host doesn't match against our local host check
+    # internally.
+    msg = f"Timeout waiting for: '{filepath}'"
+    with patch(
+        "dagrunner.utils.socket.gethostname", return_value="dummy_host.dummy_domain"
+    ):
+        with pytest.raises(FileNotFoundError, match=msg):
+            call_dp(host_tmp_file, verbose=False)

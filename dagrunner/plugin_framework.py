@@ -203,17 +203,16 @@ class DataPolling(Plugin):
 
             if host:
                 # bash equivalent to python glob (glob on remote host)
-                expanded_paths = (
-                    subprocess.run(
-                        f"ssh {host} \"printf '%s\n' {pattern} | grep -v '*'\" || true",
-                        shell=True,
-                        check=True,
-                        text=True,
-                        capture_output=True,
-                    )
-                    .stdout.strip()
-                    .split("\n")
-                )
+                expanded_paths = subprocess.run(
+                    f'ssh {host} \'for file in {pattern}; do if [ -e "$file" ]; then '
+                    'echo "$file"; fi; done\'',
+                    shell=True,
+                    check=True,
+                    text=True,
+                    capture_output=True,
+                ).stdout.strip()
+                if expanded_paths:
+                    expanded_paths = expanded_paths.split("\n")
             else:
                 expanded_paths = glob(pattern)
             if expanded_paths:
