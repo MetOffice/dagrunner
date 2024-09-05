@@ -218,6 +218,20 @@ class SQLiteQueueHandler:
             self._conn.close()
 
 
+class CustomFormatter(logging.Formatter):
+    def __init__(self, fmt=None, datefmt=None):
+        super().__init__(fmt=fmt, datefmt=datefmt)
+
+    def format(self, record):
+        if not hasattr(record, "elapsed"):
+            record.elapsed = 0  # Default value if not provided
+        if not hasattr(record, "memory"):
+            record.memory = 0  # Default value if not provided
+
+        # Call the base class's format method to handle the normal log formatting
+        return super().format(record)
+
+
 def start_logging_server(
     sqlite_filepath: str = None,
     host: str = "localhost",

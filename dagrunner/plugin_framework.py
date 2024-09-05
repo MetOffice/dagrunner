@@ -199,13 +199,11 @@ class DataPolling(Plugin):
             pattern = args[indx]
             host = None
             if ":" in pattern:
-                host, pattern = pattern.split(":")
-
-            if host:
+                host, noh_pattern = pattern.split(":")
                 # bash equivalent to python glob (glob on remote host)
                 expanded_paths = subprocess.run(
-                    f'ssh {host} \'for file in {pattern}; do if [ -e "$file" ]; then '
-                    'echo "$file"; fi; done\'',
+                    f'ssh {host} \'for file in {noh_pattern}; do if [ -e "$file" ]; '
+                    'then echo "$file"; fi; done\'',
                     shell=True,
                     check=True,
                     text=True,

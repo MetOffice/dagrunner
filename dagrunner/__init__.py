@@ -4,6 +4,6 @@
 # See LICENSE in the root of the repository for full licensing details.
 from .plugin_framework import DataPolling, Input, NodeAwarePlugin, Plugin, Shell
 
-__all__ = ["Plugin", "Shell", "Input", "DataPolling", "NodeAwarePlugin"]
+__all__ = ["Plugin", "Shell", "Input", "DataPolling", "NodeAwarePlugin", "Load"]
 
 __version__ = "0.0.1dev"
