@@ -372,3 +372,15 @@ def function_to_argparse(func, parser=None, exclude=None):
         parser.add_argument(*arg_args, **arg_kwargs)
 
     return parser
+
+
+def function_to_argparse_parse_args(*args, **kwargs):
+    parser = function_to_argparse(*args, **kwargs)
+    args = parser.parse_args()
+    args = vars(args)
+    # positional arguments with '-' aren't converted to '_' by argparse.
+    args = {key.replace("-", "_"): value for key, value in args.items()}
+    if args.get("verbose", False):
+        print(f"CLI call arguments: {args}")
+    kwargs = args.pop("kwargs", None) or {}
+    return args, kwargs

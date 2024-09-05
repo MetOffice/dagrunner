@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # (C) Crown Copyright, Met Office. All rights reserved.
 #
 # This file is part of 'dagrunner' and is released under the BSD 3-Clause license.
@@ -29,9 +30,10 @@ import queue
 import socket
 import socketserver
 import struct
-import threading
 
-__all__ = ["client_attach_socket_handler", "ServerContext"]
+from dagrunner.utils import function_to_argparse_parse_args
+
+__all__ = ["client_attach_socket_handler", "start_logging_server"]
 
 
 def client_attach_socket_handler(
@@ -96,7 +98,8 @@ class LogRecordStreamHandler(socketserver.StreamRequestHandler):
             self.handle_log_record(record)
 
             # Push log record to the queue for database writing
-            self.server.log_queue.put(record)
+            if self.server.log_queue is not None:
+                self.server.log_queue.put(record)
 
     def unpickle(self, data):
         return pickle.loads(data)
@@ -132,14 +135,16 @@ class LogRecordSocketReceiver(socketserver.ThreadingTCPServer):
         port=logging.handlers.DEFAULT_TCP_LOGGING_PORT,
         handler=LogRecordStreamHandler,
         log_queue=None,
+        queue_handler=None,
     ):
         socketserver.ThreadingTCPServer.__init__(self, (host, port), handler)
         self.abort = 0
         self.timeout = 1
         self.logname = None
         self.log_queue = log_queue  # Store the reference to the log queue
+        self.queue_handler = queue_handler
 
-    def serve_until_stopped(self, queue_handler=None):
+    def serve_until_stopped(self):
         import select
 
         abort = 0
@@ -147,15 +152,12 @@ class LogRecordSocketReceiver(socketserver.ThreadingTCPServer):
             rd, wr, ex = select.select([self.socket.fileno()], [], [], self.timeout)
             if rd:
                 self.handle_request()
-                queue_handler.write(self.log_queue)
+                if self.queue_handler:
+                    self.queue_handler.write(self.log_queue)
             abort = self.abort
-        if queue_handler:
-            queue_handler.write(self.log_queue)  # Ensure all records are written
-            queue_handler.close()
-
-    def stop(self):
-        self.abort = 1  # Set abort flag to stop the server loop
-        self.server_close()  # Close the server socket
+        if self.queue_handler:
+            self.queue_handler.write(self.log_queue)  # Ensure all records are written
+            self.queue_handler.close()
 
 
 class SQLiteQueueHandler:
@@ -216,85 +218,52 @@ class SQLiteQueueHandler:
             self._conn.close()
 
 
-class ServerContext:
+def start_logging_server(
+    sqlite_filepath: str = None,
+    host: str = "localhost",
+    port: int = logging.handlers.DEFAULT_TCP_LOGGING_PORT,
+    verbose: bool = False,
+):
     """
-    Start a TCP server to receive log records.
-
-    First run the server, and then the client. On the client side, nothing is printed
-    on the console; on the server side, you should see log messages printed to the
-    console.  The TC server is run in a separate thread enabling the main thread to
-    continue running other tasks.
-
-    Log format is:
-    %(relativeCreated)5d %(name)-15s %(levelname)-8s %(hostname)s %(process)d
-    %(asctime)s %(message)s
+    Start the logging server.
 
     Args:
+    - `sqlite_filepath`: The file path to the SQLite database.  Optional.
     - `host`: The host name of the server.  Optional.
     - `port`: The port number the server is listening on.  Optional.
-    - `sqlite_filepath`: The path to the SQLite database file.  Don't write to a
-      file if not provided.  Optional.
     - `verbose`: Whether to print verbose output.  Optional.
-
     """
+    logging.basicConfig(
+        format=(
+            "%(relativeCreated)5d %(name)-15s %(levelname)-8s %(hostname)s "
+            "%(process)d %(asctime)s %(message)s"
+        ),
+        datefmt="%Y-%m-%dT%H:%M:%S",  # Date in ISO 8601 format
+    )
 
-    def __init__(
-        self,
-        host: str = "localhost",
-        port: int = logging.handlers.DEFAULT_TCP_LOGGING_PORT,
-        sqlite_filepath: str = None,
-        verbose: bool = False,
-    ):
-        self.tcpserver = None
-        self.server_thread = None
-        self._sqlite_filepath = sqlite_filepath
-        self._verbose = verbose
-        self._host = host
-        self._port = port
+    log_queue = queue.Queue()
 
-    def __enter__(self):
-        logging.basicConfig(
-            format=(
-                "%(relativeCreated)5d %(name)-15s %(levelname)-8s %(hostname)s "
-                "%(process)d %(asctime)s %(message)s"
-            ),
-            datefmt="%Y-%m-%dT%H:%M:%S",
-        )  # Date in ISO 8601 format
+    sqlitequeue = None
+    if sqlite_filepath:
+        sqlitequeue = SQLiteQueueHandler(sqfile=sqlite_filepath, verbose=verbose)
 
-        self.log_queue = queue.Queue()
-
-        sqlitequeue = None
-        if self._sqlite_filepath:
-            sqlitequeue = SQLiteQueueHandler(
-                sqfile=self._sqlite_filepath, verbose=self._verbose
-            )
-
-        self.tcpserver = LogRecordSocketReceiver(
-            host=self._host, port=self._port, log_queue=self.log_queue
-        )
-        if self._verbose:
-            print("About to start TCP server...")
-        self.server_thread = threading.Thread(
-            target=self.tcpserver.serve_until_stopped,
-            kwargs={"queue_handler": sqlitequeue},
-        )
-        self.server_thread.start()
-
-        return self.server_thread, self.tcpserver
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.tcpserver.stop()
-        self.server_thread.join()
+    tcpserver = LogRecordSocketReceiver(
+        host=host,
+        port=port,
+        log_queue=log_queue,
+        queue_handler=sqlitequeue,
+    )
+    print("About to start TCP server...")
+    tcpserver.serve_until_stopped()
 
 
 def main():
     """
-    Demonstrate how to start a TCP server to receive log records.
+    Entry point of the program.
+    Parses command line arguments and executes the logging server
     """
-    with ServerContext(verbose=True):
-        print("Doing something while the server is running")
-        input("Press Enter to stop the server...")
-    print("Server stopped")
+    args, kwargs = function_to_argparse_parse_args(start_logging_server)
+    start_logging_server(**args, **kwargs)()
 
 
 if __name__ == "__main__":

@@ -19,7 +19,7 @@ from dagrunner.runner.schedulers import SCHEDULERS
 from dagrunner.utils import (
     CaptureProcMemory,
     TimeIt,
-    function_to_argparse,
+    function_to_argparse_parse_args,
     logger,
 )
 from dagrunner.utils.visualisation import visualise_graph
@@ -257,7 +257,6 @@ class ExecuteGraph:
         profiler_filepath: str = None,
         dry_run: bool = False,
         verbose: bool = False,
-        sqlite_filepath: str = None,
         **kwargs,
     ):
         """
@@ -288,8 +287,6 @@ class ExecuteGraph:
           Optional.
         - `verbose` (bool):
           Print executed commands.  Optional.
-        - `sqlite_filepath` (str):
-          Filepath to a SQLite database to store log records.  Optional.
         - `**kwargs`:
           Optional global keyword arguments to apply to all applicable plugins.
         """
@@ -306,7 +303,6 @@ class ExecuteGraph:
         self._profiler_output = profiler_filepath
         self._kwargs = kwargs | {"verbose": verbose, "dry_run": dry_run}
         self._exec_graph = self._process_graph()
-        self._sqlite_filepath = sqlite_filepath
 
     @property
     def nxgraph(self):
@@ -348,9 +344,7 @@ class ExecuteGraph:
         _attempt_visualise_graph(self._exec_graph, output_filepath)
 
     def __call__(self):
-        with logger.ServerContext(sqlite_filepath=self._sqlite_filepath), TimeIt(
-            verbose=True
-        ), self._scheduler(
+        with TimeIt(verbose=True), self._scheduler(
             self._num_workers, profiler_filepath=self._profiler_output
         ) as scheduler:
             try:
@@ -365,14 +359,9 @@ def main():
     Entry point of the program.
     Parses command line arguments and executes the graph using the ExecuteGraph class.
     """
-    parser = function_to_argparse(ExecuteGraph, exclude=["plugin_executor"])
-    args = parser.parse_args()
-    args = vars(args)
-    # positional arguments with '-' aren't converted to '_' by argparse.
-    args = {key.replace("-", "_"): value for key, value in args.items()}
-    if args.get("verbose", False):
-        print(f"CLI call arguments: {args}")
-    kwargs = args.pop("kwargs", None) or {}
+    args, kwargs = function_to_argparse_parse_args(
+        ExecuteGraph, exclude=["plugin_executor"]
+    )
     ExecuteGraph(**args, **kwargs)()
 
 
