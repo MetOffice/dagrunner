@@ -230,8 +230,6 @@ def _get_networkx(networkx_graph):
         module = importlib.import_module(".".join(parts[:-1]))
         networkx_graph = parts[-1]
         nxgraph = getattr(module, networkx_graph)
-    elif callable(networkx_graph):
-        nxgraph = networkx_graph()
     else:
         try:
             edges, nodes = networkx_graph
