@@ -195,7 +195,7 @@ class DataPolling(Plugin):
         file_count = len(args) if file_count is None else max(file_count, len(args))
 
         args = list(map(process_path, args))
-        while time_taken < timeout:
+        while time_taken < timeout or not time_taken:
             pattern = args[indx]
             host = None
             if ":" in pattern:
@@ -225,7 +225,8 @@ class DataPolling(Plugin):
                 )
             if patterns_found >= len(args) or files_found >= file_count:
                 break
-            time.sleep(polling)
+            if timeout:
+                time.sleep(polling)
             time_taken += polling
 
         if patterns_found < len(args):
