@@ -139,19 +139,7 @@ def plugin_executor(
             print(f"Skipping node {call[0]}")
         return SKIP_EVENT
 
-    # Handle call tuple unpacking (length 2, no class init kwargs
-    # or length 3 with class init kwargs).
-    try:
-        callable_obj, callable_kwargs_init, callable_kwargs = call
-    except ValueError as e:
-        if (
-            str(e) == "not enough values to unpack (expected 3, got 2)"
-        ):  # no class init kwargs
-            callable_obj, callable_kwargs = call
-            callable_kwargs_init = {}
-        else:
-            raise e
-
+    callable_obj = call[0]
     if isinstance(callable_obj, str):
         # import callable if a string is provided
         module_name, function_name = callable_obj.rsplit(".", 1)
@@ -159,6 +147,27 @@ def plugin_executor(
         if verbose:
             print(f"imported module '{module}', callable '{function_name}'")
         callable_obj = getattr(module, function_name)
+
+    # Handle call tuple unpacking (length 2, no class init kwargs
+    # or length 3 with class init kwargs).
+    if isinstance(callable_obj, type):
+        if len(call) == 3:
+            _, callable_kwargs_init, callable_kwargs = call
+        elif len(call) == 2:
+            _, callable_kwargs_init = call
+            callable_kwargs = {}
+        elif len(call) == 1:
+            callable_kwargs = {}
+            callable_kwargs_init = {}
+        else:
+            raise ValueError(f'expecting 1, 2 or 3 values to unpack for {callable_obj}, got {len(call)}')
+    else:
+        if len(call) == 2:
+            _, callable_kwargs = call
+        elif len(call) == 1:
+            callable_kwargs = {}
+        else:
+            raise ValueError(f'expecting 1 or 2 values to unpack for {callable_obj}, got {len(call)}')
 
     call_msg = ""
     obj_name = callable_obj.__name__
