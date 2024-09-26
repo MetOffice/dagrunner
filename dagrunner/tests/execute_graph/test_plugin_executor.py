@@ -4,98 +4,151 @@
 # See LICENSE in the root of the repository for full licensing details.
 from unittest import mock
 
+import pytest
+
 from dagrunner.execute_graph import plugin_executor
 
 
 class DummyPlugin:
-    def __init__(self, iarg1, ikwarg1=None) -> None:
-        self._iarg1 = iarg1
-        self._ikwarg1 = ikwarg1
+    def __init__(self, init_named_arg, init_named_kwarg=None, **init_kwargs) -> None:
+        self._init_named_arg = init_named_arg
+        self._init_named_kwarg = init_named_kwarg
+        self._init_kwargs = init_kwargs
 
-    def __call__(self, *args, kwarg1=None, **kwargs):
+    def __call__(
+        self, *call_args, call_named_arg, call_named_kwarg=None, **call_kwargs
+    ):
         return (
-            f"iarg1={self._iarg1}; ikwarg1={self._ikwarg1}; args={args}; "
-            f"kwarg1={kwarg1}; kwargs={kwargs}"
+            f"init_kwargs={self._init_kwargs}; "
+            f"init_named_arg={self._init_named_arg}; init_named_kwarg={self._init_named_kwarg}; "
+            f"call_args={call_args}; call_kwargs={call_kwargs}; "
+            f"call_named_arg={call_named_arg}; call_named_kwarg={call_named_kwarg}; "
         )
 
 
-@mock.patch("dagrunner.execute_graph.logger.client_attach_socket_handler")
-def test_pass_class_arg_kwargs(mock_client_attach_socket_handler):
-    """Test passing named parameters to plugin class and __call__ method."""
-    args = (mock.sentinel.arg1, mock.sentinel.arg2)
-    call = tuple(
-        [
+class DummyPluginNoNamedParam:
+    def __init__(self, **init_kwargs) -> None:
+        self._init_kwargs = init_kwargs
+
+    def __call__(self, *call_args, **call_kwargs):
+        return (
+            f"init_kwargs={self._init_kwargs}; "
+            f"call_args={call_args}; call_kwargs={call_kwargs}; "
+        )
+
+
+@pytest.mark.parametrize(
+    "plugin, init_args, call_args, target",
+    [
+        # Passing class init and call args
+        (
             DummyPlugin,
-            {"iarg1": mock.sentinel.iarg1, "ikwarg1": mock.sentinel.ikwarg1},
-            {"kwarg1": mock.sentinel.kwarg1},
-        ]
-    )
+            {
+                "init_named_arg": mock.sentinel.init_named_arg,
+                "init_named_kwarg": mock.sentinel.init_named_kwarg,
+                "init_other_kwarg": mock.sentinel.init_other_kwarg,
+            },
+            {
+                "call_named_arg": mock.sentinel.call_named_arg,
+                "call_named_kwarg": mock.sentinel.call_named_kwarg,
+                "call_other_kwarg": mock.sentinel.call_other_kwarg,
+            },
+            (
+                "init_kwargs={'init_other_kwarg': sentinel.init_other_kwarg}; "
+                "init_named_arg=sentinel.init_named_arg; "
+                "init_named_kwarg=sentinel.init_named_kwarg; "
+                "call_args=(sentinel.arg1, sentinel.arg2); "
+                "call_kwargs={'call_other_kwarg': sentinel.call_other_kwarg}; "
+                "call_named_arg=sentinel.call_named_arg; call_named_kwarg=sentinel.call_named_kwarg; "
+            ),
+        ),
+        # Passing class init args only
+        (
+            DummyPluginNoNamedParam,
+            {"init_other_kwarg": mock.sentinel.init_other_kwarg},
+            None,
+            (
+                "init_kwargs={'init_other_kwarg': sentinel.init_other_kwarg}; "
+                "call_args=(sentinel.arg1, sentinel.arg2); "
+                "call_kwargs={}; "
+            ),
+        ),
+        # Passing class call args only
+        (
+            DummyPluginNoNamedParam,
+            None,
+            {"call_other_kwarg": mock.sentinel.call_other_kwarg},
+            (
+                "init_kwargs={}; "
+                "call_args=(sentinel.arg1, sentinel.arg2); "
+                "call_kwargs={'call_other_kwarg': sentinel.call_other_kwarg}; "
+            ),
+        ),
+    ],
+)
+def test_pass_class_arg_kwargs(plugin, init_args, call_args, target):
+    """Test passing named parameters to plugin class initialisation and __call__ method."""
+    args = (mock.sentinel.arg1, mock.sentinel.arg2)
+    call = tuple([plugin, init_args, call_args])
     res = plugin_executor(*args, call=call)
-    assert res == (
-        "iarg1=sentinel.iarg1; ikwarg1=sentinel.ikwarg1; "
-        "args=(sentinel.arg1, sentinel.arg2); kwarg1=sentinel.kwarg1; "
-        "kwargs={}"
-    )
+    assert res == target
 
 
-@mock.patch("dagrunner.execute_graph.logger.client_attach_socket_handler")
-def test_pass_common_args(mock_client_attach_socket_handler):
+def test_pass_common_args():
     """Passing 'common args', some relevant to class init and some to call method."""
     args = (mock.sentinel.arg1, mock.sentinel.arg2)
     common_kwargs = {
-        "ikwarg1": mock.sentinel.ikwarg1,
-        "kwarg1": mock.sentinel.kwarg1,
-        "iarg1": mock.sentinel.iarg1,
+        "init_named_arg": mock.sentinel.init_named_arg,
+        "init_named_kwarg": mock.sentinel.init_named_kwarg,
+        "other_kwargs": mock.sentinel.other_kwargs,  # this should be ignored (as not part of class signature)
+        "call_named_arg": mock.sentinel.call_named_arg,
+        "call_named_kwarg": mock.sentinel.call_named_kwarg,
     }
-
-    # call without common args (iarg1 is positional so non-optional)
-    call = tuple([DummyPlugin, {"iarg1": mock.sentinel.iarg1}, {}])
-    res = plugin_executor(*args, call=call)
-    assert res == (
-        "iarg1=sentinel.iarg1; ikwarg1=None; args=(sentinel.arg1, "
-        "sentinel.arg2); kwarg1=None; kwargs={}"
+    target = (
+        "init_kwargs={}; "
+        "init_named_arg=sentinel.init_named_arg; "
+        "init_named_kwarg=sentinel.init_named_kwarg; "
+        "call_args=(sentinel.arg1, sentinel.arg2); "
+        "call_kwargs={}; "
+        "call_named_arg=sentinel.call_named_arg; "
+        "call_named_kwarg=sentinel.call_named_kwarg; "
     )
 
-    # call with common args
     call = tuple([DummyPlugin, {}, {}])
     res = plugin_executor(*args, call=call, common_kwargs=common_kwargs)
-    assert res == (
-        "iarg1=sentinel.iarg1; ikwarg1=sentinel.ikwarg1; "
-        "args=(sentinel.arg1, sentinel.arg2); kwarg1=sentinel.kwarg1; "
-        "kwargs={}"
-    )
+    assert res == target
 
 
-class DummyPlugin2:
-    """Plugin that is reliant on data not explicitly defined in its UI."""
-
-    def __call__(self, *args, **kwargs):
-        return f"args={args}; kwargs={kwargs}"
-
-
-@mock.patch("dagrunner.execute_graph.logger.client_attach_socket_handler")
-def test_pass_common_args_via_override(mock_client_attach_socket_handler):
-    """
-    Passing 'common args' to a plugin that doesn't have such arguments
-    defined in its signature.  Instead, filter out those that aren't
-    specified in the graph.
-    """
+def test_pass_common_args_override():
+    """Passing 'common args', some relevant to class init and some to call method."""
+    args = (mock.sentinel.arg1, mock.sentinel.arg2)
     common_kwargs = {
-        "kwarg1": mock.sentinel.kwarg1,
-        "kwarg2": mock.sentinel.kwarg2,
-        "kwarg3": mock.sentinel.kwarg3,
+        "init_named_arg": mock.sentinel.init_named_arg_override,
+        "init_named_kwarg": mock.sentinel.init_named_kwarg_override,
+        "call_named_arg": mock.sentinel.call_named_arg_override,
+        "call_named_kwarg": mock.sentinel.call_named_kwarg_override,
     }
-    args = []
     call = tuple(
         [
-            DummyPlugin2,
+            DummyPlugin,
             {
-                "kwarg1": mock.sentinel.kwarg1,
-                "kwarg2": mock.sentinel.kwarg2,
+                "init_named_arg": mock.sentinel.init_named_arg,
+                "init_named_kwarg": mock.sentinel.init_named_kwarg,
+            },
+            {
+                "call_named_arg": mock.sentinel.call_named_arg,
+                "call_named_kwarg": mock.sentinel.call_named_kwarg,
             },
         ]
     )
-    res = plugin_executor(*args, call=call, common_kwargs=common_kwargs)
-    assert (
-        res == "args=(); kwargs={'kwarg1': sentinel.kwarg1, 'kwarg2': sentinel.kwarg2}"
+    target = (
+        "init_kwargs={}; "
+        "init_named_arg=sentinel.init_named_arg_override; "
+        "init_named_kwarg=sentinel.init_named_kwarg_override; "
+        "call_args=(sentinel.arg1, sentinel.arg2); "
+        "call_kwargs={}; "
+        "call_named_arg=sentinel.call_named_arg_override; "
+        "call_named_kwarg=sentinel.call_named_kwarg_override; "
     )
+    res = plugin_executor(*args, call=call, common_kwargs=common_kwargs)
+    assert res == target

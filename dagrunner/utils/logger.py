@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # (C) Crown Copyright, Met Office. All rights reserved.
 #
 # This file is part of 'dagrunner' and is released under the BSD 3-Clause license.
@@ -25,10 +24,12 @@ https://docs.python.org/3/howto/logging-cookbook.html#sending-and-receiving-logg
 
 import logging
 import logging.handlers
+import os
 import pickle
 import queue
 import socket
 import socketserver
+import sqlite3
 import struct
 
 from dagrunner.utils import function_to_argparse_parse_args
@@ -95,11 +96,11 @@ class LogRecordStreamHandler(socketserver.StreamRequestHandler):
             record = logging.makeLogRecord(obj)
             # Modify record to include hostname
             record.hostname = socket.gethostname()
-            self.handle_log_record(record)
-
             # Push log record to the queue for database writing
             if self.server.log_queue is not None:
                 self.server.log_queue.put(record)
+
+            self.handle_log_record(record)
 
     def unpickle(self, data):
         return pickle.loads(data)
@@ -135,16 +136,14 @@ class LogRecordSocketReceiver(socketserver.ThreadingTCPServer):
         port=logging.handlers.DEFAULT_TCP_LOGGING_PORT,
         handler=LogRecordStreamHandler,
         log_queue=None,
-        queue_handler=None,
     ):
         socketserver.ThreadingTCPServer.__init__(self, (host, port), handler)
         self.abort = 0
         self.timeout = 1
         self.logname = None
         self.log_queue = log_queue  # Store the reference to the log queue
-        self.queue_handler = queue_handler
 
-    def serve_until_stopped(self):
+    def serve_until_stopped(self, queue_handler=None):
         import select
 
         abort = 0
@@ -152,50 +151,51 @@ class LogRecordSocketReceiver(socketserver.ThreadingTCPServer):
             rd, wr, ex = select.select([self.socket.fileno()], [], [], self.timeout)
             if rd:
                 self.handle_request()
-                if self.queue_handler:
-                    self.queue_handler.write(self.log_queue)
+                if queue_handler:
+                    queue_handler.write(self.log_queue)
             abort = self.abort
-        if self.queue_handler:
-            self.queue_handler.write(self.log_queue)  # Ensure all records are written
-            self.queue_handler.close()
+        if queue_handler:
+            queue_handler.write(self.log_queue)  # Ensure all records are written
+            queue_handler.close()
 
 
 class SQLiteQueueHandler:
     def __init__(self, sqfile="logs.sqlite", verbose=False):
         self._sqfile = sqfile
-        self._conn = None
+        self._conn = sqlite3.connect(self._sqfile)  # Connect to the SQLite database
         self._verbose = verbose
+        self._debug = False
+        sqlite3.enable_callback_tracebacks(self._debug)
+        self.write_table()
 
-    @property
-    def db(self):
-        if self._conn is None:
-            import sqlite3
-
-            if self._verbose:
-                print(f"Writing sqlite file: {self._sqfile}")
-            self._conn = sqlite3.connect(self._sqfile)  # Connect to the SQLite database
-            cursor = self._conn.cursor()
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS logs (
-                    created TEXT,
-                    name TEXT,
-                    level TEXT,
-                    message TEXT,
-                    hostname TEXT,
-                    process TEXT,
-                    thread TEXT
-                )
-            """)  # Create the 'logs' table if it doesn't exist
-        return self._conn
+    def write_table(self):
+        if self._verbose:
+            print(f"Writing sqlite file table: {self._sqfile}")
+        # cursors are not thread-safe
+        cursor = self._conn.cursor()
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS logs (
+                created TEXT,
+                name TEXT,
+                level TEXT,
+                message TEXT,
+                hostname TEXT,
+                process TEXT,
+                thread TEXT
+            )
+        """)  # Create the 'logs' table if it doesn't exist
+        self._conn.commit()  # Commit the transaction after all writes
+        cursor.close()
 
     def write(self, log_queue):
         if self._verbose:
-            print("Writing to sqlite file")
+            print(f"Writing row to sqlite file: {self._sqfile}")
+        # cursors are not thread-safe
+        cursor = self._conn.cursor()
         while not log_queue.empty():
             record = log_queue.get()
             if self._verbose:
                 print("Dequeued item:", record)
-            cursor = self.db.cursor()
             cursor.execute(
                 "\n"
                 "INSERT INTO logs "
@@ -211,7 +211,8 @@ class SQLiteQueueHandler:
                     record.thread,
                 ),
             )
-            self.db.commit()  # Commit the transaction
+        self._conn.commit()  # Commit the transaction after all writes
+        cursor.close()
 
     def close(self):
         if self._conn:
@@ -265,10 +266,19 @@ def start_logging_server(
         host=host,
         port=port,
         log_queue=log_queue,
-        queue_handler=sqlitequeue,
     )
-    print("About to start TCP server...")
-    tcpserver.serve_until_stopped()
+    print(
+        "About to start TCP server...\n",
+        "HOST:",
+        host,
+        "PORT:",
+        port,
+        "PID:",
+        os.getpid(),
+        "SQLITE:",
+        sqlite_filepath,
+    )
+    tcpserver.serve_until_stopped(queue_handler=sqlitequeue)
 
 
 def main():

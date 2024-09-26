@@ -160,14 +160,22 @@ def plugin_executor(
             callable_kwargs = {}
             callable_kwargs_init = {}
         else:
-            raise ValueError(f'expecting 1, 2 or 3 values to unpack for {callable_obj}, got {len(call)}')
+            raise ValueError(
+                f"expecting 1, 2 or 3 values to unpack for {callable_obj}, got {len(call)}"
+            )
+        callable_kwargs_init = (
+            {} if callable_kwargs_init is None else callable_kwargs_init
+        )
     else:
         if len(call) == 2:
             _, callable_kwargs = call
         elif len(call) == 1:
             callable_kwargs = {}
         else:
-            raise ValueError(f'expecting 1 or 2 values to unpack for {callable_obj}, got {len(call)}')
+            raise ValueError(
+                f"expecting 1 or 2 values to unpack for {callable_obj}, got {len(call)}"
+            )
+    callable_kwargs = {} if callable_kwargs is None else callable_kwargs
 
     call_msg = ""
     obj_name = callable_obj.__name__
