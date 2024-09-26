@@ -20,7 +20,8 @@ class DummyPlugin:
     ):
         return (
             f"init_kwargs={self._init_kwargs}; "
-            f"init_named_arg={self._init_named_arg}; init_named_kwarg={self._init_named_kwarg}; "
+            f"init_named_arg={self._init_named_arg}; "
+            f"init_named_kwarg={self._init_named_kwarg}; "
             f"call_args={call_args}; call_kwargs={call_kwargs}; "
             f"call_named_arg={call_named_arg}; call_named_kwarg={call_named_kwarg}; "
         )
@@ -59,7 +60,8 @@ class DummyPluginNoNamedParam:
                 "init_named_kwarg=sentinel.init_named_kwarg; "
                 "call_args=(sentinel.arg1, sentinel.arg2); "
                 "call_kwargs={'call_other_kwarg': sentinel.call_other_kwarg}; "
-                "call_named_arg=sentinel.call_named_arg; call_named_kwarg=sentinel.call_named_kwarg; "
+                "call_named_arg=sentinel.call_named_arg; "
+                "call_named_kwarg=sentinel.call_named_kwarg; "
             ),
         ),
         # Passing class init args only
@@ -87,7 +89,10 @@ class DummyPluginNoNamedParam:
     ],
 )
 def test_pass_class_arg_kwargs(plugin, init_args, call_args, target):
-    """Test passing named parameters to plugin class initialisation and __call__ method."""
+    """
+    Test passing named parameters to plugin class initialisation and __call__
+    method.
+    """
     args = (mock.sentinel.arg1, mock.sentinel.arg2)
     call = tuple([plugin, init_args, call_args])
     res = plugin_executor(*args, call=call)
@@ -95,12 +100,15 @@ def test_pass_class_arg_kwargs(plugin, init_args, call_args, target):
 
 
 def test_pass_common_args():
-    """Passing 'common args', some relevant to class init and some to call method."""
+    """
+    Passing 'common args', some relevant to class init and some to call method.
+    """
     args = (mock.sentinel.arg1, mock.sentinel.arg2)
     common_kwargs = {
         "init_named_arg": mock.sentinel.init_named_arg,
         "init_named_kwarg": mock.sentinel.init_named_kwarg,
-        "other_kwargs": mock.sentinel.other_kwargs,  # this should be ignored (as not part of class signature)
+        # this should be ignored (as not part of class signature)
+        "other_kwargs": mock.sentinel.other_kwargs,
         "call_named_arg": mock.sentinel.call_named_arg,
         "call_named_kwarg": mock.sentinel.call_named_kwarg,
     }

@@ -189,11 +189,12 @@ class DataPolling(Plugin):
         Raises:
         - RuntimeError: If the timeout is reached before all files are found.
         """
+
         # Define a key function
         def host_and_glob_key(path):
-            psplit = path.split(':')
-            host = psplit[0] if ':' in path else ''  # Extract host if available
-            is_glob = psplit[-1] if '*' in psplit[-1] else ''  # Glob pattern
+            psplit = path.split(":")
+            host = psplit[0] if ":" in path else ""  # Extract host if available
+            is_glob = psplit[-1] if "*" in psplit[-1] else ""  # Glob pattern
             return (host, is_glob)
 
         time_taken = 0
@@ -202,18 +203,20 @@ class DataPolling(Plugin):
 
         # Group by host and whether it's a glob pattern
         sorted_args = sorted(args, key=host_and_glob_key)
-        args_by_host = [[key, set(map(lambda path: path.split(':')[-1], group))] for
-                        key, group in itertools.groupby(sorted_args, key=host_and_glob_key)]
+        args_by_host = [
+            [key, set(map(lambda path: path.split(":")[-1], group))]
+            for key, group in itertools.groupby(sorted_args, key=host_and_glob_key)
+        ]
 
         for ind, ((host, globular), paths) in enumerate(args_by_host):
             globular = bool(globular)
-            host_msg = f"{host}:" if host else ''
+            host_msg = f"{host}:" if host else ""
             while time_taken < timeout or not timeout:
                 if host:
                     # bash equivalent to python glob (glob on remote host)
                     expanded_paths = subprocess.run(
-                        f'ssh {host} \'for file in {" ".join(paths)}; do if [ -e "$file" ]; '
-                        'then echo "$file"; fi; done\'',
+                        f'ssh {host} \'for file in {" ".join(paths)}; do if '
+                        '[ -e "$file" ]; then echo "$file"; fi; done\'',
                         shell=True,
                         check=True,
                         text=True,
@@ -222,10 +225,14 @@ class DataPolling(Plugin):
                     if expanded_paths:
                         expanded_paths = expanded_paths.split("\n")
                 else:
-                    expanded_paths = list(itertools.chain.from_iterable(map(glob, paths)))
+                    expanded_paths = list(
+                        itertools.chain.from_iterable(map(glob, paths))
+                    )
                 if expanded_paths:
                     fpaths_found = fpaths_found.union(expanded_paths)
-                    if globular and (not file_count or len(expanded_paths) >= file_count):
+                    if globular and (
+                        not file_count or len(expanded_paths) >= file_count
+                    ):
                         # globular expansion completed
                         paths = set()
                     else:
@@ -235,8 +242,8 @@ class DataPolling(Plugin):
                 if paths:
                     if timeout:
                         print(
-                            f"polling for {host_msg}{paths}, time taken: {time_taken}s of limit "
-                            f"{timeout}s"
+                            f"polling for {host_msg}{paths}, time taken: "
+                            f"{time_taken}s of limit {timeout}s"
                         )
                         time.sleep(polling)
                         time_taken += polling
@@ -246,10 +253,15 @@ class DataPolling(Plugin):
                     break
 
             if paths:
-                raise FileNotFoundError(f"Timeout waiting for: {host_msg}{'; '.join(sorted(paths))}")
+                raise FileNotFoundError(
+                    f"Timeout waiting for: {host_msg}{'; '.join(sorted(paths))}"
+                )
 
         if verbose and fpaths_found:
-            print(f"The following files were polled and found: {'; '.join(sorted(fpaths_found))}")
+            print(
+                "The following files were polled and found: "
+                f"{'; '.join(sorted(fpaths_found))}"
+            )
         return None
 
 
