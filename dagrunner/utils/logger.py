@@ -158,21 +158,22 @@ class LogRecordSocketReceiver(socketserver.ThreadingTCPServer):
             queue_handler.write(self.log_queue)  # Ensure all records are written
             queue_handler.close()
 
+    def stop(self):
+        self.abort = 1  # Set abort flag to stop the server loop
+        self.server_close()  # Close the server socket
+
 
 class SQLiteQueueHandler:
     def __init__(self, sqfile="logs.sqlite", verbose=False):
         self._sqfile = sqfile
-        self._conn = sqlite3.connect(self._sqfile)  # Connect to the SQLite database
+        self._conn = None
         self._verbose = verbose
         self._debug = False
         sqlite3.enable_callback_tracebacks(self._debug)
-        self.write_table()
 
-    def write_table(self):
+    def write_table(self, cursor):
         if self._verbose:
             print(f"Writing sqlite file table: {self._sqfile}")
-        # cursors are not thread-safe
-        cursor = self._conn.cursor()
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS logs (
                 created TEXT,
@@ -184,14 +185,20 @@ class SQLiteQueueHandler:
                 thread TEXT
             )
         """)  # Create the 'logs' table if it doesn't exist
-        self._conn.commit()  # Commit the transaction after all writes
-        cursor.close()
 
     def write(self, log_queue):
+        if self._conn is None:
+            # SQLite objects created in a thread can only be used in that same thread
+            # for flexibility we create a new connection here.
+            self._conn = sqlite3.connect(self._sqfile)
+            cursor = self._conn.cursor()
+            self.write_table(cursor)
+        else:
+            # NOTE: cursors are not thread-safe
+            cursor = self._conn.cursor()
+
         if self._verbose:
             print(f"Writing row to sqlite file: {self._sqfile}")
-        # cursors are not thread-safe
-        cursor = self._conn.cursor()
         while not log_queue.empty():
             record = log_queue.get()
             if self._verbose:
@@ -269,14 +276,7 @@ def start_logging_server(
     )
     print(
         "About to start TCP server...\n",
-        "HOST:",
-        host,
-        "PORT:",
-        port,
-        "PID:",
-        os.getpid(),
-        "SQLITE:",
-        sqlite_filepath,
+        f"HOST: {host}; PORT: {port}; PID: {os.getpid()}; SQLITE: {sqlite_filepath}\n",
     )
     tcpserver.serve_until_stopped(queue_handler=sqlitequeue)
 
