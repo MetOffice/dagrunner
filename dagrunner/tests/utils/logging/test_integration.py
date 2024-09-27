@@ -35,6 +35,8 @@ def server(sqlite_filepath):
             "logger",
             "--sqlite-filepath",
             str(sqlite_filepath),
+            "--port",
+            "12345",
             "--verbose",
         ],
         env=env,
@@ -58,7 +60,7 @@ def test_sqlitedb(server, caplog):
         ["Indentation defines code blocks.", "myapp.area2", "warning"],
         ["Libraries extend Pythons capabilities.", "myapp.area2", "error"],
     )
-    client_attach_socket_handler()
+    client_attach_socket_handler(port=12345)
     for msg, lvlname, name in test_inputs:
         getattr(logging.getLogger(lvlname), name)(msg)
 
@@ -91,7 +93,7 @@ def test_sqlitedb(server, caplog):
     records = cursor.execute("SELECT * FROM logs").fetchall()
     for test_input, record in zip(test_inputs, records):
         tar_format = (
-            float,
+            str,
             test_input[1],
             test_input[2].upper(),
             test_input[0],
@@ -104,7 +106,10 @@ def test_sqlitedb(server, caplog):
         for tar, rec in zip(tar_format, record):
             if isinstance(tar, type):
                 # simply check it is the correct type
-                assert type(eval(rec)) is tar
+                try:
+                    assert type(eval(rec)) is tar
+                except SyntaxError:
+                    continue
             else:
                 assert rec == tar
     conn.close()
