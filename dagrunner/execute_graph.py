@@ -356,11 +356,12 @@ class ExecuteGraph:
             # of types (tuples, bytes, int, float and str).
             key = tokenize(node_id)
             args = [tokenize(arg) for arg in self._nxgraph.predecessors(node_id)]
+            print(node_id, key, properties)
             try:
                 exec_graph[key] = (apply, executor, args, properties)
-            except:
+            except Exception as error:
                 print(node_id, properties)
-                raise
+                raise ValueError(f"something went wrong with {key}") from error
         # handle_clobber(graph, workflow, no_clobber, verbose)
         return exec_graph
 
