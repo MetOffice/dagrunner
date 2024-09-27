@@ -130,6 +130,10 @@ def plugin_executor(
         arg for arg in args if arg is not None
     ]  # support plugins that have no return value
     if call is None:
+        print(f"args: {args}")
+        print(f"call: {call}")
+        print(f"common_kwargs: {common_kwargs}")
+        print(f"node_properties: {node_properties}")
         raise ValueError("call is a required argument")
     if verbose:
         print(f"args: {args}")
@@ -352,8 +356,11 @@ class ExecuteGraph:
             # of types (tuples, bytes, int, float and str).
             key = tokenize(node_id)
             args = [tokenize(arg) for arg in self._nxgraph.predecessors(node_id)]
-            exec_graph[key] = (apply, executor, args, properties)
-
+            try:
+                exec_graph[key] = (apply, executor, args, properties)
+            except:
+                print(node_id, properties)
+                raise
         # handle_clobber(graph, workflow, no_clobber, verbose)
         return exec_graph
 
