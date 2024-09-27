@@ -8,7 +8,7 @@ see [class: dagrunner.plugin_framework.NodeAwarePlugin](dagrunner.plugin_framewo
 
 see [class: dagrunner.utils.TimeIt](dagrunner.utils.md#class-timeit)
 
-see [function: dagrunner.utils.function_to_argparse](dagrunner.utils.md#function-function_to_argparse)
+see [function: dagrunner.utils.function_to_argparse_parse_args](dagrunner.utils.md#function-function_to_argparse_parse_args)
 
 see [module: dagrunner.utils.logger](dagrunner.utils.logger.md#module-dagrunnerutilslogger)
 
@@ -16,17 +16,17 @@ see [function: dagrunner.utils.visualisation.visualise_graph](dagrunner.utils.vi
 
 ## class: `ExecuteGraph`
 
-[Source](../dagrunner/execute_graph.py#L249)
+[Source](../dagrunner/execute_graph.py#L266)
 
 ### Call Signature:
 
 ```python
-ExecuteGraph(networkx_graph: str, networkx_graph_kwargs: dict = None, <function plugin_executor>, scheduler: str = 'processes', num_workers: int = 1, profiler_filepath: str = None, dry_run: bool = False, verbose: bool = False, sqlite_filepath: str = None, **kwargs)
+ExecuteGraph(networkx_graph: str, networkx_graph_kwargs: dict = None, <function plugin_executor>, scheduler: str = 'processes', num_workers: int = 1, profiler_filepath: str = None, dry_run: bool = False, verbose: bool = False, **kwargs)
 ```
 
 ### function: `__call__`
 
-[Source](../dagrunner/execute_graph.py#L350)
+[Source](../dagrunner/execute_graph.py#L363)
 
 #### Call Signature:
 
@@ -38,12 +38,12 @@ Call self as a function.
 
 ### function: `__init__`
 
-[Source](../dagrunner/execute_graph.py#L250)
+[Source](../dagrunner/execute_graph.py#L267)
 
 #### Call Signature:
 
 ```python
-__init__(self, networkx_graph: str, networkx_graph_kwargs: dict = None, <function plugin_executor>, scheduler: str = 'processes', num_workers: int = 1, profiler_filepath: str = None, dry_run: bool = False, verbose: bool = False, sqlite_filepath: str = None, **kwargs)
+__init__(self, networkx_graph: str, networkx_graph_kwargs: dict = None, <function plugin_executor>, scheduler: str = 'processes', num_workers: int = 1, profiler_filepath: str = None, dry_run: bool = False, verbose: bool = False, **kwargs)
 ```
 
 Execute a networkx graph using a chosen scheduler.
@@ -73,14 +73,12 @@ Args:
   Optional.
 - `verbose` (bool):
   Print executed commands.  Optional.
-- `sqlite_filepath` (str):
-  Filepath to a SQLite database to store log records.  Optional.
 - `**kwargs`:
   Optional global keyword arguments to apply to all applicable plugins.
 
 ### function: `visualise`
 
-[Source](../dagrunner/execute_graph.py#L347)
+[Source](../dagrunner/execute_graph.py#L360)
 
 #### Call Signature:
 
@@ -109,7 +107,7 @@ Status: experimental.
 
 ## function: `main`
 
-[Source](../dagrunner/execute_graph.py#L363)
+[Source](../dagrunner/execute_graph.py#L374)
 
 ### Call Signature:
 
