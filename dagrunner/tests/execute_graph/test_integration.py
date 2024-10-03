@@ -6,7 +6,6 @@ import json
 import os
 import time
 from dataclasses import dataclass
-from unittest.mock import patch
 
 import pytest
 
@@ -83,7 +82,7 @@ def graph(tmp_path_factory):
         for nodenum in range(1, 6):
             node = vars()[f"node{nodenum}"]
             SETTINGS[node] = {
-                "call": tuple([ProcessID, {"id": nodenum}]),
+                "call": tuple([ProcessID, None, {"id": nodenum}]),
             }
 
         node_save = Node(step="save", leadtime=leadtime)
@@ -92,7 +91,7 @@ def graph(tmp_path_factory):
         # we let SaveJson expand the filepath for us from the node properties (leadtime)
         SETTINGS[node_save] = {
             "call": tuple(
-                [SaveJson, {"filepath": f"{tmp_dir}/result_{{leadtime}}.json"}]
+                [SaveJson, None, {"filepath": f"{tmp_dir}/result_{{leadtime}}.json"}]
             )
         }
     return EDGES, SETTINGS, output_files
@@ -115,16 +114,13 @@ def test_execution(graph, scheduler):
     # parallel execution performance.
     debug = False
     EDGES, SETTINGS, output_files = graph
-    with patch("dagrunner.execute_graph.logger.ServerContext"), patch(
-        "dagrunner.execute_graph.logger.client_attach_socket_handler"
-    ):
-        graph = ExecuteGraph(
-            (EDGES, SETTINGS),
-            num_workers=3,
-            scheduler=scheduler,
-            verbose=False,
-            debug=debug,
-        )()
+    graph = ExecuteGraph(
+        (EDGES, SETTINGS),
+        num_workers=3,
+        scheduler=scheduler,
+        verbose=False,
+        debug=debug,
+    )()
     for output_file in output_files:
         with open(output_file, "r") as file:
             # two of them are expected since we have two leadtime branches
@@ -145,17 +141,14 @@ def test_skip_execution(graph):
 
     # skip execution of the second branch
     SETTINGS[Node(step="step2", leadtime=HOUR)] = {
-        "call": tuple([SkipExe, {"id": 2}]),
+        "call": tuple([SkipExe, None, {"id": 2}]),
     }
-    with patch("dagrunner.execute_graph.logger.ServerContext"), patch(
-        "dagrunner.execute_graph.logger.client_attach_socket_handler"
-    ):
-        graph = ExecuteGraph(
-            (EDGES, SETTINGS),
-            num_workers=3,
-            scheduler=scheduler,
-            verbose=False,
-        )()
+    graph = ExecuteGraph(
+        (EDGES, SETTINGS),
+        num_workers=3,
+        scheduler=scheduler,
+        verbose=False,
+    )()
     output_file = output_files[0]
     with open(output_file, "r") as file:
         # two of them are expected since we have two leadtime branches
@@ -178,19 +171,16 @@ def test_multiprocessing_error_handling(graph):
 
     # # skip execution of the second branch
     SETTINGS[Node(step="step2", leadtime=HOUR)] = {
-        "call": tuple([RaiseErr, {"id": 2}]),
+        "call": tuple([RaiseErr, None, {"id": 2}]),
     }
-    with patch("dagrunner.execute_graph.logger.ServerContext"), patch(
-        "dagrunner.execute_graph.logger.client_attach_socket_handler"
-    ):
-        graph = ExecuteGraph(
-            (EDGES, SETTINGS),
-            num_workers=3,
-            scheduler=scheduler,
-            verbose=False,
-        )
-        with pytest.raises(RuntimeError, match="RaiseErr"):
-            graph()
+    graph = ExecuteGraph(
+        (EDGES, SETTINGS),
+        num_workers=3,
+        scheduler=scheduler,
+        verbose=False,
+    )
+    with pytest.raises(RuntimeError, match="RaiseErr"):
+        graph()
 
 
 @pytest.fixture()
@@ -204,10 +194,10 @@ def graph_input():
     EDGES.append([node1, node2])
 
     SETTINGS[node1] = {
-        "call": tuple([Input, {"filepath": "{step}_{leadtime}"}]),
+        "call": tuple([Input, None, {"filepath": "{step}_{leadtime}"}]),
     }
     SETTINGS[node2] = {
-        "call": tuple([lambda x: x, {}]),
+        "call": tuple([lambda x: x]),
     }
     return EDGES, SETTINGS
 
@@ -219,14 +209,11 @@ def test_override_node_property_with_setting(graph_input, capsys):
     new_step = "altered_step"
     SETTINGS[Node(step="step1", leadtime=1)] |= {"step": new_step}
 
-    with patch("dagrunner.execute_graph.logger.ServerContext"), patch(
-        "dagrunner.execute_graph.logger.client_attach_socket_handler"
-    ):
-        _ = ExecuteGraph(
-            (EDGES, SETTINGS),
-            num_workers=1,
-            scheduler=scheduler,
-            verbose=True,
-        )()
+    _ = ExecuteGraph(
+        (EDGES, SETTINGS),
+        num_workers=1,
+        scheduler=scheduler,
+        verbose=True,
+    )()
     output = capsys.readouterr()
     assert f"result: {new_step}_1" in output.out

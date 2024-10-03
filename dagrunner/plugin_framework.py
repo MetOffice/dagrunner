@@ -2,6 +2,7 @@
 #
 # This file is part of 'dagrunner' and is released under the BSD 3-Clause license.
 # See LICENSE in the root of the repository for full licensing details.
+import itertools
 import json
 import os
 import pickle
@@ -179,10 +180,8 @@ class DataPolling(Plugin):
         - timeout (int): Timeout in seconds (default is 120 seconds).
         - polling (int): Time interval in seconds between each poll (default is 1
           second).
-        - file_count (int): Expected number of files to be found (default is None).
-            If specified, the total number of files found can be greater than the
-            number of arguments.  Each argument is expected to return a minimum of
-            1 match each in either case.
+        - file_count (int): Expected number of files to be found for globular
+            expansion (default is >= 1 files per pattern).
 
         Returns:
         - None
@@ -190,50 +189,79 @@ class DataPolling(Plugin):
         Raises:
         - RuntimeError: If the timeout is reached before all files are found.
         """
-        time_taken = indx = patterns_found = files_found = 0
-        fpaths_found = []
-        file_count = len(args) if file_count is None else max(file_count, len(args))
 
+        # Define a key function
+        def host_and_glob_key(path):
+            psplit = path.split(":")
+            host = psplit[0] if ":" in path else ""  # Extract host if available
+            is_glob = psplit[-1] if "*" in psplit[-1] else ""  # Glob pattern
+            return (host, is_glob)
+
+        time_taken = 0
+        fpaths_found = set()
         args = list(map(process_path, args))
-        while time_taken < timeout:
-            pattern = args[indx]
-            host = None
-            if ":" in pattern:
-                host, pattern = pattern.split(":")
 
-            if host:
-                # bash equivalent to python glob (glob on remote host)
-                expanded_paths = subprocess.run(
-                    f'ssh {host} \'for file in {pattern}; do if [ -e "$file" ]; then '
-                    'echo "$file"; fi; done\'',
-                    shell=True,
-                    check=True,
-                    text=True,
-                    capture_output=True,
-                ).stdout.strip()
+        # Group by host and whether it's a glob pattern
+        sorted_args = sorted(args, key=host_and_glob_key)
+        args_by_host = [
+            [key, set(map(lambda path: path.split(":")[-1], group))]
+            for key, group in itertools.groupby(sorted_args, key=host_and_glob_key)
+        ]
+
+        for ind, ((host, globular), paths) in enumerate(args_by_host):
+            globular = bool(globular)
+            host_msg = f"{host}:" if host else ""
+            while time_taken < timeout or not timeout:
+                if host:
+                    # bash equivalent to python glob (glob on remote host)
+                    expanded_paths = subprocess.run(
+                        f'ssh {host} \'for file in {" ".join(paths)}; do if '
+                        '[ -e "$file" ]; then echo "$file"; fi; done\'',
+                        shell=True,
+                        check=True,
+                        text=True,
+                        capture_output=True,
+                    ).stdout.strip()
+                    if expanded_paths:
+                        expanded_paths = expanded_paths.split("\n")
+                else:
+                    expanded_paths = list(
+                        itertools.chain.from_iterable(map(glob, paths))
+                    )
                 if expanded_paths:
-                    expanded_paths = expanded_paths.split("\n")
-            else:
-                expanded_paths = glob(pattern)
-            if expanded_paths:
-                fpaths_found.extend(expanded_paths)
-                patterns_found += 1
-                files_found += len(expanded_paths)
-                indx += 1
-            elif verbose:
-                print(
-                    f"polling for '{pattern}', time taken: {time_taken}s of limit "
-                    f"{timeout}s"
-                )
-            if patterns_found >= len(args) or files_found >= file_count:
-                break
-            time.sleep(polling)
-            time_taken += polling
+                    fpaths_found = fpaths_found.union(expanded_paths)
+                    if globular and (
+                        not file_count or len(expanded_paths) >= file_count
+                    ):
+                        # globular expansion completed
+                        paths = set()
+                    else:
+                        # Remove paths we have found
+                        paths = paths - set(expanded_paths)
 
-        if patterns_found < len(args):
-            raise FileNotFoundError(f"Timeout waiting for: '{pattern}'")
+                if paths:
+                    if timeout:
+                        print(
+                            f"polling for {host_msg}{paths}, time taken: "
+                            f"{time_taken}s of limit {timeout}s"
+                        )
+                        time.sleep(polling)
+                        time_taken += polling
+                    else:
+                        break
+                else:
+                    break
+
+            if paths:
+                raise FileNotFoundError(
+                    f"Timeout waiting for: {host_msg}{'; '.join(sorted(paths))}"
+                )
+
         if verbose and fpaths_found:
-            print(f"The following files were polled and found: {fpaths_found}")
+            print(
+                "The following files were polled and found: "
+                f"{'; '.join(sorted(fpaths_found))}"
+            )
         return None
 
 

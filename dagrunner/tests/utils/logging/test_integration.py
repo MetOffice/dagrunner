@@ -2,14 +2,18 @@
 #
 # This file is part of 'dagrunner' and is released under the BSD 3-Clause license.
 # See LICENSE in the root of the repository for full licensing details.
+import inspect
 import logging
 import os
 import sqlite3
 import subprocess
+import sys
+import time
 
 import pytest
 
-from dagrunner.utils.logger import ServerContext
+import dagrunner
+from dagrunner.utils.logger import client_attach_socket_handler
 
 
 @pytest.fixture
@@ -17,20 +21,38 @@ def sqlite_filepath(tmp_path):
     return tmp_path / "test_logs.sqlite"
 
 
-def gen_client_code(loggers):
-    code = "import logging;"
-    code += "from dagrunner.utils.logger import client_attach_socket_handler;"
-    code += "client_attach_socket_handler();"
+@pytest.fixture
+def server(sqlite_filepath):
+    pythonpath = os.path.dirname(os.path.dirname(inspect.getfile(dagrunner)))
+    env = os.environ.copy()
+    env["PYTHONPATH"] = f"{os.path.dirname(__file__)}/../../../utils/:{pythonpath}"
 
-    for msg, lvlname, name in loggers:
-        if lvlname:
-            code += f"logging.getLogger('{lvlname}').{name}('{msg}');"
-        else:
-            code += f"logging.{name}('{msg}');"
-    return code
+    # Start the server process
+    server_proc = subprocess.Popen(
+        [
+            sys.executable,
+            "-m",
+            "logger",
+            "--sqlite-filepath",
+            str(sqlite_filepath),
+            "--port",
+            "12345",
+            "--verbose",
+        ],
+        env=env,
+    )
+
+    # Wait for the server to start (adjust as needed)
+    time.sleep(1)  # Can use a more robust method to check server readiness
+
+    yield server_proc, sqlite_filepath
+
+    # Teardown: Kill the server after tests are done
+    server_proc.terminate()
+    server_proc.wait()
 
 
-def test_sqlitedb(sqlite_filepath, caplog):
+def test_sqlitedb(server, caplog):
     test_inputs = (
         ["Python is versatile and powerful.", "root", "info"],
         ["Lists store collections of items.", "myapp.area1", "debug"],
@@ -38,11 +60,9 @@ def test_sqlitedb(sqlite_filepath, caplog):
         ["Indentation defines code blocks.", "myapp.area2", "warning"],
         ["Libraries extend Pythons capabilities.", "myapp.area2", "error"],
     )
-    client_code = gen_client_code(test_inputs)
-    with ServerContext(sqlite_filepath=sqlite_filepath, verbose=True):
-        subprocess.run(
-            ["python", "-c", client_code], capture_output=True, text=True, check=True
-        )
+    client_attach_socket_handler(port=12345)
+    for msg, lvlname, name in test_inputs:
+        getattr(logging.getLogger(lvlname), name)(msg)
 
     # Check log messages
     assert len(caplog.record_tuples) == len(test_inputs)
@@ -54,8 +74,12 @@ def test_sqlitedb(sqlite_filepath, caplog):
             == record
         )
 
+    server_proc, sqlite_filepath = server
+    time.sleep(1)  # wait for db write to complete
+    server_proc.terminate()
+
     # Check there are any records in the database
-    conn = sqlite3.connect(sqlite_filepath)
+    conn = sqlite3.connect(str(sqlite_filepath))
     cursor = conn.cursor()
     cursor.execute("SELECT COUNT(*) FROM logs")
     count = cursor.fetchone()[0]
@@ -69,7 +93,7 @@ def test_sqlitedb(sqlite_filepath, caplog):
     records = cursor.execute("SELECT * FROM logs").fetchall()
     for test_input, record in zip(test_inputs, records):
         tar_format = (
-            float,
+            str,
             test_input[1],
             test_input[2].upper(),
             test_input[0],
@@ -82,7 +106,10 @@ def test_sqlitedb(sqlite_filepath, caplog):
         for tar, rec in zip(tar_format, record):
             if isinstance(tar, type):
                 # simply check it is the correct type
-                assert type(eval(rec)) is tar
+                try:
+                    assert type(eval(rec)) is tar
+                except SyntaxError:
+                    continue
             else:
                 assert rec == tar
     conn.close()

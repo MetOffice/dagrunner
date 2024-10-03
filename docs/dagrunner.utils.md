@@ -375,6 +375,16 @@ function_to_argparse(func, parser=None, exclude=None)
 
 Generate an argparse from a function signature
 
+## function: `function_to_argparse_parse_args`
+
+[Source](../dagrunner/utils/__init__.py#L377)
+
+### Call Signature:
+
+```python
+function_to_argparse_parse_args(*args, **kwargs)
+```
+
 ## function: `get_proc_mem_stat`
 
 [Source](../dagrunner/utils/__init__.py#L36)

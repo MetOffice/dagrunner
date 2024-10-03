@@ -19,7 +19,7 @@ from dagrunner.runner.schedulers import SCHEDULERS
 from dagrunner.utils import (
     CaptureProcMemory,
     TimeIt,
-    function_to_argparse,
+    function_to_argparse_parse_args,
     logger,
 )
 from dagrunner.utils.visualisation import visualise_graph
@@ -139,19 +139,7 @@ def plugin_executor(
             print(f"Skipping node {call[0]}")
         return SKIP_EVENT
 
-    # Handle call tuple unpacking (length 2, no class init kwargs
-    # or length 3 with class init kwargs).
-    try:
-        callable_obj, callable_kwargs_init, callable_kwargs = call
-    except ValueError as e:
-        if (
-            str(e) == "not enough values to unpack (expected 3, got 2)"
-        ):  # no class init kwargs
-            callable_obj, callable_kwargs = call
-            callable_kwargs_init = {}
-        else:
-            raise e
-
+    callable_obj = call[0]
     if isinstance(callable_obj, str):
         # import callable if a string is provided
         module_name, function_name = callable_obj.rsplit(".", 1)
@@ -159,6 +147,37 @@ def plugin_executor(
         if verbose:
             print(f"imported module '{module}', callable '{function_name}'")
         callable_obj = getattr(module, function_name)
+
+    # Handle call tuple unpacking (length 2, no class init kwargs
+    # or length 3 with class init kwargs).
+    if isinstance(callable_obj, type):
+        if len(call) == 3:
+            _, callable_kwargs_init, callable_kwargs = call
+        elif len(call) == 2:
+            _, callable_kwargs_init = call
+            callable_kwargs = {}
+        elif len(call) == 1:
+            callable_kwargs = {}
+            callable_kwargs_init = {}
+        else:
+            raise ValueError(
+                f"expecting 1, 2 or 3 values to unpack for {callable_obj}, "
+                f"got {len(call)}"
+            )
+        callable_kwargs_init = (
+            {} if callable_kwargs_init is None else callable_kwargs_init
+        )
+    else:
+        if len(call) == 2:
+            _, callable_kwargs = call
+        elif len(call) == 1:
+            callable_kwargs = {}
+        else:
+            raise ValueError(
+                f"expecting 1 or 2 values to unpack for {callable_obj}, got "
+                f"{len(call)}"
+            )
+    callable_kwargs = {} if callable_kwargs is None else callable_kwargs
 
     call_msg = ""
     obj_name = callable_obj.__name__
@@ -230,8 +249,6 @@ def _get_networkx(networkx_graph):
         module = importlib.import_module(".".join(parts[:-1]))
         networkx_graph = parts[-1]
         nxgraph = getattr(module, networkx_graph)
-    elif callable(networkx_graph):
-        nxgraph = networkx_graph()
     else:
         try:
             edges, nodes = networkx_graph
@@ -257,7 +274,6 @@ class ExecuteGraph:
         profiler_filepath: str = None,
         dry_run: bool = False,
         verbose: bool = False,
-        sqlite_filepath: str = None,
         **kwargs,
     ):
         """
@@ -288,8 +304,6 @@ class ExecuteGraph:
           Optional.
         - `verbose` (bool):
           Print executed commands.  Optional.
-        - `sqlite_filepath` (str):
-          Filepath to a SQLite database to store log records.  Optional.
         - `**kwargs`:
           Optional global keyword arguments to apply to all applicable plugins.
         """
@@ -306,7 +320,6 @@ class ExecuteGraph:
         self._profiler_output = profiler_filepath
         self._kwargs = kwargs | {"verbose": verbose, "dry_run": dry_run}
         self._exec_graph = self._process_graph()
-        self._sqlite_filepath = sqlite_filepath
 
     @property
     def nxgraph(self):
@@ -348,9 +361,7 @@ class ExecuteGraph:
         _attempt_visualise_graph(self._exec_graph, output_filepath)
 
     def __call__(self):
-        with logger.ServerContext(sqlite_filepath=self._sqlite_filepath), TimeIt(
-            verbose=True
-        ), self._scheduler(
+        with TimeIt(verbose=True), self._scheduler(
             self._num_workers, profiler_filepath=self._profiler_output
         ) as scheduler:
             try:
@@ -365,14 +376,9 @@ def main():
     Entry point of the program.
     Parses command line arguments and executes the graph using the ExecuteGraph class.
     """
-    parser = function_to_argparse(ExecuteGraph, exclude=["plugin_executor"])
-    args = parser.parse_args()
-    args = vars(args)
-    # positional arguments with '-' aren't converted to '_' by argparse.
-    args = {key.replace("-", "_"): value for key, value in args.items()}
-    if args.get("verbose", False):
-        print(f"CLI call arguments: {args}")
-    kwargs = args.pop("kwargs", None) or {}
+    args, kwargs = function_to_argparse_parse_args(
+        ExecuteGraph, exclude=["plugin_executor"]
+    )
     ExecuteGraph(**args, **kwargs)()
 
 

@@ -11,10 +11,10 @@ https://docs.python.org/3/howto/logging-cookbook.html#sending-and-receiving-logg
 - `client_attach_socket_handler`, a function that attaches a socket handler
   `logging.handlers.SocketHandler` to the root logger with the specified host name and
   port number.
-- `ServerContext`, a context manager that starts and manages the TCP server
+- `start_logging_server`, a function to start the TCP server
   `LogRecordSocketReceiver` on its own thread, ready to receive log records.
-  - `SQLiteQueueHandler`, which is managed by the server context and writes log records
-    to an SQLite database.
+  - `SQLiteHandler`, a custom logging handler to write log messages to an SQLite
+    database.
   - `LogRecordSocketReceiver(socketserver.ThreadingTCPServer)`, the TCP server running
     on a specified host and port, managed by the server context that receives log
     records and utilises the `LogRecordStreamHandler` handler.
@@ -22,16 +22,22 @@ https://docs.python.org/3/howto/logging-cookbook.html#sending-and-receiving-logg
       `socketserver.StreamRequestHandler`, responsible for 'getting' log records.
 """
 
+import datetime
 import logging
 import logging.handlers
+import os
 import pickle
-import queue
 import socket
 import socketserver
+import sqlite3
 import struct
-import threading
 
-__all__ = ["client_attach_socket_handler", "ServerContext"]
+from dagrunner.utils import function_to_argparse_parse_args
+
+__all__ = ["client_attach_socket_handler", "start_logging_server"]
+
+
+DATEFMT = "%Y-%m-%dT%H:%M:%S"  # Date in ISO 8601 format
 
 
 def client_attach_socket_handler(
@@ -91,12 +97,8 @@ class LogRecordStreamHandler(socketserver.StreamRequestHandler):
                 chunk = chunk + self.connection.recv(slen - len(chunk))
             obj = self.unpickle(chunk)
             record = logging.makeLogRecord(obj)
-            # Modify record to include hostname
             record.hostname = socket.gethostname()
             self.handle_log_record(record)
-
-            # Push log record to the queue for database writing
-            self.server.log_queue.put(record)
 
     def unpickle(self, data):
         return pickle.loads(data)
@@ -131,15 +133,13 @@ class LogRecordSocketReceiver(socketserver.ThreadingTCPServer):
         host="localhost",
         port=logging.handlers.DEFAULT_TCP_LOGGING_PORT,
         handler=LogRecordStreamHandler,
-        log_queue=None,
     ):
         socketserver.ThreadingTCPServer.__init__(self, (host, port), handler)
         self.abort = 0
         self.timeout = 1
         self.logname = None
-        self.log_queue = log_queue  # Store the reference to the log queue
 
-    def serve_until_stopped(self, queue_handler=None):
+    def serve_until_stopped(self):
         import select
 
         abort = 0
@@ -147,60 +147,54 @@ class LogRecordSocketReceiver(socketserver.ThreadingTCPServer):
             rd, wr, ex = select.select([self.socket.fileno()], [], [], self.timeout)
             if rd:
                 self.handle_request()
-                queue_handler.write(self.log_queue)
             abort = self.abort
-        if queue_handler:
-            queue_handler.write(self.log_queue)  # Ensure all records are written
-            queue_handler.close()
-
-    def stop(self):
-        self.abort = 1  # Set abort flag to stop the server loop
-        self.server_close()  # Close the server socket
 
 
-class SQLiteQueueHandler:
-    def __init__(self, sqfile="logs.sqlite", verbose=False):
+class SQLiteHandler(logging.Handler):
+    """
+    Custom logging handler to write log messages to an SQLite database.
+    """
+
+    def __init__(self, sqfile="logs.sqlite"):
+        logging.Handler.__init__(self)
         self._sqfile = sqfile
-        self._conn = None
-        self._verbose = verbose
+        self._create_table()
 
-    @property
-    def db(self):
-        if self._conn is None:
-            import sqlite3
+    def _create_table(self):
+        """
+        Creates a table to store the logs if it doesn't exist.
+        """
+        conn = sqlite3.connect(self._sqfile)
+        cursor = conn.cursor()
+        print(f"Writing sqlite file table: {self._sqfile}")
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS logs (
+                created TEXT,
+                name TEXT,
+                level TEXT,
+                message TEXT,
+                hostname TEXT,
+                process TEXT,
+                thread TEXT
+            )
+        """)
+        conn.commit()
+        cursor.close()
+        conn.close()
 
-            if self._verbose:
-                print(f"Writing sqlite file: {self._sqfile}")
-            self._conn = sqlite3.connect(self._sqfile)  # Connect to the SQLite database
-            cursor = self._conn.cursor()
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS logs (
-                    created TEXT,
-                    name TEXT,
-                    level TEXT,
-                    message TEXT,
-                    hostname TEXT,
-                    process TEXT,
-                    thread TEXT
-                )
-            """)  # Create the 'logs' table if it doesn't exist
-        return self._conn
-
-    def write(self, log_queue):
-        if self._verbose:
-            print("Writing to sqlite file")
-        while not log_queue.empty():
-            record = log_queue.get()
-            if self._verbose:
-                print("Dequeued item:", record)
-            cursor = self.db.cursor()
+    def emit(self, record):
+        """Emit a log record, and insert it into the database."""
+        try:
+            conn = sqlite3.connect(self._sqfile)
+            cursor = conn.cursor()
+            print("Dequeued item:", record)
             cursor.execute(
                 "\n"
                 "INSERT INTO logs "
                 "(created, name, level, message, hostname, process, thread)\n"
                 "VALUES (?, ?, ?, ?, ?, ?, ?)\n",
                 (
-                    record.created,
+                    datetime.datetime.fromtimestamp(record.created).strftime(DATEFMT),
                     record.name,
                     record.levelname,
                     record.getMessage(),
@@ -209,92 +203,73 @@ class SQLiteQueueHandler:
                     record.thread,
                 ),
             )
-            self.db.commit()  # Commit the transaction
+            conn.commit()
+            cursor.close()
+            conn.close()
+        except sqlite3.Error as e:
+            print(f"SQLite error: {e}")
 
     def close(self):
-        if self._conn:
-            self._conn.close()
+        """Ensure the database connection is closed cleanly."""
+        super().close()
 
 
-class ServerContext:
+class CustomFormatter(logging.Formatter):
+    def __init__(self, fmt=None, datefmt=None):
+        super().__init__(fmt=fmt, datefmt=datefmt)
+
+    def format(self, record):
+        if not hasattr(record, "elapsed"):
+            record.elapsed = 0  # Default value if not provided
+        if not hasattr(record, "memory"):
+            record.memory = 0  # Default value if not provided
+
+        # Call the base class's format method to handle the normal log formatting
+        return super().format(record)
+
+
+def start_logging_server(
+    sqlite_filepath: str = None,
+    host: str = "localhost",
+    port: int = logging.handlers.DEFAULT_TCP_LOGGING_PORT,
+    verbose: bool = False,
+):
     """
-    Start a TCP server to receive log records.
-
-    First run the server, and then the client. On the client side, nothing is printed
-    on the console; on the server side, you should see log messages printed to the
-    console.  The TC server is run in a separate thread enabling the main thread to
-    continue running other tasks.
-
-    Log format is:
-    %(relativeCreated)5d %(name)-15s %(levelname)-8s %(hostname)s %(process)d
-    %(asctime)s %(message)s
+    Start the logging server.
 
     Args:
+    - `sqlite_filepath`: The file path to the SQLite database.  Optional.
     - `host`: The host name of the server.  Optional.
     - `port`: The port number the server is listening on.  Optional.
-    - `sqlite_filepath`: The path to the SQLite database file.  Don't write to a
-      file if not provided.  Optional.
     - `verbose`: Whether to print verbose output.  Optional.
-
     """
+    logging.basicConfig(
+        format=(
+            "%(relativeCreated)5d %(name)-15s %(levelname)-8s %(hostname)s "
+            "%(process)d %(asctime)s %(message)s"
+        ),
+        datefmt=DATEFMT,
+    )
 
-    def __init__(
-        self,
-        host: str = "localhost",
-        port: int = logging.handlers.DEFAULT_TCP_LOGGING_PORT,
-        sqlite_filepath: str = None,
-        verbose: bool = False,
-    ):
-        self.tcpserver = None
-        self.server_thread = None
-        self._sqlite_filepath = sqlite_filepath
-        self._verbose = verbose
-        self._host = host
-        self._port = port
-
-    def __enter__(self):
-        logging.basicConfig(
-            format=(
-                "%(relativeCreated)5d %(name)-15s %(levelname)-8s %(hostname)s "
-                "%(process)d %(asctime)s %(message)s"
-            ),
-            datefmt="%Y-%m-%dT%H:%M:%S",
-        )  # Date in ISO 8601 format
-
-        self.log_queue = queue.Queue()
-
-        sqlitequeue = None
-        if self._sqlite_filepath:
-            sqlitequeue = SQLiteQueueHandler(
-                sqfile=self._sqlite_filepath, verbose=self._verbose
-            )
-
-        self.tcpserver = LogRecordSocketReceiver(
-            host=self._host, port=self._port, log_queue=self.log_queue
-        )
-        if self._verbose:
-            print("About to start TCP server...")
-        self.server_thread = threading.Thread(
-            target=self.tcpserver.serve_until_stopped,
-            kwargs={"queue_handler": sqlitequeue},
-        )
-        self.server_thread.start()
-
-        return self.server_thread, self.tcpserver
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.tcpserver.stop()
-        self.server_thread.join()
+    tcpserver = LogRecordSocketReceiver(host=host, port=port)
+    if sqlite_filepath:
+        sqlite_handler = SQLiteHandler(sqlite_filepath)
+        logging.getLogger("").addHandler(sqlite_handler)
+    print(
+        "About to start TCP server...\n",
+        f"HOST: {host}; PORT: {port}; PID: {os.getpid()}; SQLITE: {sqlite_filepath}\n",
+    )
+    tcpserver.serve_until_stopped()
 
 
 def main():
     """
-    Demonstrate how to start a TCP server to receive log records.
+    Entry point of the program.
+
+    Parses command line arguments and executes the logging server
     """
-    with ServerContext(verbose=True):
-        print("Doing something while the server is running")
-        input("Press Enter to stop the server...")
-    print("Server stopped")
+    args, kwargs = function_to_argparse_parse_args(start_logging_server)
+    start_logging_server(**args, **kwargs)()
 
 
 if __name__ == "__main__":
