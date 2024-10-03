@@ -188,7 +188,11 @@ def plugin_executor(
             callable_kwargs_init
             | _get_common_args_matching_signature(callable_obj, common_kwargs)
         )
-        callable_obj = callable_obj(**callable_kwargs_init)
+        try:
+            callable_obj = callable_obj(**callable_kwargs_init)
+        except Exception as err:
+            msg = f"Failed to initialise {obj_name} with {callable_kwargs_init}"
+            raise RuntimeError(msg) from err
         call_msg = f"(**{callable_kwargs_init})"
 
     callable_kwargs = callable_kwargs | _get_common_args_matching_signature(
@@ -203,7 +207,11 @@ def plugin_executor(
         with TimeIt() as timer, dask.config.set(
             scheduler="single-threaded"
         ), CaptureProcMemory() as mem:
-            res = callable_obj(*args, **callable_kwargs)
+            try:
+                res = callable_obj(*args, **callable_kwargs)
+            except Exception as err:
+                msg = f"Failed to execute {obj_name} with {args}, {callable_kwargs}"
+                raise RuntimeError(msg) from err
         msg = f"{str(timer)}; {msg}; {mem.max()}"
     logging.info(msg)
 
