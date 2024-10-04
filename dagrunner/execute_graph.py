@@ -308,8 +308,9 @@ class ExecuteGraph:
           function.  Optional.
         - `scheduler` (str):
           Accepted values include "ray", "multiprocessing" and those recognised
-          by dask: "threads", "processes" and "single-threaded" (useful for debugging).
-          See https://docs.dask.org/en/latest/scheduling.html.  Optional.
+          by dask: "threads", "processes" and "single-threaded" (useful for debugging)
+          and "distributed".  See https://docs.dask.org/en/latest/scheduling.html.
+          Optional.
         - `num_workers` (int):
           Number of processes or threads to use.  Optional.
         - `dry_run` (bool):
