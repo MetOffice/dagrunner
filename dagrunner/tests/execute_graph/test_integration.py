@@ -64,34 +64,36 @@ def graph(tmp_path_factory):
         # node1 -> node2
         node1 = Node(step="step1", leadtime=leadtime)
         node2 = Node(step="step2", leadtime=leadtime)
-        EDGES.append([node1, node2])
+        EDGES.append((node1, node2))
 
         # node3 -> node4
         node3 = Node(step="step3", leadtime=leadtime)
         node4 = Node(step="step4", leadtime=leadtime)
-        EDGES.append([node3, node4])
+        EDGES.append((node3, node4))
 
         # node2 -> node5
         node5 = Node(step="step5", leadtime=leadtime)
-        EDGES.append([node2, node5])
+        EDGES.append((node2, node5))
 
         # node4 -> node5
         node4 = Node(step="step4", leadtime=leadtime)
-        EDGES.append([node4, node5])
+        EDGES.append((node4, node5))
 
         for nodenum in range(1, 6):
             node = vars()[f"node{nodenum}"]
             SETTINGS[node] = {
-                "call": tuple([ProcessID, None, {"id": nodenum}]),
+                "call": (ProcessID, None, {"id": nodenum}),
             }
 
         node_save = Node(step="save", leadtime=leadtime)
-        EDGES.append([node5, node_save])
+        EDGES.append((node5, node_save))
         output_files.append(tmp_dir / f"result_{leadtime}.json")
         # we let SaveJson expand the filepath for us from the node properties (leadtime)
         SETTINGS[node_save] = {
-            "call": tuple(
-                [SaveJson, None, {"filepath": f"{tmp_dir}/result_{{leadtime}}.json"}]
+            "call": (
+                SaveJson,
+                None,
+                {"filepath": f"{tmp_dir}/result_{{leadtime}}.json"},
             )
         }
     return EDGES, SETTINGS, output_files
@@ -141,7 +143,7 @@ def test_skip_execution(graph):
 
     # skip execution of the second branch
     SETTINGS[Node(step="step2", leadtime=HOUR)] = {
-        "call": tuple([SkipExe, None, {"id": 2}]),
+        "call": (SkipExe, None, {"id": 2}),
     }
     graph = ExecuteGraph(
         (EDGES, SETTINGS),
@@ -171,7 +173,7 @@ def test_multiprocessing_error_handling(graph):
 
     # # skip execution of the second branch
     SETTINGS[Node(step="step2", leadtime=HOUR)] = {
-        "call": tuple([RaiseErr, None, {"id": 2}]),
+        "call": (RaiseErr, None, {"id": 2}),
     }
     graph = ExecuteGraph(
         (EDGES, SETTINGS),
@@ -191,13 +193,13 @@ def graph_input():
     # node1 -> node2
     node1 = Node(step="step1", leadtime=1)
     node2 = Node(step="dummy", leadtime=1)
-    EDGES.append([node1, node2])
+    EDGES.append((node1, node2))
 
     SETTINGS[node1] = {
-        "call": tuple([Input, None, {"filepath": "{step}_{leadtime}"}]),
+        "call": (Input, None, {"filepath": "{step}_{leadtime}"}),
     }
     SETTINGS[node2] = {
-        "call": tuple([lambda x: x]),
+        "call": (lambda x: x,),
     }
     return EDGES, SETTINGS
 
