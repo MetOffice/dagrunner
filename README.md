@@ -53,6 +53,8 @@ This demonstrates:
 - Passing data in memory.
 - Execution with our chosen scheduler.
 
+Our networkx graph is constructed from a list of edges (see official [edge](https://networkx.org/documentation/stable/reference/glossary.html#term-edge) definition) and settings.  The former defines the connection between 'nodes' (see official [node](https://networkx.org/documentation/stable/reference/glossary.html#term-node) definition), while the later defines a lookup between node and the nodes attributes (see official [node attributes](https://networkx.org/documentation/stable/reference/glossary.html#term-node-attribute) definition).  It is the nodes attributes that instruct DAGRunner on how to execute that given 'node'.  In short, these attributes are passed directly to DAGRunner's [plugin-executor](https://github.com/MetOffice/dagrunner/blob/main/docs/dagrunner.execute_graph.md#function-plugin_executor) function (by default, see [Customise node execution](#customise-node-execution)).  This takes a 'call' argument what plugin to be called along with any keyword arguments.
+
 ### Defining a custom processing module (plugin)
 
 First, ensure that 'dagrunner' is on the `PYTHONPATH` (i.e. [installation](#installation)).

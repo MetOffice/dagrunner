@@ -101,9 +101,13 @@ def plugin_executor(
 
     Args:
     - `*args`: Positional arguments to be passed to the plugin callable.
-    - `call`: A tuple containing the callable object or python dot path to one, keyword
-      arguments to instantiate this class (optional and where this callable is a class)
-      and finally the keyword arguments to be passed to this callable.
+    - `call`: A tuple containing the callable object (plugin) or python dot path to one
+      and optionally keyword arguments on instantiating and calling to that plugin:
+      - `(CallableClass, kwargs_init, kwargs_call)` -> `CallableClass(**kwargs_init)(*args, **kwargs_call)`
+      - `(CallableClass, {}, kwargs_call)` -> `CallableClass()(*args, **kwargs_call)`
+      - `(CallableClass)` - `CallableClass()(*args)`
+      - `(callable, kwargs)` -> `callable(*args, **kwargs)`
+      - `(callable)` -> `callable(*args)`
     - `verbose`: A boolean indicating whether to print verbose output.
     - `dry_run`: A boolean indicating whether to perform a dry run without executing
       the plugin.
@@ -119,7 +123,7 @@ def plugin_executor(
 
     Raises:
     - ValueError: If the `call` argument is not provided.
-    """
+    """  # noqa: E501
     logger.client_attach_socket_handler()
 
     if common_kwargs is None:
@@ -269,7 +273,7 @@ class ExecuteGraph:
         networkx_graph: str,
         networkx_graph_kwargs: dict = None,
         plugin_executor: callable = plugin_executor,
-        scheduler: str = "processes",
+        scheduler: str = "multiprocessing",
         num_workers: int = 1,
         profiler_filepath: str = None,
         dry_run: bool = False,
@@ -281,11 +285,12 @@ class ExecuteGraph:
 
         Args:
         - `networkx_graph` (networkx.DiGraph, callable or str):
-          A networkx graph; dot path to a networkx graph or callable that returns
-          one; tuple representing (edges, nodes) or callable object that
-          returns a networkx.
+          Python dot path to a `networkx.DiGraph` or tuple(edges, settings) object, or
+          callable that returns one.  When called via the library, we support passing
+          the `networkx.DiGraph` or `tuple(edges, settings)` objects directly.
         - `networkx_graph_kwargs` (dict):
-          Keyword arguments to pass to the networkx graph callable.  Optional.
+          Keyword arguments to pass to the `networkx_graph` when it represents a
+          callable.  Optional.
         - `plugin_executor` (callable):
           A callable object that executes a plugin function or method with the provided
           arguments and keyword arguments.  By default, uses the `plugin_executor`
