@@ -90,6 +90,8 @@ class Distributed:
         self._kwargs = kwargs
         self._cluster = None
         self._client = None
+        # bug: dashboard cannot be disabled
+        # see https://github.com/dask/distributed/issues/8136
         self._dashboard_address = None
 
     def __enter__(self):
@@ -98,9 +100,10 @@ class Distributed:
             n_workers=self._num_workers,
             processes=True,
             threads_per_worker=1,
+            dashboard_address=self._dashboard_address,
             **self._kwargs,
         )
-        self._client = Client(self._cluster, dashboard_address=self._dashboard_address)
+        self._client = Client(self._cluster)
         if self._dashboard_address:
             print(f"dashboard link: {self._client.dashboard_link}")
         return self
