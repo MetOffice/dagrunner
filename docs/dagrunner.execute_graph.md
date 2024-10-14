@@ -16,7 +16,7 @@ see [function: dagrunner.utils.visualisation.visualise_graph](dagrunner.utils.vi
 
 ## class: `ExecuteGraph`
 
-[Source](../dagrunner/execute_graph.py#L270)
+[Source](../dagrunner/execute_graph.py#L286)
 
 ### Call Signature:
 
@@ -26,7 +26,7 @@ ExecuteGraph(networkx_graph: str, networkx_graph_kwargs: dict = None, <function 
 
 ### function: `__call__`
 
-[Source](../dagrunner/execute_graph.py#L368)
+[Source](../dagrunner/execute_graph.py#L385)
 
 #### Call Signature:
 
@@ -38,7 +38,7 @@ Call self as a function.
 
 ### function: `__init__`
 
-[Source](../dagrunner/execute_graph.py#L271)
+[Source](../dagrunner/execute_graph.py#L287)
 
 #### Call Signature:
 
@@ -62,8 +62,9 @@ Args:
   function.  Optional.
 - `scheduler` (str):
   Accepted values include "ray", "multiprocessing" and those recognised
-  by dask: "threads", "processes" and "single-threaded" (useful for debugging).
-  See https://docs.dask.org/en/latest/scheduling.html.  Optional.
+  by dask: "threads", "processes" and "single-threaded" (useful for debugging)
+  and "distributed".  See https://docs.dask.org/en/latest/scheduling.html.
+  Optional.
 - `num_workers` (int):
   Number of processes or threads to use.  Optional.
 - `dry_run` (bool):
@@ -79,7 +80,7 @@ Args:
 
 ### function: `visualise`
 
-[Source](../dagrunner/execute_graph.py#L365)
+[Source](../dagrunner/execute_graph.py#L382)
 
 #### Call Signature:
 
@@ -108,7 +109,7 @@ Status: experimental.
 
 ## function: `main`
 
-[Source](../dagrunner/execute_graph.py#L379)
+[Source](../dagrunner/execute_graph.py#L396)
 
 ### Call Signature:
 

@@ -134,7 +134,9 @@ def plugin_executor(
         arg for arg in args if arg is not None
     ]  # support plugins that have no return value
     if call is None:
-        raise ValueError("call is a required argument")
+        raise ValueError(
+            f"call is a required argument\nnode_properties: {node_properties}"
+        )
     if verbose:
         print(f"args: {args}")
         print(f"call: {call}")
@@ -166,7 +168,7 @@ def plugin_executor(
         else:
             raise ValueError(
                 f"expecting 1, 2 or 3 values to unpack for {callable_obj}, "
-                f"got {len(call)}"
+                f"got {len(call)}\nnode_properties: {node_properties}"
             )
         callable_kwargs_init = (
             {} if callable_kwargs_init is None else callable_kwargs_init
@@ -179,7 +181,7 @@ def plugin_executor(
         else:
             raise ValueError(
                 f"expecting 1 or 2 values to unpack for {callable_obj}, got "
-                f"{len(call)}"
+                f"{len(call)}\nnode_properties: {node_properties}"
             )
     callable_kwargs = {} if callable_kwargs is None else callable_kwargs
 
@@ -192,7 +194,14 @@ def plugin_executor(
             callable_kwargs_init
             | _get_common_args_matching_signature(callable_obj, common_kwargs)
         )
-        callable_obj = callable_obj(**callable_kwargs_init)
+        try:
+            callable_obj = callable_obj(**callable_kwargs_init)
+        except Exception as err:
+            msg = (
+                f"Failed to initialise {obj_name} with {callable_kwargs_init}"
+                f"\nnode_properties: {node_properties}"
+            )
+            raise RuntimeError(msg) from err
         call_msg = f"(**{callable_kwargs_init})"
 
     callable_kwargs = callable_kwargs | _get_common_args_matching_signature(
@@ -207,7 +216,14 @@ def plugin_executor(
         with TimeIt() as timer, dask.config.set(
             scheduler="single-threaded"
         ), CaptureProcMemory() as mem:
-            res = callable_obj(*args, **callable_kwargs)
+            try:
+                res = callable_obj(*args, **callable_kwargs)
+            except Exception as err:
+                msg = (
+                    f"Failed to execute {obj_name} with {args}, {callable_kwargs}"
+                    f"\nnode_properties: {node_properties}"
+                )
+                raise RuntimeError(msg) from err
         msg = f"{str(timer)}; {msg}; {mem.max()}"
     logging.info(msg)
 
@@ -297,8 +313,9 @@ class ExecuteGraph:
           function.  Optional.
         - `scheduler` (str):
           Accepted values include "ray", "multiprocessing" and those recognised
-          by dask: "threads", "processes" and "single-threaded" (useful for debugging).
-          See https://docs.dask.org/en/latest/scheduling.html.  Optional.
+          by dask: "threads", "processes" and "single-threaded" (useful for debugging)
+          and "distributed".  See https://docs.dask.org/en/latest/scheduling.html.
+          Optional.
         - `num_workers` (int):
           Number of processes or threads to use.  Optional.
         - `dry_run` (bool):

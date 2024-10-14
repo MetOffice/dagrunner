@@ -160,3 +160,47 @@ def test_pass_common_args_override():
     )
     res = plugin_executor(*args, call=call, common_kwargs=common_kwargs)
     assert res == target
+
+
+def test_missing_call_args():
+    """Raise an error if 'call' arg isn't provided."""
+    kwargs = {"key1": mock.sentinel.value1, "key2": mock.sentinel.value2}
+    msg = f"call is a required argument\nnode_properties: {kwargs}"
+    with pytest.raises(ValueError, match=msg):
+        plugin_executor(mock.sentinel.arg1, **kwargs)
+
+
+def test_class_plugin_unexpected_tuple_unpack():
+    """Expecting inits kwargs and call kwargs but no more."""
+    msg = "expecting 1, 2 or 3 values to unpack.*got 4"
+    with pytest.raises(ValueError, match=msg):
+        plugin_executor(mock.sentinel.arg1, call=(DummyPlugin, {}, {}, {}))
+
+
+def test_callable_plugin_unexpected_tuple_unpack():
+    """Expecting call kwargs but no more."""
+    msg = "expecting 1 or 2 values to unpack.*got 3"
+    with pytest.raises(ValueError, match=msg):
+        plugin_executor(mock.sentinel.arg1, call=(DummyPluginNoNamedParam(), {}, {}))
+
+
+class BadDummyInitPlugin:
+    def __init__(self, **kwargs):
+        raise ValueError("some error")
+
+    def __call__(self, *args, **kwargs):
+        pass
+
+
+def test_extended_init_failure_context():
+    with pytest.raises(RuntimeError, match="Failed to initialise"):
+        plugin_executor(mock.sentinel.arg1, call=(BadDummyInitPlugin,))
+
+
+def bad_call_plugin(*args):
+    raise ValueError("some error")
+
+
+def test_extended_call_plugin_failure_context():
+    with pytest.raises(RuntimeError, match="Failed to execute"):
+        plugin_executor(mock.sentinel.arg1, call=(bad_call_plugin,))
