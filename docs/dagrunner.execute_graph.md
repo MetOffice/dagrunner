@@ -16,17 +16,17 @@ see [function: dagrunner.utils.visualisation.visualise_graph](dagrunner.utils.vi
 
 ## class: `ExecuteGraph`
 
-[Source](../dagrunner/execute_graph.py#L282)
+[Source](../dagrunner/execute_graph.py#L286)
 
 ### Call Signature:
 
 ```python
-ExecuteGraph(networkx_graph: str, networkx_graph_kwargs: dict = None, <function plugin_executor>, scheduler: str = 'processes', num_workers: int = 1, profiler_filepath: str = None, dry_run: bool = False, verbose: bool = False, **kwargs)
+ExecuteGraph(networkx_graph: str, networkx_graph_kwargs: dict = None, <function plugin_executor>, scheduler: str = 'multiprocessing', num_workers: int = 1, profiler_filepath: str = None, dry_run: bool = False, verbose: bool = False, **kwargs)
 ```
 
 ### function: `__call__`
 
-[Source](../dagrunner/execute_graph.py#L380)
+[Source](../dagrunner/execute_graph.py#L385)
 
 #### Call Signature:
 
@@ -38,23 +38,24 @@ Call self as a function.
 
 ### function: `__init__`
 
-[Source](../dagrunner/execute_graph.py#L283)
+[Source](../dagrunner/execute_graph.py#L287)
 
 #### Call Signature:
 
 ```python
-__init__(self, networkx_graph: str, networkx_graph_kwargs: dict = None, <function plugin_executor>, scheduler: str = 'processes', num_workers: int = 1, profiler_filepath: str = None, dry_run: bool = False, verbose: bool = False, **kwargs)
+__init__(self, networkx_graph: str, networkx_graph_kwargs: dict = None, <function plugin_executor>, scheduler: str = 'multiprocessing', num_workers: int = 1, profiler_filepath: str = None, dry_run: bool = False, verbose: bool = False, **kwargs)
 ```
 
 Execute a networkx graph using a chosen scheduler.
 
 Args:
 - `networkx_graph` (networkx.DiGraph, callable or str):
-  A networkx graph; dot path to a networkx graph or callable that returns
-  one; tuple representing (edges, nodes) or callable object that
-  returns a networkx.
+  Python dot path to a `networkx.DiGraph` or tuple(edges, settings) object, or
+  callable that returns one.  When called via the library, we support passing
+  the `networkx.DiGraph` or `tuple(edges, settings)` objects directly.
 - `networkx_graph_kwargs` (dict):
-  Keyword arguments to pass to the networkx graph callable.  Optional.
+  Keyword arguments to pass to the `networkx_graph` when it represents a
+  callable.  Optional.
 - `plugin_executor` (callable):
   A callable object that executes a plugin function or method with the provided
   arguments and keyword arguments.  By default, uses the `plugin_executor`
@@ -79,7 +80,7 @@ Args:
 
 ### function: `visualise`
 
-[Source](../dagrunner/execute_graph.py#L377)
+[Source](../dagrunner/execute_graph.py#L382)
 
 #### Call Signature:
 
@@ -108,7 +109,7 @@ Status: experimental.
 
 ## function: `main`
 
-[Source](../dagrunner/execute_graph.py#L391)
+[Source](../dagrunner/execute_graph.py#L396)
 
 ### Call Signature:
 
@@ -139,9 +140,13 @@ is the `SKIP_EVENT` object.
 
 Args:
 - `*args`: Positional arguments to be passed to the plugin callable.
-- `call`: A tuple containing the callable object or python dot path to one, keyword
-  arguments to instantiate this class (optional and where this callable is a class)
-  and finally the keyword arguments to be passed to this callable.
+- `call`: A tuple containing the callable object (plugin) or python dot path to one
+  and optionally keyword arguments on instantiating and calling to that plugin:
+  - `(CallableClass, kwargs_init, kwargs_call)` -> `CallableClass(**kwargs_init)(*args, **kwargs_call)`
+  - `(CallableClass, {}, kwargs_call)` -> `CallableClass()(*args, **kwargs_call)`
+  - `(CallableClass)` - `CallableClass()(*args)`
+  - `(callable, kwargs)` -> `callable(*args, **kwargs)`
+  - `(callable)` -> `callable(*args)`
 - `verbose`: A boolean indicating whether to print verbose output.
 - `dry_run`: A boolean indicating whether to perform a dry run without executing
   the plugin.

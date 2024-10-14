@@ -53,6 +53,8 @@ This demonstrates:
 - Passing data in memory.
 - Execution with our chosen scheduler.
 
+Our networkx graph is constructed from a list of edges (see official [edge](https://networkx.org/documentation/stable/reference/glossary.html#term-edge) definition) and settings.  The former defines the connection between 'nodes' (see official [node](https://networkx.org/documentation/stable/reference/glossary.html#term-node) definition), while the later defines a lookup between node and the nodes attributes (see official [node attributes](https://networkx.org/documentation/stable/reference/glossary.html#term-node-attribute) definition).  It is the nodes attributes that instruct DAGRunner on how to execute that given 'node'.  In short, these attributes are passed directly to DAGRunner's [plugin-executor](https://github.com/MetOffice/dagrunner/blob/main/docs/dagrunner.execute_graph.md#function-plugin_executor) function (by default, see [Customise node execution](#customise-node-execution)).  This takes a 'call' argument what plugin to be called along with any keyword arguments.
+
 ### Defining a custom processing module (plugin)
 
 First, ensure that 'dagrunner' is on the `PYTHONPATH` (i.e. [installation](#installation)).
@@ -104,25 +106,25 @@ for leadtime in leadtimes:
     # node1 -> node2
     node1 = Node(step="step1", leadtime=leadtime)
     node2 = Node(step="step2", leadtime=leadtime)
-    EDGES.append([node1, node2])
+    EDGES.append((node1, node2))
 
     # node3 -> node4
     node3 = Node(step="step3", leadtime=leadtime)
     node4 = Node(step="step4", leadtime=leadtime)
-    EDGES.append([node3, node4])
+    EDGES.append((node3, node4))
 
     # node2 -> node5
     node5 = Node(step="step5", leadtime=leadtime)
-    EDGES.append([node2, node5])
+    EDGES.append((node2, node5))
 
     # node4 -> node5
     node4 = Node(step="step4", leadtime=leadtime)
-    EDGES.append([node4, node5])
+    EDGES.append((node4, node5))
 
     for nodenum in range(1, 6):
         node = vars()[f"node{nodenum}"]
         SETTINGS[node] = {
-            'call': tuple([ProcessID, {"id": nodenum}]),
+            'call': (ProcessID, {"id": nodenum}),
         }
 ```
 We see that the processing step callable is provided via the 'call' of the node attribute dictionary.
@@ -225,17 +227,15 @@ def filter_missing(node):
     return {k: v for k, v in vars(node).items() if v is not None}
 
 def gen_networkx(config_dot_path):
-    edges = []
-    nodes = []
     config_subpkg = import_module(f"{config_dot_path}")
+    graph = nx.DiGraph()
     for module in config_subpkg.__all__:
         print(f"config_dot_path: {config_dot_path}, module: {module}")
         mod = import_module(f"{config_dot_path}.{module}")
-        edges.extend(mod.EDGES)
-        nodes.extend({k: mod.SETTINGS[k] | filter_missing(k) for k in mod.SETTINGS.keys()}.items())
-    graph = nx.DiGraph()
-    graph.add_edges_from(edges)
-    graph.add_nodes_from(nodes)
+        edges, nodes = mod.EDGES, mod.SETTINGS
+        nodes = {k: filter_missing(k) | nodes[k] for k in nodes.keys()}.items()
+        graph.add_edges_from(edges)
+        graph.add_nodes_from(nodes)
     return graph
 
 GRAPH = lambda: gen_networkx("<node-edge-module-dot-path>")
@@ -278,9 +278,9 @@ Plugins included:
 
 ## Schedulers
 
-The `dagrunner-execute-graph` script exposes a scheduler argument for specifying our preferred scheduler.  Schedulers include [dask](https://www.dask.org/), [ray](https://docs.ray.io/en/latest/ray-more-libs/dask-on-ray.html) and multiprocessing async scheduler (in-house scheduler utilising python built-in [multiprocessing](https://docs.python.org/3/library/multiprocessing.html) library).  See command help for further details.
+The `dagrunner-execute-graph` script exposes a scheduler argument for specifying our preferred scheduler.  Schedulers include those provided by [dask](https://www.dask.org/), [ray](https://docs.ray.io/en/latest/ray-more-libs/dask-on-ray.html) as well as an in-house multiprocessing asynchronous scheduler (built upon the [multiprocessing](https://docs.python.org/3/library/multiprocessing.html) library).  See command help for further details.
 
 ## Logging and monitoring
 
-DAGrunner is configured with a TCP socket handler, meaning that it will function across the network.  Additionally, it will write logs to an sqlite database to aid in realtime monitoring from external tools.
-We can see that both [ExecuteGraph](docs/dagrunner.execute_graph.md#class-executegraph) class and commandline script provide a means for passing a filepath to an sqlite database file for storing real-time logging information.
+DAGrunner provides a script `dagrunner-logger` for running a TCP server.  This enables logging to function across the network.  Additionally, it will write logs to an sqlite database to aid in realtime monitoring from external tools.
+See [logger](docs/dagrunner.utils.logger.md) for more information.
