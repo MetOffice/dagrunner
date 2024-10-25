@@ -303,7 +303,19 @@ class ExecuteGraph:
         - `networkx_graph` (networkx.DiGraph, callable or str):
           Python dot path to a `networkx.DiGraph` or tuple(edges, settings) object, or
           callable that returns one.  When called via the library, we support passing
-          the `networkx.DiGraph` or `tuple(edges, settings)` objects directly.
+          the `networkx.DiGraph` or `tuple(edges, settings)` objects directly.  Note
+          that 'settings' represent a mapping (dictionary) between node and the node
+          attributes.  When provided, DAGrunner will attempt to convert this tuple into
+          a networkx through the following pseudo-code:
+            1. Copy node identity properties into the node attributes dictionary
+              and remove any attributes that are 'None' ('settings' from the tuple
+              provided).
+            2. Construct an empty networkx.DiGraph object.
+            3. Add edges to this graph ('edges' from the tuple provided).
+            4. Add node to attributes lookup to this graph ('settings' from the tuple
+              provided).
+            It is recommended that the user instead provide the networkx graph directly
+            rather than relying on DAGRunner to decide how to construct it.
         - `networkx_graph_kwargs` (dict):
           Keyword arguments to pass to the `networkx_graph` when it represents a
           callable.  Optional.

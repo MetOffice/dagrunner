@@ -169,9 +169,9 @@ class DataPolling(Plugin):
         self, *args, timeout=60 * 2, polling=1, file_count=None, verbose=False
     ):
         """
-        Poll for availability of files
+        Poll for the availability of files
 
-        Poll for data and return when all are available or otherwise raise an
+        Poll for data and return when all data is available or otherwise raise an
         exception if the timeout is reached.
 
         Args:
@@ -268,11 +268,11 @@ class DataPolling(Plugin):
 class Input(NodeAwarePlugin):
     def __call__(self, filepath, node_properties=None, **kwargs):
         """
-        Given a filepath, expand it and return this string
+        Given a string, expand it and return this expanded string.
 
-        Expand the provided filepath using the keyword arguments and environment
-        variables.  Note that this plugin is 'node aware' since it is derived from the
-        `NodeAwarePlugin`.
+        Expand the provided string (typically representing a filepath) using the
+        keyword arguments and environment variables.  Note that this plugin is
+        'node aware' since it is derived from the `NodeAwarePlugin`.
 
         Args:
         - `filepath` (str): The filepath to be expanded.
