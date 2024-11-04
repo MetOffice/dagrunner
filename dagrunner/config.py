@@ -16,7 +16,6 @@ configuration file parsing will override existing parameter values.
 """
 
 import configparser
-import copy
 import io
 import itertools
 import os
@@ -54,7 +53,7 @@ class GlobalConfiguration(object, metaclass=Singleton):
     }
 
     def __init__(self):
-        self._config = copy.deepcopy(self._INI_PARAMETERS)
+        self._config = {key: {} for key in self._INI_PARAMETERS}
         self._parser = configparser.RawConfigParser()
 
     def __str__(self):
@@ -98,14 +97,16 @@ class GlobalConfiguration(object, metaclass=Singleton):
         - `name`: Option name
 
         """
-        try:
-            value = self._config[section][name] or self._INI_PARAMETERS[section][name]
-        except KeyError:
+        if (
+            section not in self._INI_PARAMETERS
+            or name not in self._INI_PARAMETERS[section]
+        ):
             msg = (
                 'The provided configuration section "{}" and item "{}" are '
                 "not valid to dagrunner.  See dagrunner.config for further details."
             )
             raise KeyError(msg.format(section, name))
+
         if self._parser.has_option(section, name):
             value = self._parser.get(section, name)
             # Expand environmental variables

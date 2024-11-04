@@ -14,6 +14,7 @@ import networkx as nx
 from dask.base import tokenize
 from dask.utils import apply
 
+from dagrunner.config import CONFIG
 from dagrunner.plugin_framework import NodeAwarePlugin
 from dagrunner.runner.schedulers import SCHEDULERS
 from dagrunner.utils import (
@@ -124,7 +125,7 @@ def plugin_executor(
     Raises:
     - ValueError: If the `call` argument is not provided.
     """  # noqa: E501
-    logger.client_attach_socket_handler()
+    logger.client_attach_socket_handler(**CONFIG["dagrunner_logging"])
 
     if common_kwargs is None:
         common_kwargs = {}
