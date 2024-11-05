@@ -42,11 +42,12 @@ class HTMLTable:
 
 
 class MermaidGraph:
-    MERMAID_TEMPLATE = "graph TD\n{cont}"
+    MERMAID_TEMPLATE = "---\ntitle: {title}\n---\ngraph TD\n{cont}"
     CARRIAGE_RETURN = "<br>"
 
-    def __init__(self):
+    def __init__(self, title=None):
         self._cont = ""
+        self._title = title or ""
 
     def add_node(self, nodeid, label=None, tooltip=None, url=None):
         if label:
@@ -63,7 +64,7 @@ class MermaidGraph:
         self._cont += f"\n{id1} --> {id2}"
 
     def __str__(self):
-        return self.MERMAID_TEMPLATE.format(cont=self._cont)
+        return self.MERMAID_TEMPLATE.format(title=self._title, cont=self._cont)
 
 
 class MermaidHTML:

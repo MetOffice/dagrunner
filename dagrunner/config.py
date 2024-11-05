@@ -40,6 +40,7 @@ class GlobalConfiguration(object, metaclass=Singleton):
         # Graph visualisation
         [dagrunner_visualisation]
         enabled
+        title
         collapse_properties
         backend
         output_filepath
@@ -58,6 +59,7 @@ class GlobalConfiguration(object, metaclass=Singleton):
         "dagrunner_logging": {"host": None, "port": None},
         "dagrunner_visualisation": {
             "enabled": None,
+            "title": None,
             "collapse_properties": None,
             "backend": None,
             "output_filepath": None,

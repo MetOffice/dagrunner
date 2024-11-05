@@ -126,7 +126,10 @@ def get_subset_with_dependencies(
 
 
 def visualise_graph_matplotlib(
-    graph: nx.DiGraph, node_info_lookup: dict = None, output_filepath: str = None
+    graph: nx.DiGraph,
+    node_info_lookup: dict = None,
+    title: str = None,
+    output_filepath: str = None,
 ):
     """
     Visualise a networkx graph using matplotlib.
@@ -134,12 +137,16 @@ def visualise_graph_matplotlib(
     Args:
     - `graph`: The graph to visualise.
     - `node_info_lookup`: A dictionary mapping nodes to their information.
+    - `title`: The title of the visualisation.
     - `output_filepath`: The output filepath to save the visualisation to.
     """
     import matplotlib.pyplot as plt
     from matplotlib.backend_bases import MouseButton
 
     pos = nx.spring_layout(graph, seed=42, k=8 / math.sqrt(graph.order()))
+
+    plt.figure()
+    plt.title(title)
 
     # Draw nodes
     nx.draw_networkx_nodes(graph, pos)
@@ -209,17 +216,21 @@ def visualise_graph_matplotlib(
 
 
 def visualise_graph_mermaid(
-    graph: nx.DiGraph, node_info_lookup: dict = None, output_filepath: str = None
+    graph: nx.DiGraph,
+    node_info_lookup: dict = None,
+    title: str = None,
+    output_filepath: str = None,
 ):
     """
     Visualise a networkx graph using matplotlib.
 
     Args:
     - `graph`: The graph to visualise.
-    - `output_filepath`: The output filepath to save the visualisation to.
     - `node_info_lookup`: A dictionary mapping nodes to their information.
+    - `title`: The title of the visualisation.
+    - `output_filepath`: The output filepath to save the visualisation to.
     """
-    mermaid = MermaidGraph()
+    mermaid = MermaidGraph(title=title or "")
     table = HTMLTable(["id", "node", "info"])
 
     node_target_id_map = {}
@@ -263,8 +274,9 @@ def visualise_graph_mermaid(
 def visualise_graph(
     graph: nx.DiGraph,
     backend="mermaid",
-    output_filepath=None,
     collapse_properties: Iterable = None,
+    title=None,
+    output_filepath=None,
 ):
     """
     Visualise a networkx graph.
@@ -278,11 +290,11 @@ def visualise_graph(
     - `graph`: The graph to visualise.
     - `backend`: The backend to use for visualisation.  Supported values include
       'mermaid' (javascript, default) and 'matplotlib'.
-    - `output_filepath`: The output filepath to save the visualisation to.
     - `collapse_properties`: A list of properties to collapse nodes on.  Only
       supported for nodes represented by dataclasses right now.
+    - `title`: The title of the visualisation.
+    - `output_filepath`: The output filepath to save the visualisation to.
     """
-    # collapse_properties = None
     node_info_lookup = {}
     if collapse_properties:
         if not isinstance(collapse_properties, Iterable) or isinstance(
@@ -334,8 +346,8 @@ def visualise_graph(
             node_info_lookup[node] = {"node data": data}
 
     if backend == "mermaid":
-        visualise_graph_mermaid(graph, node_info_lookup, output_filepath)
+        visualise_graph_mermaid(graph, node_info_lookup, title, output_filepath)
     elif backend == "matplotlib":
-        visualise_graph_matplotlib(graph, node_info_lookup, output_filepath)
+        visualise_graph_matplotlib(graph, node_info_lookup, title, output_filepath)
     else:
         raise ValueError(f"Unsupported visualisation backend: {backend}")
