@@ -90,9 +90,23 @@ div.mermaidTooltip {{
 
 tr:nth-child(even) {{ background: #CCC }}
 tr:nth-child(odd) {{ background: #FFF }}
+
+.scrollable {{
+    overflow-y: auto;
+    overflow-x: auto;
+}}
+
+#mermaid1 {{
+    height: 70vh;
+}}
+
+#table1 {{
+    height: 30vh;
+}}
+
 </style>
 
-<div class="mermaid">
+<div id="mermaid1" class="mermaid scrollable">
 {graph}
 </div>
 
@@ -106,7 +120,9 @@ tr:nth-child(odd) {{ background: #FFF }}
   }});
 </script>
 
+<div id="table1" class="scrollable">
 {table}
+</div>
 
 </body>
 </html>
