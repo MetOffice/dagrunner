@@ -23,7 +23,7 @@ from dagrunner.utils import (
     function_to_argparse_parse_args,
     logger,
 )
-from dagrunner.utils.visualisation import visualise_graph
+from dagrunner.utils.networkx import visualise_graph
 
 
 class _SKIP_EVENT:
@@ -293,6 +293,7 @@ class ExecuteGraph:
         scheduler: str = "multiprocessing",
         num_workers: int = 1,
         profiler_filepath: str = None,
+        config_filepath: str = None,
         dry_run: bool = False,
         verbose: bool = False,
         **kwargs,
@@ -331,6 +332,9 @@ class ExecuteGraph:
           Optional.
         - `num_workers` (int):
           Number of processes or threads to use.  Optional.
+        - `config_filepath` (str):
+          Path to the configuration file.  See [dagrunner.config](dagrunner.config.md).
+          Optional.
         - `dry_run` (bool):
           Print executed commands but don't actually run them.  Optional.
         - `profiler_filepath` (str):
@@ -342,6 +346,9 @@ class ExecuteGraph:
         - `**kwargs`:
           Optional global keyword arguments to apply to all applicable plugins.
         """
+        if config_filepath:
+            CONFIG.parse_config_file(config_filepath)
+
         self._nxgraph = _get_networkx(networkx_graph)
         self._nxgraph_kwargs = networkx_graph_kwargs or {}
         self._plugin_executor = plugin_executor
@@ -350,6 +357,8 @@ class ExecuteGraph:
                 f"scheduler '{scheduler}' not recognised, please choose from "
                 f"{list(SCHEDULERS.keys())}"
             )
+        if dry_run:
+            scheduler = "single-threaded"
         self._scheduler = SCHEDULERS[scheduler]
         self._num_workers = num_workers
         self._profiler_output = profiler_filepath
@@ -379,6 +388,9 @@ class ExecuteGraph:
 
         if callable(self._nxgraph):
             self._nxgraph = self._nxgraph(**self._nxgraph_kwargs)
+
+        if CONFIG["dagrunner_visualisation"].pop("enabled", False) is True:
+            visualise_graph(self._nxgraph, **CONFIG["dagrunner_visualisation"])
 
         exec_graph = {}
         for node_id, properties in self._nxgraph.nodes(data=True):

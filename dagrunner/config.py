@@ -35,10 +35,16 @@ class GlobalConfiguration(object, metaclass=Singleton):
     parsed strictly.  Those groups not with this prefix are silently ignored.
 
     The following represents a description of the runtime configuration
-    options and their default values::
+    options::
+
+        # Graph visualisation
+        [dagrunner_visualisation]
+        enabled
+        collapse_properties
+        backend
+        output_filepath
 
         # Logging
-
         [dagrunner_logging]
         host
         port
@@ -50,6 +56,12 @@ class GlobalConfiguration(object, metaclass=Singleton):
     # Logic around default values belong in the functions which use them.
     _INI_PARAMETERS = {
         "dagrunner_logging": {"host": None, "port": None},
+        "dagrunner_visualisation": {
+            "enabled": None,
+            "collapse_properties": None,
+            "backend": None,
+            "output_filepath": None,
+        },
     }
 
     def __init__(self):

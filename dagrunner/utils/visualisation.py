@@ -8,24 +8,13 @@ Module responsible for scheduler independent graph visualisation
 
 import os
 
-from dask.core import get_deps
-
-
-def _shorten_path(path):
-    """Shorten paths for the visual graph"""
-    if "/share/" in path:
-        path = path[path.index("/share/") + 1 :]
-    elif "/etc/" in path:
-        path = path[path.index("/etc/") + 1 :]
-    return path
-
 
 def _as_html(msg):
     """Quick nasty convert text to html, avoid beautiful soup dep."""
     return str(msg).replace(">", "&gt;").replace("<", "&lt;")
 
 
-class _HTMLTable:
+class HTMLTable:
     TABLE_TEMPLATE = """<table>
 <tr>
 {table_header}
@@ -65,7 +54,7 @@ class MermaidGraph:
         self._cont += f'\n{nodeid}(["{label}"])'
         if tooltip:
             # https://mermaid-js.github.io/mermaid/#/flowchart?id=interaction
-            tooltip = tooltip.replace("\n", self.CARRIAGE_RETURN)
+            tooltip = tooltip.replace("\n", self.CARRIAGE_RETURN).replace('"', "")
             self._cont += f'\nclick {nodeid} callback "{tooltip}"'
         if url:
             self._cont += f'\nclick {nodeid} "{url}"'
@@ -123,71 +112,8 @@ tr:nth-child(odd) {{ background: #FFF }}
 </html>
 """
 
-    def __init__(self, graph):
-        self._graph, self._html_table = self._graph_engine_gen_with_table(graph)
-
-    @classmethod
-    def _get_tooltip(cls, tgt, args):
-        args = " ".join(tuple(map(_shorten_path, args)))
-        tgt = _shorten_path(tgt)
-        return f"target:\n{tgt}\n\nargs:\n{args}"
-
-    @classmethod
-    def _get_url(cls, command, args):
-        """Derive URL from the provided command and arguments"""
-        url = None
-        if args[0] == "improver":
-            url = (
-                "https://improver.readthedocs.io/en/latest/"
-                f"improver.cli.{command.replace('-', '_')}.html"
-            )
-        return url
-
-    @classmethod
-    def _graph_engine_gen_with_table(cls, graph):
-        def get_command(tgt):
-            if graph[tgt][2] == "improver":
-                return graph[tgt][3], graph[tgt][2:]
-            else:
-                return graph[tgt][2], graph[tgt][2:]
-
-        table = _HTMLTable(["node ID", "command", "target", "args"])
-        graph_engine = cls.GRAPH_ENGINE()
-        node_target_id_map = {}
-        node_id = 0
-        pred_deps, _ = get_deps(graph)
-
-        for target in pred_deps:
-            if target not in node_target_id_map:
-                node_target_id_map[target] = node_id
-                command, args = get_command(target)
-                url = cls._get_url(command, args)
-                graph_engine.add_node(
-                    node_id,
-                    label=f"{node_id}\n{command}",
-                    tooltip=cls._get_tooltip(target, args),
-                    url=url,
-                )
-                table.add_row(node_id, command, target, " ".join(args))
-                node_id += 1
-
-            for pred in pred_deps[target]:
-                if pred not in node_target_id_map:
-                    node_target_id_map[pred] = node_id
-                    command, args = get_command(target)
-                    url = cls._get_url(command, args)
-                    graph_engine.add_node(
-                        node_id,
-                        label=f"{node_id}\n{command}",
-                        tooltip=cls._get_tooltip(pred, args),
-                        url=url,
-                    )
-                    table.add_row(node_id, command, pred, " ".join(args))
-                    node_id += 1
-                graph_engine.add_connection(
-                    node_target_id_map[pred], node_target_id_map[target]
-                )
-        return graph_engine, table
+    def __init__(self, mermaid, table=None):
+        self._graph, self._html_table = mermaid, table
 
     def __str__(self):
         return self.HTML_TEMPLATE.format(
@@ -200,18 +126,3 @@ tr:nth-child(odd) {{ background: #FFF }}
         ], "Expecting graph output file extension to be .html"
         with open(output_filepath, "w") as fh:
             fh.write(str(self))
-
-
-def visualise_graph(graph, output_filepath):
-    """
-    Args:
-        graph (dict):
-            Graph with keys representing 'targets' and values representing
-            (function, *args).
-        output_filepath (str):
-            Node graph visualisation html output filepath.
-
-    Returns:
-        None:
-    """
-    MermaidHTML(graph).save(output_filepath)
