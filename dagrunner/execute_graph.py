@@ -389,8 +389,9 @@ class ExecuteGraph:
         if callable(self._nxgraph):
             self._nxgraph = self._nxgraph(**self._nxgraph_kwargs)
 
+
         if CONFIG["dagrunner_visualisation"].pop("enabled", False) is True:
-            visualise_graph(self._nxgraph, **CONFIG["dagrunner_visualisation"])
+            self.visualise_graph(**CONFIG["dagrunner_visualisation"])
 
         exec_graph = {}
         for node_id, properties in self._nxgraph.nodes(data=True):
@@ -404,8 +405,8 @@ class ExecuteGraph:
         # handle_clobber(graph, workflow, no_clobber, verbose)
         return exec_graph
 
-    def visualise(self, output_filepath: str):
-        _attempt_visualise_graph(self._exec_graph, output_filepath)
+    def visualise(self, **kwargs):
+        visualise_graph(self._nxgraph, **kwargs)
 
     def __call__(self):
         with TimeIt(verbose=True), self._scheduler(

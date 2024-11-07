@@ -15,7 +15,9 @@ import dagrunner.utils._doc_styles as doc_styles
 
 
 def as_iterable(obj):
-    if not isinstance(obj, Iterable) or isinstance(
+    if obj is None:
+        return []
+    elif not isinstance(obj, Iterable) or isinstance(
         obj, (str, bytes)
     ):
         obj = [obj]
