@@ -8,9 +8,18 @@ import os
 import socket
 import threading
 import time
+from typing import Iterable
 from abc import ABC, abstractmethod
 
 import dagrunner.utils._doc_styles as doc_styles
+
+
+def as_iterable(obj):
+    if not isinstance(obj, Iterable) or isinstance(
+        obj, (str, bytes)
+    ):
+        obj = [obj]
+    return obj
 
 
 class Singleton(type):

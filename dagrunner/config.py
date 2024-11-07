@@ -44,6 +44,8 @@ class GlobalConfiguration(object, metaclass=Singleton):
         collapse_properties
         backend
         output_filepath
+        group_by
+        label_by
 
         # Logging
         [dagrunner_logging]
@@ -63,6 +65,8 @@ class GlobalConfiguration(object, metaclass=Singleton):
             "collapse_properties": None,
             "backend": None,
             "output_filepath": None,
+            "group_by": None,
+            "label_by": None,
         },
     }
 

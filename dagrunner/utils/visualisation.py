@@ -49,6 +49,9 @@ class MermaidGraph:
         self._cont = ""
         self._title = title or ""
 
+    def add_raw(self, raw):
+        self._cont += f"\n{raw}"
+
     def add_node(self, nodeid, label=None, tooltip=None, url=None):
         if label:
             label = label.replace("\n", self.CARRIAGE_RETURN)
