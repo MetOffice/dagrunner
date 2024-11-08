@@ -248,7 +248,7 @@ def visualise_graph_mermaid(
             label = gen_label(node_id, node, label_by)
             tooltip = pprint.pformat(node_info_lookup[node])
 
-            subgraphs = [getattr(node, key) for key in group_by if hasattr(node, key)]
+            subgraphs = [getattr(node, key) for key in group_by if getattr(node, key, None)]
             for subgraph in subgraphs:
                 mermaid.add_raw(f"subgraph {subgraph}")
             mermaid.add_node(

@@ -22,21 +22,19 @@ from dagrunner.utils import (
     TimeIt,
     function_to_argparse_parse_args,
     logger,
+    as_iterable,
+    Singleton
 )
 from dagrunner.utils.networkx import visualise_graph
 
 
-class _SKIP_EVENT:
+class _SKIP_EVENT(Singleton):
     """
-    This object is used to indicate to `plugin_executor` to skip execution of its node.
+    A plugin that returns a 'SKIP_EVENT' will cause `plugin_executor` to skip execution
+    of all descendant node execution.
     """
 
     _instance = None
-
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(_SKIP_EVENT, cls).__new__(cls)
-        return cls._instance
 
     def __repr__(self):
         return "SKIP_EVENT"
@@ -49,6 +47,27 @@ class _SKIP_EVENT:
 
 
 SKIP_EVENT = _SKIP_EVENT()
+
+
+class _IGNORE_EVENT(Singleton):
+    """
+    A plugin that returns an 'IGNORE_EVENT' will be filtered out as arguments by
+    `plugin_executor` in descendant node execution.
+    """
+
+    _instance = None
+
+    def __repr__(self):
+        return "IGNORE_EVENT"
+
+    def __hash__(self):
+        return hash("IGNORE_EVENT")
+
+    def __reduce__(self):
+        return (self.__class__, ())
+
+
+IGNORE_EVENT = _IGNORE_EVENT()
 
 
 class SkipBranch(Exception):
@@ -141,6 +160,13 @@ def plugin_executor(
     if verbose:
         print(f"args: {args}")
         print(f"call: {call}")
+
+    call = as_iterable(call)
+
+    # filter out IGNORE_EVENT from args.
+    args = filter(lambda x: x is not IGNORE_EVENT, args)
+
+    # ignore execution if SKIP_EVENT found in any arg.
     if SKIP_EVENT in args:
         if verbose:
             print(f"Skipping node {call[0]}")
@@ -391,7 +417,7 @@ class ExecuteGraph:
 
 
         if CONFIG["dagrunner_visualisation"].pop("enabled", False) is True:
-            self.visualise_graph(**CONFIG["dagrunner_visualisation"])
+            self.visualise(**CONFIG["dagrunner_visualisation"])
 
         exec_graph = {}
         for node_id, properties in self._nxgraph.nodes(data=True):
