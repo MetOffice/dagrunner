@@ -19,55 +19,49 @@ from dagrunner.plugin_framework import NodeAwarePlugin
 from dagrunner.runner.schedulers import SCHEDULERS
 from dagrunner.utils import (
     CaptureProcMemory,
+    Singleton,
     TimeIt,
+    as_iterable,
     function_to_argparse_parse_args,
     logger,
-    as_iterable,
-    Singleton
 )
 from dagrunner.utils.networkx import visualise_graph
 
 
-class _SKIP_EVENT(Singleton):
+class _EventBase:
+    def __repr__(self):
+        # Ensures easy identification when printing/logging.
+        return self.__class__.__name__.upper()
+
+    def __hash__(self):
+        # Ensures that can be used as keys in dictionaries or stored as sets.
+        return hash(self.__class__.__name__.upper())
+
+    def __reduce__(self):
+        # Ensures that can be serialised and deserialised using pickle.
+        return (self.__class__, ())
+
+
+class _SkipEvent(_EventBase, metaclass=Singleton):
     """
     A plugin that returns a 'SKIP_EVENT' will cause `plugin_executor` to skip execution
     of all descendant node execution.
     """
-
-    _instance = None
-
-    def __repr__(self):
-        return "SKIP_EVENT"
-
-    def __hash__(self):
-        return hash("SKIP_EVENT")
-
-    def __reduce__(self):
-        return (self.__class__, ())
+    pass
 
 
-SKIP_EVENT = _SKIP_EVENT()
+SKIP_EVENT = _SkipEvent()
 
 
-class _IGNORE_EVENT(Singleton):
+class _IgnoreEvent(_EventBase, metaclass=Singleton):
     """
     A plugin that returns an 'IGNORE_EVENT' will be filtered out as arguments by
     `plugin_executor` in descendant node execution.
     """
-
-    _instance = None
-
-    def __repr__(self):
-        return "IGNORE_EVENT"
-
-    def __hash__(self):
-        return hash("IGNORE_EVENT")
-
-    def __reduce__(self):
-        return (self.__class__, ())
+    pass
 
 
-IGNORE_EVENT = _IGNORE_EVENT()
+IGNORE_EVENT = _IgnoreEvent()
 
 
 class SkipBranch(Exception):
@@ -414,7 +408,6 @@ class ExecuteGraph:
 
         if callable(self._nxgraph):
             self._nxgraph = self._nxgraph(**self._nxgraph_kwargs)
-
 
         if CONFIG["dagrunner_visualisation"].pop("enabled", False) is True:
             self.visualise(**CONFIG["dagrunner_visualisation"])

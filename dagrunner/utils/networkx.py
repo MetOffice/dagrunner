@@ -233,6 +233,7 @@ def visualise_graph_mermaid(
     - `title`: The title of the visualisation.
     - `output_filepath`: The output filepath to save the visualisation to.
     """
+
     def gen_label(node_id, node, label_by):
         label = f"{node_id}"
         if label_by:
@@ -242,13 +243,24 @@ def visualise_graph_mermaid(
             label += f"\n{str(node)}"
         return label
 
-    def add_node(node, mermaid, table, node_id, node_target_id_map, node_info_lookup, label_by, group_by):
+    def add_node(
+        node,
+        mermaid,
+        table,
+        node_id,
+        node_target_id_map,
+        node_info_lookup,
+        label_by,
+        group_by,
+    ):
         if node not in node_target_id_map:
             node_target_id_map[node] = node_id
             label = gen_label(node_id, node, label_by)
             tooltip = pprint.pformat(node_info_lookup[node])
 
-            subgraphs = [getattr(node, key) for key in group_by if getattr(node, key, None)]
+            subgraphs = [
+                getattr(node, key) for key in group_by if getattr(node, key, None)
+            ]
             for subgraph in subgraphs:
                 mermaid.add_raw(f"subgraph {subgraph}")
             mermaid.add_node(
@@ -262,7 +274,6 @@ def visualise_graph_mermaid(
             node_id += 1
         return node_id
 
-
     mermaid = MermaidGraph(title=title or "")
     table = HTMLTable(["id", "node", "info"])
 
@@ -272,10 +283,28 @@ def visualise_graph_mermaid(
     node_target_id_map = {}
     node_id = 0
     for target in graph.nodes:
-        node_id = add_node(target, mermaid, table, node_id, node_target_id_map, node_info_lookup, label_by, group_by)
+        node_id = add_node(
+            target,
+            mermaid,
+            table,
+            node_id,
+            node_target_id_map,
+            node_info_lookup,
+            label_by,
+            group_by,
+        )
 
         for pred in graph.predecessors(target):
-            node_id = add_node(pred, mermaid, table, node_id, node_target_id_map, node_info_lookup, label_by, group_by)
+            node_id = add_node(
+                pred,
+                mermaid,
+                table,
+                node_id,
+                node_target_id_map,
+                node_info_lookup,
+                label_by,
+                group_by,
+            )
             mermaid.add_connection(node_target_id_map[pred], node_target_id_map[target])
 
     if output_filepath:
@@ -361,8 +390,12 @@ def visualise_graph(
             node_info_lookup[node] = {"node data": data}
 
     if backend == "mermaid":
-        visualise_graph_mermaid(graph, node_info_lookup, title, output_filepath, **kwargs)
+        visualise_graph_mermaid(
+            graph, node_info_lookup, title, output_filepath, **kwargs
+        )
     elif backend == "matplotlib":
-        visualise_graph_matplotlib(graph, node_info_lookup, title, output_filepath, **kwargs)
+        visualise_graph_matplotlib(
+            graph, node_info_lookup, title, output_filepath, **kwargs
+        )
     else:
         raise ValueError(f"Unsupported visualisation backend: {backend}")
