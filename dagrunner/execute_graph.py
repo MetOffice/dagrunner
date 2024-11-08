@@ -47,6 +47,7 @@ class _SkipEvent(_EventBase, metaclass=Singleton):
     A plugin that returns a 'SKIP_EVENT' will cause `plugin_executor` to skip execution
     of all descendant node execution.
     """
+
     pass
 
 
@@ -58,6 +59,7 @@ class _IgnoreEvent(_EventBase, metaclass=Singleton):
     A plugin that returns an 'IGNORE_EVENT' will be filtered out as arguments by
     `plugin_executor` in descendant node execution.
     """
+
     pass
 
 
@@ -158,7 +160,7 @@ def plugin_executor(
     call = as_iterable(call)
 
     # filter out IGNORE_EVENT from args.
-    args = filter(lambda x: x is not IGNORE_EVENT, args)
+    args = list(filter(lambda x: x is not IGNORE_EVENT, args))
 
     # ignore execution if SKIP_EVENT found in any arg.
     if SKIP_EVENT in args:
