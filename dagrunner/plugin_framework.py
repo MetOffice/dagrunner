@@ -203,9 +203,37 @@ class Load(Plugin):
 
 
 class DataPolling(Plugin):
-    def __call__(
-        self, *args, timeout=60 * 2, polling=1, file_count=None, error_on_missing=True, verbose=False
-    ):
+    def __init__(self, timeout=60 * 2, polling=1, file_count=None, error_on_missing=True, return_found=False, verbose=False):
+        """
+        Args:
+        - timeout (int): Timeout in seconds (default is 120 seconds).
+        - polling (int): Time interval in seconds between each poll (default is 1
+          second).
+        - file_count (int): Expected number of files to be found for globular
+            expansion (default is >= 1 files per pattern).
+        - error_on_missing (bool): Raise an exception if files are missing.
+        - return_found (bool): Return list of files found if True, otherwise return
+          None.  error_on_missing and return_found cannot both be False.
+          When False, the DataPolling plugin acts only to indicate successful
+          completion of the poll, thereby triggering the execution of steps dependent
+          on this poll.
+          wile setting to True will mean that the plugin additionally passes along
+          files it has found.
+        - verbose (bool): Print verbose output.
+        """
+        self._timeout = timeout
+        self._polling = polling
+        self._file_count = file_count
+        self._error_on_missing = error_on_missing
+        self._return_found = return_found
+        self._verbose = verbose
+
+        if not error_on_missing and not return_found:
+            raise ValueError(
+                "error_on_missing and return_found cannot both be False"
+            )
+
+    def __call__(self, *args):
         """
         Poll for the availability of files
 
@@ -215,21 +243,17 @@ class DataPolling(Plugin):
         Args:
         - *args: Variable length argument list of file patterns to be checked.
           `<hostname>:<path>` syntax supported for files on a remote host.
-        - timeout (int): Timeout in seconds (default is 120 seconds).
-        - polling (int): Time interval in seconds between each poll (default is 1
-          second).
-        - file_count (int): Expected number of files to be found for globular
-            expansion (default is >= 1 files per pattern).
-        - error_on_missing (bool): Raise an exception if files are missing.
-        - verbose (bool): Print verbose output.
 
         Returns:
-        - None
+        - None, SKIP_EVENT or set:
+          Returning 'None' where 'return_found' is False, returning 'SKIP_EVENT' if
+          'error_on_missing' is True and returning a 'set' of files found if
+          'return_found' is True.
 
         Raises:
         - RuntimeError: If the timeout is reached before all files are found.
         """
-
+            
         # Define a key function
         def host_and_glob_key(path):
             psplit = path.split(":")
@@ -239,6 +263,7 @@ class DataPolling(Plugin):
 
         time_taken = 0
         fpaths_found = set()
+        fpaths_not_found = set()
         args = list(map(process_path, args))
 
         # Group by host and whether it's a glob pattern
@@ -251,7 +276,7 @@ class DataPolling(Plugin):
         for ind, ((host, globular), paths) in enumerate(args_by_host):
             globular = bool(globular)
             host_msg = f"{host}:" if host else ""
-            while time_taken < timeout or not timeout:
+            while True:
                 if host:
                     # bash equivalent to python glob (glob on remote host)
                     expanded_paths = subprocess.run(
@@ -269,9 +294,12 @@ class DataPolling(Plugin):
                         itertools.chain.from_iterable(map(glob, paths))
                     )
                 if expanded_paths:
-                    fpaths_found = fpaths_found.union(expanded_paths)
+                    if host:
+                        fpaths_found = fpaths_found.union(set([f"{host}:{path}" for path in expanded_paths]))
+                    else:
+                        fpaths_found = fpaths_found.union(expanded_paths)
                     if globular and (
-                        not file_count or len(expanded_paths) >= file_count
+                        not self._file_count or len(expanded_paths) >= self._file_count
                     ):
                         # globular expansion completed
                         paths = set()
@@ -280,31 +308,42 @@ class DataPolling(Plugin):
                         paths = paths - set(expanded_paths)
 
                 if paths:
-                    if timeout:
+                    if self._timeout and time_taken < self._timeout:
                         print(
-                            f"polling for {host_msg}{paths}, time taken: "
-                            f"{time_taken}s of limit {timeout}s"
+                            f"self._polling for {host_msg}{paths}, time taken: "
+                            f"{time_taken}s of limit {self._timeout}s"
                         )
-                        time.sleep(polling)
-                        time_taken += polling
+                        time.sleep(self._polling)
+                        time_taken += self._polling
                     else:
                         break
                 else:
                     break
 
             if paths:
-                if error_on_missing:
+                if host:
+                    fpaths_not_found = fpaths_not_found.union(set([f"{host}:{path}" for path in paths]))
+                else:
+                    fpaths_not_found = fpaths_not_found.union(paths)
+                if self._error_on_missing:
                     raise FileNotFoundError(
                         f"Timeout waiting for: {host_msg}{'; '.join(sorted(paths))}"
                     )
-                else:
+                elif not self._return_found:
                     return SKIP_EVENT
 
-        if verbose and fpaths_found:
+        if self._verbose and fpaths_found:
             print(
                 "The following files were polled and found: "
                 f"{'; '.join(sorted(fpaths_found))}"
             )
+        if fpaths_not_found:
+            warnings.warn(
+                "The following files were polled and NOT found: "
+                f"{'; '.join(sorted(fpaths_not_found))}"
+            )
+        if self._return_found:
+            return fpaths_found
         return None
 
 
