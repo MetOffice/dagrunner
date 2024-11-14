@@ -14,7 +14,45 @@ import warnings
 from abc import ABC, abstractmethod
 from glob import glob
 
-from dagrunner.utils import process_path
+from dagrunner.utils import process_path, Singleton
+
+
+class _EventBase:
+    def __repr__(self):
+        # Ensures easy identification when printing/logging.
+        return self.__class__.__name__.upper()
+
+    def __hash__(self):
+        # Ensures that can be used as keys in dictionaries or stored as sets.
+        return hash(self.__class__.__name__.upper())
+
+    def __reduce__(self):
+        # Ensures that can be serialised and deserialised using pickle.
+        return (self.__class__, ())
+
+
+class _SkipEvent(_EventBase, metaclass=Singleton):
+    """
+    A plugin that returns a 'SKIP_EVENT' will cause `plugin_executor` to skip execution
+    of all descendant node execution.
+    """
+
+    pass
+
+
+SKIP_EVENT = _SkipEvent()
+
+
+class _IgnoreEvent(_EventBase, metaclass=Singleton):
+    """
+    A plugin that returns an 'IGNORE_EVENT' will be filtered out as arguments by
+    `plugin_executor` in descendant node execution.
+    """
+
+    pass
+
+
+IGNORE_EVENT = _IgnoreEvent()
 
 
 class Plugin(ABC):
@@ -166,7 +204,7 @@ class Load(Plugin):
 
 class DataPolling(Plugin):
     def __call__(
-        self, *args, timeout=60 * 2, polling=1, file_count=None, verbose=False
+        self, *args, timeout=60 * 2, polling=1, file_count=None, error_on_missing=True, verbose=False
     ):
         """
         Poll for the availability of files
@@ -182,6 +220,8 @@ class DataPolling(Plugin):
           second).
         - file_count (int): Expected number of files to be found for globular
             expansion (default is >= 1 files per pattern).
+        - error_on_missing (bool): Raise an exception if files are missing.
+        - verbose (bool): Print verbose output.
 
         Returns:
         - None
@@ -253,9 +293,12 @@ class DataPolling(Plugin):
                     break
 
             if paths:
-                raise FileNotFoundError(
-                    f"Timeout waiting for: {host_msg}{'; '.join(sorted(paths))}"
-                )
+                if error_on_missing:
+                    raise FileNotFoundError(
+                        f"Timeout waiting for: {host_msg}{'; '.join(sorted(paths))}"
+                    )
+                else:
+                    return SKIP_EVENT
 
         if verbose and fpaths_found:
             print(

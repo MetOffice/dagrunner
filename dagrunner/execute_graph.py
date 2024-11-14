@@ -15,73 +15,16 @@ from dask.base import tokenize
 from dask.utils import apply
 
 from dagrunner.config import CONFIG
-from dagrunner.plugin_framework import NodeAwarePlugin
+from dagrunner.plugin_framework import NodeAwarePlugin, IGNORE_EVENT, SKIP_EVENT
 from dagrunner.runner.schedulers import SCHEDULERS
 from dagrunner.utils import (
     CaptureProcMemory,
-    Singleton,
     TimeIt,
     as_iterable,
     function_to_argparse_parse_args,
     logger,
 )
 from dagrunner.utils.networkx import visualise_graph
-
-
-class _EventBase:
-    def __repr__(self):
-        # Ensures easy identification when printing/logging.
-        return self.__class__.__name__.upper()
-
-    def __hash__(self):
-        # Ensures that can be used as keys in dictionaries or stored as sets.
-        return hash(self.__class__.__name__.upper())
-
-    def __reduce__(self):
-        # Ensures that can be serialised and deserialised using pickle.
-        return (self.__class__, ())
-
-
-class _SkipEvent(_EventBase, metaclass=Singleton):
-    """
-    A plugin that returns a 'SKIP_EVENT' will cause `plugin_executor` to skip execution
-    of all descendant node execution.
-    """
-
-    pass
-
-
-SKIP_EVENT = _SkipEvent()
-
-
-class _IgnoreEvent(_EventBase, metaclass=Singleton):
-    """
-    A plugin that returns an 'IGNORE_EVENT' will be filtered out as arguments by
-    `plugin_executor` in descendant node execution.
-    """
-
-    pass
-
-
-IGNORE_EVENT = _IgnoreEvent()
-
-
-class SkipBranch(Exception):
-    """
-    This exception is used to skip a branch of the execution graph.
-
-    To be used in combination to one of the multiprocessing dask schedulers.
-    In the single-threaded scheduler, Dask executes tasks sequentially, and
-    exceptions will propagate as they occur, potentially halting the execution of
-    subsequent tasks.
-
-    ## Warning
-
-    Status: experimental.
-
-    """
-
-    pass
 
 
 def _get_common_args_matching_signature(callable_obj, common_kwargs, keys=None):
@@ -433,10 +376,7 @@ class ExecuteGraph:
         with TimeIt(verbose=True), self._scheduler(
             self._num_workers, profiler_filepath=self._profiler_output
         ) as scheduler:
-            try:
-                res = scheduler.run(self._exec_graph)
-            except SkipBranch:
-                pass
+            res = scheduler.run(self._exec_graph)
         return res
 
 
