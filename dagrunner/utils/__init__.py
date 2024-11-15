@@ -3,18 +3,18 @@
 # This file is part of 'dagrunner' and is released under the BSD 3-Clause license.
 # See LICENSE in the root of the repository for full licensing details.
 import argparse
-from glob import glob
 import inspect
 import itertools
 import os
-import socket
 import shutil
+import socket
 import subprocess
 import threading
 import time
-from typing import Iterable
 import warnings
 from abc import ABC, abstractmethod
+from glob import glob
+from typing import Iterable
 
 import dagrunner.utils._doc_styles as doc_styles
 
@@ -22,9 +22,7 @@ import dagrunner.utils._doc_styles as doc_styles
 def as_iterable(obj):
     if obj is None:
         return []
-    elif not isinstance(obj, Iterable) or isinstance(
-        obj, (str, bytes)
-    ):
+    elif not isinstance(obj, Iterable) or isinstance(obj, (str, bytes)):
         obj = [obj]
     return obj
 
@@ -415,7 +413,9 @@ def function_to_argparse_parse_args(*args, **kwargs):
     return args, kwargs
 
 
-def data_polling(*args, timeout=60 * 2, polling=1, file_count=None, fail_fast=True, verbose=False):
+def data_polling(
+    *args, timeout=60 * 2, polling=1, file_count=None, fail_fast=True, verbose=False
+):
     """
     Poll for the availability of files
 
@@ -435,6 +435,7 @@ def data_polling(*args, timeout=60 * 2, polling=1, file_count=None, fail_fast=Tr
     - fail_fast (bool): Stop when a file is not found (default is True).
     - verbose (bool): Print verbose output.
     """
+
     # Define a key function
     def host_and_glob_key(path):
         psplit = path.split(":")
@@ -471,17 +472,15 @@ def data_polling(*args, timeout=60 * 2, polling=1, file_count=None, fail_fast=Tr
                 if expanded_paths:
                     expanded_paths = expanded_paths.split("\n")
             else:
-                expanded_paths = list(
-                    itertools.chain.from_iterable(map(glob, paths))
-                )
+                expanded_paths = list(itertools.chain.from_iterable(map(glob, paths)))
             if expanded_paths:
                 if host:
-                    fpaths_found = fpaths_found.union(set([f"{host}:{path}" for path in expanded_paths]))
+                    fpaths_found = fpaths_found.union(
+                        set([f"{host}:{path}" for path in expanded_paths])
+                    )
                 else:
                     fpaths_found = fpaths_found.union(expanded_paths)
-                if globular and (
-                    not file_count or len(expanded_paths) >= file_count
-                ):
+                if globular and (not file_count or len(expanded_paths) >= file_count):
                     # globular expansion completed
                     paths = set()
                 else:
@@ -504,7 +503,9 @@ def data_polling(*args, timeout=60 * 2, polling=1, file_count=None, fail_fast=Tr
 
         if paths:
             if host:
-                fpaths_not_found = fpaths_not_found.union(set([f"{host}:{path}" for path in paths]))
+                fpaths_not_found = fpaths_not_found.union(
+                    set([f"{host}:{path}" for path in paths])
+                )
             else:
                 fpaths_not_found = fpaths_not_found.union(paths)
 
@@ -535,9 +536,12 @@ class _RemotePathHandler:
     def exists(self):
         if self._host:
             # check if file exists on remote host
-            exists = subprocess.run(
-                ["ssh", self._host, "test", "-e", self._lpath], check=False
-            ).returncode == 0
+            exists = (
+                subprocess.run(
+                    ["ssh", self._host, "test", "-e", self._lpath], check=False
+                ).returncode
+                == 0
+            )
         else:
             exists = os.path.exists(self._lpath)
         return exists
@@ -552,15 +556,15 @@ class _RemotePathHandler:
                 capture_output=True,
             ).stdout.strip()
         else:
-            mtime = f"{int(os.path.getmtime(self._lpath))}_{os.path.getsize(self._lpath)}"
+            mtime = (
+                f"{int(os.path.getmtime(self._lpath))}_{os.path.getsize(self._lpath)}"
+            )
         return mtime
-    
+
     def copy(self, target):
         if self._host:
             rsync_command = ["scp", "-p", f"{self._host}:{self._lpath}", target]
-            subprocess.run(
-                rsync_command, check=True, text=True, capture_output=True
-            )
+            subprocess.run(rsync_command, check=True, text=True, capture_output=True)
         else:
             try:
                 os.link(self._lpath, target)
@@ -584,7 +588,6 @@ def stage_to_dir(*args, staging_dir, verbose=False):
     os.makedirs(staging_dir, exist_ok=True)
     args = list(args)
     for ind, arg in enumerate(args):
-
         fpath = _RemotePathHandler(arg)
         if not fpath.exists():
             raise FileNotFoundError(f"File '{fpath}' not found.")
@@ -592,14 +595,16 @@ def stage_to_dir(*args, staging_dir, verbose=False):
         source_mtime_size = fpath.get_identity()
 
         target = os.path.join(
-            staging_dir, f"{source_mtime_size}_{os.path.basename(fpath)}"
+            staging_dir, f"{source_mtime_size}_{os.path.basename(str(fpath))}"
         )
         if not os.path.exists(target):
+            if verbose:
+                print(f"Staged '{arg}' to '{target}'")
             fpath.copy(target)
         else:
-            warnings.warn(f"Staged file {target} already exists. Skipping copy.")
+            warnings.warn(
+                f"'{arg}' staged file '{target}' already exists. Skipping copy."
+            )
 
         args[ind] = target
-        if verbose:
-            print(f"Staged {arg} to {args[ind]}")
     return args

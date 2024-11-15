@@ -15,7 +15,7 @@ from dask.base import tokenize
 from dask.utils import apply
 
 from dagrunner.config import CONFIG
-from dagrunner.plugin_framework import NodeAwarePlugin, IGNORE_EVENT, SKIP_EVENT
+from dagrunner.plugin_framework import IGNORE_EVENT, SKIP_EVENT, NodeAwarePlugin
 from dagrunner.runner.schedulers import SCHEDULERS
 from dagrunner.utils import (
     CaptureProcMemory,
@@ -194,7 +194,12 @@ def plugin_executor(
     logging.info(msg)
 
     if verbose:
-        print(f"result: {res}")
+        try:
+            # cube looking UI
+            print(f"result: {res.summary(shorten=True)}")
+        except (TypeError, AttributeError):
+            # fallback
+            print(f"result: {res}")
     return res
 
 

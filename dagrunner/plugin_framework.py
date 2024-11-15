@@ -5,14 +5,12 @@
 import json
 import os
 import pickle
-import shutil
 import string
 import subprocess
 import warnings
 from abc import ABC, abstractmethod
-from glob import glob
 
-from dagrunner.utils import process_path, Singleton, data_polling, stage_to_dir
+from dagrunner.utils import Singleton, data_polling, process_path, stage_to_dir
 
 
 class _EventBase:
@@ -153,7 +151,9 @@ class Load(Plugin):
 
         if self._staging_dir and args:
             try:
-                args = stage_to_dir(*args, staging_dir=self._staging_dir, verbose=self._verbose)
+                args = stage_to_dir(
+                    *args, staging_dir=self._staging_dir, verbose=self._verbose
+                )
             except FileNotFoundError as e:
                 if self._ignore_missing:
                     warnings.warn(str(e))
@@ -175,6 +175,7 @@ class Load(Plugin):
 
 class DataPolling(Plugin):
     """A trigger plugin that completes when data is successfully polled."""
+
     def __init__(self, timeout=60 * 2, polling=1, file_count=None, verbose=False):
         self._timeout = timeout
         self._polling = polling
@@ -182,15 +183,24 @@ class DataPolling(Plugin):
         self._verbose = verbose
 
     def __call__(self, *args):
-            fpaths_found, fpaths_not_found = data_polling(*args, self._timeout, self._polling, self._file_count, fail_fast=True, verbose=self._verbose)
-            if fpaths_not_found:
-                raise FileNotFoundError(
-                    f"Timeout waiting for: {'; '.join(sorted(fpaths_not_found))}"
-                )
-            if self._verbose:
-                msg = f"These files were polled and found: {'; '.join(sorted(fpaths_found))}"
-                print(msg)
-            return
+        fpaths_found, fpaths_not_found = data_polling(
+            *args,
+            timeout=self._timeout,
+            polling=self._polling,
+            file_count=self._file_count,
+            fail_fast=True,
+            verbose=self._verbose,
+        )
+        if fpaths_not_found:
+            raise FileNotFoundError(
+                f"Timeout waiting for: {'; '.join(sorted(fpaths_not_found))}"
+            )
+        if self._verbose:
+            msg = (
+                f"These files were polled and found: {'; '.join(sorted(fpaths_found))}"
+            )
+            print(msg)
+        return
 
 
 class Input(NodeAwarePlugin):
