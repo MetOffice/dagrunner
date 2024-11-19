@@ -5,8 +5,9 @@
 """
 Module responsible for scheduler independent graph visualisation
 """
-
+import base64
 import os
+import requests
 
 
 def _as_html(msg):
@@ -68,6 +69,36 @@ class MermaidGraph:
 
     def __str__(self):
         return self.MERMAID_TEMPLATE.format(title=self._title, cont=self._cont)
+    
+    def display(self):
+        # in jupiter 7.1, we have native markdown support for mermaid
+        from IPython.display import Image, Markdown, display
+        import notebook
+
+        # Mermaid graph definition
+        graph = self.__str__()
+
+        notebook_version = tuple(map(int, notebook.__version__.split('.')))
+        if notebook_version >= (7, 1):
+            # Use native Mermaid rendering in Markdown
+            display(Markdown(graph))
+        else:
+            # Use the Mermaid API via mermaid.ink to render the graph as an image
+
+            # Encode the graph for use in the Mermaid API
+            graphbytes = graph.encode("ascii")
+            base64_bytes = base64.b64encode(graphbytes)
+            base64_string = base64_bytes.decode("ascii")
+
+            # Fetch the rendered image from the Mermaid API
+            image_url = f"https://mermaid.ink/img/{base64_string}"
+            response = requests.get(image_url)
+
+            # Display the image directly in the notebook
+            if response.status_code == 200:
+                display(Image(response.content))
+            else:
+                print(f"Failed to fetch the image. Status code: {response.status_code}")
 
 
 class MermaidHTML:

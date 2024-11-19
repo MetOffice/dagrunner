@@ -11,7 +11,7 @@ from typing import Iterable
 
 import networkx as nx
 
-from . import as_iterable
+from . import as_iterable, in_notebook
 from .visualisation import HTMLTable, MermaidGraph, MermaidHTML
 
 
@@ -310,11 +310,14 @@ def visualise_graph_mermaid(
     if output_filepath:
         MermaidHTML(mermaid, table).save(output_filepath)
     else:
-        import tempfile
+        if in_notebook():
+            mermaid.display()
+        else:
+            import tempfile
 
-        with tempfile.NamedTemporaryFile(suffix=".html", delete=False) as f:
-            MermaidHTML(mermaid, table).save(f.name)
-            webbrowser.open(f.name)
+            with tempfile.NamedTemporaryFile(suffix=".html", delete=False) as f:
+                MermaidHTML(mermaid, table).save(f.name)
+                webbrowser.open(f.name)
 
 
 def visualise_graph(

@@ -19,6 +19,17 @@ from typing import Iterable
 import dagrunner.utils._doc_styles as doc_styles
 
 
+def in_notebook():
+    """Determine whether we are in a Jupyter notebook."""
+    res = False
+    try:
+        from IPython import get_ipython
+        res = "IPKernelApp" in get_ipython().config
+    except (ImportError, AttributeError):
+        pass
+    return res
+
+
 def as_iterable(obj):
     if obj is None:
         return []
