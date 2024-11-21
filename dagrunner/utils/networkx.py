@@ -369,11 +369,12 @@ def visualise_graph(
             )
             node_info_lookup[node] = {
                 property: sorted(
-                    set([getattr(node, property) for node in filtered_nodes])
+                    set([getattr(node, property) for node in filtered_nodes]),
+                    key=lambda x: (x is None, x),
                 )
                 for property in collapse_properties
             }
-            node_info_lookup[node] |= {
+            node_info_lookup[node].update({
                 "node data": set(
                     [
                         str(
@@ -386,7 +387,7 @@ def visualise_graph(
                         for gnode in filtered_nodes
                     ]
                 )
-            }
+            })
         graph = collapsed_graph
     else:
         for node, data in graph.nodes(data=True):
