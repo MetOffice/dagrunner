@@ -126,34 +126,51 @@ div.mermaidTooltip {{
 tr:nth-child(even) {{ background: #CCC }}
 tr:nth-child(odd) {{ background: #FFF }}
 
-.scrollable {{
-    overflow-y: auto;
-    overflow-x: auto;
+html, body {{
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden; /* Prevent page scrollbars */
+    display: flex;
+    flex-direction: column;
 }}
 
-#table1 {{
-    height: 30vh;
+/* 
+td {{
+  white-space: nowrap;
 }}
+*/
 
 #controls {{
-      margin-bottom: 3px;
+    height: 25px;
+    margin-bottom: 3px;
+    margin-top: 3px;
+    flex-shrink: 0; /* Prevent shrinking */
 }}
 
 #mermaid-container {{
-    width: 100%;
     height: 70vh;
-    overflow: hidden;
-    border: 1px solid #ccc;
-    position: relative;
+    min-height: 50px; /* Allow resizing very small */
+    max-height: 90vh; /* Allow resizing very small */
+    overflow: hidden; /* Add vertical scrollbar if needed */
+    resize: vertical; /* Allow resizing */
+    flex-shrink: 0; /* Prevent flex behaviour from overriding resize */
 }}
+
+#table1 {{
+    min-height: 0; /* Allow shrinking to 0 height */
+    flex-grow: 1; /* Take up remaining space */
+    overflow: auto; /* Add vertical scrollbar if needed */
+}}
+
 #diagram-wrapper {{
-    width: 100%;
-    height: 100%;
     cursor: grab;
 }}
+
 #diagram-wrapper:active {{
     cursor: grabbing;
 }}
+
 .mermaid {{
     transform-origin: 0 0; /* Set the origin for scaling */
 }}
@@ -161,8 +178,9 @@ tr:nth-child(odd) {{ background: #FFF }}
 </style>
 
 <div id="controls">
-  <button id="toggle-zoom">Zoom Behavior: Cursor-Relative</button>
+  <button id="toggle-zoom">Zoom Behaviour: Cursor-Relative</button>
   <button id="reset-zoom">Reset to Origin</button>
+  <button id="save-diagram">Save as SVG</button>
 </div>
 <div id="mermaid-container">
 <div id="diagram-wrapper">
@@ -185,6 +203,7 @@ tr:nth-child(odd) {{ background: #FFF }}
   const mermaidDiagram = document.querySelector('.mermaid');
   const toggleButton = document.getElementById('toggle-zoom');
   const resetButton = document.getElementById('reset-zoom');
+  const saveButton = document.getElementById('save-diagram');
   let scale = 1;
   let offsetX = 0;
   let offsetY = 0;
@@ -196,7 +215,7 @@ tr:nth-child(odd) {{ background: #FFF }}
 
   toggleButton.addEventListener('click', () => {{
     zoomRelativeToCursor = !zoomRelativeToCursor;
-    toggleButton.textContent = `Zoom Behavior: ${{zoomRelativeToCursor ? 'Cursor-Relative' : 'Origin-Based'}}`;
+    toggleButton.textContent = `Zoom Behaviour: ${{zoomRelativeToCursor ? 'Cursor-Relative' : 'Origin-Based'}}`;
   }});
 
   resetButton.addEventListener('click', () => {{
@@ -205,6 +224,31 @@ tr:nth-child(odd) {{ background: #FFF }}
       offsetX = 0;
       offsetY = 0;
       updateTransform();
+  }});
+
+  saveButton.addEventListener('click', () => {{
+    // Extract the rendered SVG from the DOM
+    const svgElement = document.querySelector('#mermaid-container svg');
+   if (!svgElement) {{
+      alert('No diagram found to save!');
+      return;
+    }}
+
+   // Serialize the SVG to a string
+    const serializer = new XMLSerializer();
+    const svgContent = serializer.serializeToString(svgElement);
+
+   // Create a Blob from the SVG string
+    const blob = new Blob([svgContent], {{ type: 'image/svg+xml;charset=utf-8' }});
+
+   // Create a link element to trigger the download
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'mermaid-diagram.svg';
+    link.click();
+
+   // Clean up the temporary object URL
+    URL.revokeObjectURL(link.href);
   }});
 
   // Zoom functionality
@@ -254,6 +298,7 @@ tr:nth-child(odd) {{ background: #FFF }}
   wrapper.addEventListener('mouseleave', () => {{
     isDragging = false;
   }});
+
 </script>
 
 <div id="table1" class="scrollable">
