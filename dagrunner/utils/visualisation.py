@@ -131,18 +131,37 @@ tr:nth-child(odd) {{ background: #FFF }}
     overflow-x: auto;
 }}
 
-#mermaid1 {{
-    height: 70vh;
-}}
-
 #table1 {{
     height: 30vh;
 }}
 
+#mermaid-container {{
+    width: 100%;
+    height: 70vh;
+    overflow: hidden;
+    border: 1px solid #ccc;
+    position: relative;
+}}
+#diagram-wrapper {{
+    width: 100%;
+    height: 100%;
+    cursor: grab;
+}}
+#diagram-wrapper:active {{
+    cursor: grabbing;
+}}
+.mermaid {{
+    transform-origin: 0 0; /* Set the origin for scaling */
+}}
+
 </style>
 
-<div id="mermaid1" class="mermaid scrollable">
+<div id="mermaid-container">
+<div id="diagram-wrapper">
+<div class="mermaid">
 {graph}
+</div>
+</div>
 </div>
 
 <script type="module">
@@ -152,6 +171,53 @@ tr:nth-child(odd) {{ background: #FFF }}
         flowchart: {{ useMaxWidth: false, htmlLabels: true, curve: 'basis' }},
         securityLevel:'loose',
         maxTextSize: 99999999  // beyond this "Maximum text size in diagram exceeded"
+  }});
+
+  // Zoom and pan functionality
+  const wrapper = document.getElementById('diagram-wrapper');
+  const mermaidDiagram = document.querySelector('.mermaid');
+  let scale = 1;
+  let originX = 0;
+  let originY = 0;
+
+  // Zoom functionality
+  wrapper.addEventListener('wheel', (event) => {{
+    event.preventDefault();
+    const zoomStep = 0.1;
+    const minScale = 0.5;
+    const maxScale = 4;
+    scale += event.deltaY > 0 ? -zoomStep : zoomStep;
+    scale = Math.min(Math.max(scale, minScale), maxScale);
+    mermaidDiagram.style.transform = `scale(${{scale}}) translate(${{originX}}px, ${{originY}}px)`;
+  }});
+
+  // Pan functionality
+  let isDragging = false;
+  let startX, startY;
+  wrapper.addEventListener('mousedown', (event) => {{
+    isDragging = true;
+    startX = event.clientX;
+    startY = event.clientY;
+  }});
+
+  wrapper.addEventListener('mousemove', (event) => {{
+    if (isDragging) {{
+      const deltaX = (event.clientX - startX) / scale;
+      const deltaY = (event.clientY - startY) / scale;
+      originX += deltaX;
+      originY += deltaY;
+      startX = event.clientX;
+      startY = event.clientY;
+      mermaidDiagram.style.transform = `scale(${{scale}}) translate(${{originX}}px, ${{originY}}px)`;
+    }}
+  }});
+
+  wrapper.addEventListener('mouseup', () => {{
+    isDragging = false;
+  }});
+
+  wrapper.addEventListener('mouseleave', () => {{
+    isDragging = false;
   }});
 </script>
 
