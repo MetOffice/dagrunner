@@ -135,6 +135,10 @@ tr:nth-child(odd) {{ background: #FFF }}
     height: 30vh;
 }}
 
+#controls {{
+      margin-bottom: 3px;
+}}
+
 #mermaid-container {{
     width: 100%;
     height: 70vh;
@@ -156,6 +160,10 @@ tr:nth-child(odd) {{ background: #FFF }}
 
 </style>
 
+<div id="controls">
+  <button id="toggle-zoom">Zoom Behavior: Cursor-Relative</button>
+  <button id="reset-zoom">Reset to Origin</button>
+</div>
 <div id="mermaid-container">
 <div id="diagram-wrapper">
 <div class="mermaid">
@@ -173,22 +181,49 @@ tr:nth-child(odd) {{ background: #FFF }}
         maxTextSize: 99999999  // beyond this "Maximum text size in diagram exceeded"
   }});
 
-  // Zoom and pan functionality
   const wrapper = document.getElementById('diagram-wrapper');
   const mermaidDiagram = document.querySelector('.mermaid');
+  const toggleButton = document.getElementById('toggle-zoom');
+  const resetButton = document.getElementById('reset-zoom');
   let scale = 1;
-  let originX = 0;
-  let originY = 0;
+  let offsetX = 0;
+  let offsetY = 0;
+  let zoomRelativeToCursor = true; // Default behaviour: cursor-relative zoom
+
+  const updateTransform = () => {{
+    mermaidDiagram.style.transform = `translate(${{offsetX}}px, ${{offsetY}}px) scale(${{scale}})`;
+  }};
+
+  toggleButton.addEventListener('click', () => {{
+    zoomRelativeToCursor = !zoomRelativeToCursor;
+    toggleButton.textContent = `Zoom Behavior: ${{zoomRelativeToCursor ? 'Cursor-Relative' : 'Origin-Based'}}`;
+  }});
+
+  resetButton.addEventListener('click', () => {{
+      // Reset to default scale and position
+      scale = 1;
+      offsetX = 0;
+      offsetY = 0;
+      updateTransform();
+  }});
 
   // Zoom functionality
   wrapper.addEventListener('wheel', (event) => {{
     event.preventDefault();
     const zoomStep = 0.1;
-    const minScale = 0.5;
-    const maxScale = 4;
-    scale += event.deltaY > 0 ? -zoomStep : zoomStep;
-    scale = Math.min(Math.max(scale, minScale), maxScale);
-    mermaidDiagram.style.transform = `scale(${{scale}}) translate(${{originX}}px, ${{originY}}px)`;
+    const minScale = 0.2;
+    const maxScale = 2;
+    const newScale = Math.min(Math.max(scale + (event.deltaY > 0 ? -zoomStep : zoomStep), minScale), maxScale);
+    if (zoomRelativeToCursor) {{
+      // Cursor-relative zoom
+      const rect = wrapper.getBoundingClientRect();
+      const cursorX = event.clientX - rect.left; // Cursor position relative to wrapper
+      const cursorY = event.clientY - rect.top;
+      offsetX -= (cursorX - offsetX) * (newScale / scale - 1);
+      offsetY -= (cursorY - offsetY) * (newScale / scale - 1);
+    }}
+    scale = newScale;
+    updateTransform();
   }});
 
   // Pan functionality
@@ -202,13 +237,13 @@ tr:nth-child(odd) {{ background: #FFF }}
 
   wrapper.addEventListener('mousemove', (event) => {{
     if (isDragging) {{
-      const deltaX = (event.clientX - startX) / scale;
-      const deltaY = (event.clientY - startY) / scale;
-      originX += deltaX;
-      originY += deltaY;
+      const deltaX = event.clientX - startX;
+      const deltaY = event.clientY - startY;
+      offsetX += deltaX;
+      offsetY += deltaY;
       startX = event.clientX;
       startY = event.clientY;
-      mermaidDiagram.style.transform = `scale(${{scale}}) translate(${{originX}}px, ${{originY}}px)`;
+      updateTransform();
     }}
   }});
 
