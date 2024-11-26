@@ -155,6 +155,7 @@ td {{
     overflow: hidden; /* Add vertical scrollbar if needed */
     resize: vertical; /* Allow resizing */
     flex-shrink: 0; /* Prevent flex behaviour from overriding resize */
+    border: 1px solid #ccc;
 }}
 
 #table1 {{
