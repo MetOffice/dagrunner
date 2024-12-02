@@ -6,6 +6,8 @@
 import importlib
 import inspect
 import logging
+import os
+from pathlib import Path
 import warnings
 from functools import partial
 
@@ -47,6 +49,8 @@ def plugin_executor(
     verbose=False,
     dry_run=False,
     common_kwargs=None,
+    pickle=False,
+    node_id=None,
     **node_properties,
 ):
     """
@@ -85,6 +89,15 @@ def plugin_executor(
     """  # noqa: E501
     logger.client_attach_socket_handler(**CONFIG["dagrunner_logging"])
 
+    pickle_dir = Path(CONFIG["dagrunner_runtime"]["pickle_dir"])
+    pickle_filepath = pickle_dir / f"{node_id}.pickle"
+
+    if pickle and os.path.exists(pickle_filepath):
+        if verbose:
+            print(f"loading from pickle: {pickle_filepath}")
+        with open(pickle_filepath, "rb") as f:
+            return pickle.load(f)
+
     if common_kwargs is None:
         common_kwargs = {}
     common_kwargs.update({"verbose": verbose, "dry_run": dry_run})
@@ -104,11 +117,15 @@ def plugin_executor(
 
     # filter out IGNORE_EVENT from args.
     args = list(filter(lambda x: x is not IGNORE_EVENT, args))
+    if not args:
+        if verbose:
+            print(f"Retuning 'IGNORE_EVENT' event {call[0]}")
+        return IGNORE_EVENT
 
-    # ignore execution if SKIP_EVENT found in any arg.
+    # ignore execution if any SKIP_EVENT found args.
     if SKIP_EVENT in args:
         if verbose:
-            print(f"Skipping node {call[0]}")
+            print(f"Retuning 'SKIP_EVENT' event {call[0]}")
         return SKIP_EVENT
 
     callable_obj = call[0]
@@ -200,6 +217,13 @@ def plugin_executor(
         except (TypeError, AttributeError):
             # fallback
             print(f"result: {res}")
+
+    if pickle:
+        pickle_dir.mkdir(parents=True, exist_ok=True)
+        if verbose:
+            print(f"saving to pickle: {pickle_filepath}")
+        with open(pickle_filepath, "wb") as f:
+            pickle.dump(res, f)
     return res
 
 
@@ -369,7 +393,7 @@ class ExecuteGraph:
             # of types (tuples, bytes, int, float and str).
             key = tokenize(node_id)
             args = [tokenize(arg) for arg in self._nxgraph.predecessors(node_id)]
-            exec_graph[key] = (apply, executor, args, properties)
+            exec_graph[key] = (apply, executor, args, properties | {"node_id": node_id})
 
         # handle_clobber(graph, workflow, no_clobber, verbose)
         return exec_graph
