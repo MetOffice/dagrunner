@@ -96,11 +96,16 @@ def plugin_executor(
         pickle_dir = Path(tempfile.gettempdir())
     pickle_filepath = pickle_dir / f"{tokenize(node_id)}.pickle"
 
-    if pickle and os.path.exists(pickle_filepath):
-        if verbose:
-            print(f"loading from pickle: {pickle_filepath}")
-        with open(pickle_filepath, "rb") as f:
-            return pickle.load(f)
+    if pickle:
+        if os.path.exists(pickle_filepath):
+            if verbose:
+                print(f"loading pickle for {node_id}")
+            with open(pickle_filepath, "rb") as f:
+                return pickle.load(f)
+        else:
+            if verbose:
+                print(f"pickle not found for {node_id}, ignoring")
+            return IGNORE_EVENT
 
     if common_kwargs is None:
         common_kwargs = {}
