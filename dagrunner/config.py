@@ -47,6 +47,9 @@ class GlobalConfiguration(object, metaclass=Singleton):
         group_by
         label_by
 
+        [dagrunner_runtime]
+        pickle_dir
+
         # Logging
         [dagrunner_logging]
         host
@@ -68,6 +71,7 @@ class GlobalConfiguration(object, metaclass=Singleton):
             "group_by": None,
             "label_by": None,
         },
+        "dagrunner_runtime": {"pickle_dir": None},
     }
 
     def __init__(self):

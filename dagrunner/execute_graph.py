@@ -8,6 +8,7 @@ import inspect
 import logging
 import os
 from pathlib import Path
+import tempfile
 import warnings
 from functools import partial
 
@@ -89,7 +90,10 @@ def plugin_executor(
     """  # noqa: E501
     logger.client_attach_socket_handler(**CONFIG["dagrunner_logging"])
 
-    pickle_dir = Path(CONFIG["dagrunner_runtime"]["pickle_dir"])
+    try:
+        pickle_dir = Path(CONFIG["dagrunner_runtime"]["pickle_dir"])
+    except KeyError:
+        pickle_dir = Path(tempfile.gettempdir())
     pickle_filepath = pickle_dir / f"{node_id}.pickle"
 
     if pickle and os.path.exists(pickle_filepath):
