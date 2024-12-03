@@ -94,7 +94,7 @@ def plugin_executor(
         pickle_dir = Path(CONFIG["dagrunner_runtime"]["pickle_dir"])
     except KeyError:
         pickle_dir = Path(tempfile.gettempdir())
-    pickle_filepath = pickle_dir / f"{node_id}.pickle"
+    pickle_filepath = pickle_dir / f"{tokenize(node_id)}.pickle"
 
     if pickle and os.path.exists(pickle_filepath):
         if verbose:
@@ -106,9 +106,8 @@ def plugin_executor(
         common_kwargs = {}
     common_kwargs.update({"verbose": verbose, "dry_run": dry_run})
 
-    args = [
-        arg for arg in args if arg is not None
-    ]  # support plugins that have no return value
+    # support plugins that have no return value
+    args = list(filter(lambda x: x is not None, args))
     if call is None:
         raise ValueError(
             f"call is a required argument\nnode_properties: {node_properties}"
@@ -119,14 +118,15 @@ def plugin_executor(
 
     call = as_iterable(call)
 
-    # filter out IGNORE_EVENT from args.
-    args = list(filter(lambda x: x is not IGNORE_EVENT, args))
-    if not args:
+    # IGNORE_EVENT event handling
+    if set(args) == {IGNORE_EVENT}:
+        # all args are IGNORE_EVENT, return IGNORE_EVENT (pass along)
         if verbose:
             print(f"Retuning 'IGNORE_EVENT' event {call[0]}")
         return IGNORE_EVENT
+    args = list(filter(lambda x: x is not IGNORE_EVENT, args))
 
-    # ignore execution if any SKIP_EVENT found args.
+    # ignore execution if any SKIP_EVENT in args (pass along).
     if SKIP_EVENT in args:
         if verbose:
             print(f"Retuning 'SKIP_EVENT' event {call[0]}")
@@ -345,7 +345,7 @@ class ExecuteGraph:
           Optional global keyword arguments to apply to all applicable plugins.
         """
         if config_filepath:
-            CONFIG.parse_config_file(config_filepath)
+            CONFIG.parse_configuration(config_filepath)
 
         self._nxgraph = _get_networkx(networkx_graph)
         self._nxgraph_kwargs = networkx_graph_kwargs or {}
