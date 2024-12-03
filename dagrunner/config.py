@@ -94,7 +94,7 @@ class GlobalConfiguration(object, metaclass=Singleton):
             val = val.strip()
             try:
                 val = eval(val)
-            except NameError:
+            except (NameError, SyntaxError):
                 val = str(val)
             return val
 
