@@ -3,12 +3,15 @@
 # This file is part of 'dagrunner' and is released under the BSD 3-Clause license.
 # See LICENSE in the root of the repository for full licensing details.
 import argparse
+import dataclasses
+from dataclasses import dataclass, fields
 import inspect
 import itertools
 import os
 import shutil
 import socket
 import subprocess
+import sys
 import threading
 import time
 import warnings
@@ -17,6 +20,57 @@ from glob import glob
 from typing import Iterable
 
 import dagrunner.utils._doc_styles as doc_styles
+
+
+def subset_equality(obj_a, obj_b):
+    """Subset equality for hashable objects."""
+    # check that both objects are of the same type and hashable
+    if type(obj_a) != type(obj_b) or not hash(obj_a) or not hash(obj_b):
+        raise NotImplementedError(f"Subset equality not implemented for {type(obj_a)}, {type(obj_b)}")
+
+    ret = True
+    if isinstance(obj_a, set):
+        # set
+        ret = obj_a <= obj_b
+    elif hasattr(obj_a, "issubset"):
+        # .issubset method
+        ret = obj_a.issubset(obj_b)
+    elif dataclasses.is_dataclass(obj_a):
+        # dataclass
+        for field in fields(obj_a):
+            if getattr(obj_a, field.name) is not None and getattr(obj_a, field.name) != getattr(obj_b, field.name):
+                ret = False
+        return True
+    elif hasattr(obj_a, "_fields"):
+        # namedtuple
+        for field in obj_a._fields:
+            if getattr(obj_a, field) is not None and getattr(obj_a, field) != getattr(obj_b, field):
+                ret = False
+    else:
+        raise NotImplementedError(f"Subset equality not implemented for {type(obj_a)}")
+    return ret
+
+
+def pairwise(iterable):
+    """
+    Return successive overlapping pairs taken from the input iterable.
+
+    The number of 2-tuples in the output iterator will be one fewer than the
+    number of inputs. It will be empty if the input iterable has fewer than
+    two values.
+
+    pairwise('ABCDEFG') → AB BC CD DE EF FG
+    """
+    if sys.version_info >= (3, 10):
+        warnings.warn(
+            "The 'pairwise' function is deprecated. Use 'itertools.pairwise' instead.",
+            DeprecationWarning,
+        )
+    iterator = iter(iterable)
+    a = next(iterator, None)
+    for b in iterator:
+        yield a, b
+        a = b
 
 
 def in_notebook():

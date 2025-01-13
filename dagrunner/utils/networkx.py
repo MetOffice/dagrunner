@@ -13,6 +13,7 @@ import networkx as nx
 
 from . import as_iterable, in_notebook
 from .visualisation import HTMLTable, MermaidGraph, MermaidHTML
+from . import subset_equality
 
 
 def _update_node_ancestry(
@@ -80,7 +81,7 @@ def get_subset_with_dependencies(
         for pattern in include_subset:
             node_pattern = pattern["node"]
             filtered_nodes = set(
-                filter(lambda node: node_pattern.subset_equality(node), graph.nodes)
+                filter(lambda node: subset_equality(node_pattern, node), graph.nodes)
             )
             _update_node_ancestry(
                 graph,
@@ -113,7 +114,7 @@ def get_subset_with_dependencies(
     for pattern in exclude_subset:
         node_pattern = pattern["node"]
         filtered_nodes = set(
-            filter(lambda node: node_pattern.subset_equality(node), dependencies)
+            filter(lambda node: subset_equality(node_pattern, node), dependencies)
         )
         _update_node_ancestry(
             graph,
@@ -365,7 +366,7 @@ def visualise_graph(
 
         for node in collapsed_graph.nodes:
             filtered_nodes = set(
-                filter(lambda gnode: node.subset_equality(gnode), graph.nodes)
+                filter(lambda gnode: subset_equality(node, gnode), graph.nodes)
             )
             node_info_lookup[node] = {
                 property: sorted(
