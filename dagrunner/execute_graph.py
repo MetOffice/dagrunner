@@ -88,7 +88,7 @@ def plugin_executor(
     Raises:
     - ValueError: If the `call` argument is not provided.
     """  # noqa: E501
-    logger.client_attach_socket_handler()#**CONFIG["dagrunner_logging"])
+    logger.client_attach_socket_handler(CONFIG["dagrunner_logging"])
 
     try:
         pickle_dir = Path(CONFIG["dagrunner_runtime"]["pickle_dir"])

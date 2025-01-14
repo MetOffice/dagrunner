@@ -2,9 +2,20 @@
 #
 # This file is part of 'dagrunner' and is released under the BSD 3-Clause license.
 # See LICENSE in the root of the repository for full licensing details.
+import pytest
+from unittest import mock
+
 import networkx as nx
 
+from dagrunner.config import GlobalConfiguration
 from dagrunner.execute_graph import ExecuteGraph
+
+
+@pytest.fixture(autouse=True)
+def patch_config():
+    """Stop picking up any configuration from the environment."""
+    with mock.patch("dagrunner.execute_graph.CONFIG", new=GlobalConfiguration()):
+        yield
 
 
 def test___init___graph_non_callable():
