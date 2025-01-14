@@ -257,7 +257,7 @@ def visualise_graph_mermaid(
         if node not in node_target_id_map:
             node_target_id_map[node] = node_id
             label = gen_label(node_id, node, label_by)
-            tooltip = pprint.pformat(node_info_lookup[node])
+            tooltip = '\n'.join(map(str.strip, pprint.pformat(node_info_lookup[node]).split('\n')))
 
             subgraphs = [
                 getattr(node, key) for key in group_by if getattr(node, key, None)

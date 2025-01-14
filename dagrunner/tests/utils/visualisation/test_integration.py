@@ -3,6 +3,7 @@
 # This file is part of 'dagrunner' and is released under the BSD 3-Clause license.
 # See LICENSE in the root of the repository for full licensing details.
 from dataclasses import dataclass
+import inspect
 import tempfile
 
 import pytest
@@ -34,6 +35,18 @@ def _gen_node(diag, leadtime):
     )
 
 
+def assert_visual(graph, backend, **kwargs):
+    caller_frame = inspect.stack()[1]
+    func_name = caller_frame.function
+    module = inspect.getmodule(caller_frame.frame)
+    module_name = module.__name__ if module else "<unknown>"
+
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        output_filepath = f"{tmpdirname}/graph.html"
+        visualise_graph(graph, backend="mermaid", output_filepath=output_filepath, **kwargs)
+        assert_text_file_equal(output_filepath, f"{module_name}.{func_name}.html")
+
+
 @pytest.fixture(scope="session")
 def graph(tmp_path_factory):
     ngraph = nx.DiGraph()
@@ -58,36 +71,29 @@ def graph(tmp_path_factory):
 
 
 def test_basic(graph):
-    #dummy_callable = "<function test_basic.<locals>.<lambda> at 0x7f04ce115048>"
-    with tempfile.TemporaryDirectory() as tmpdirname:
-        output_filepath = f"{tmpdirname}/graph.html"
-        visualise_graph(graph, backend="mermaid", output_filepath=output_filepath)
-        assert_text_file_equal(output_filepath, "dag_graph.html")
+    assert_visual(graph, "mermaid")
 
 
 def test_collapse_properties(graph):
-    with tempfile.TemporaryDirectory() as tmpdirname:
-        output_filepath = f"{tmpdirname}/graph.html"
-        visualise_graph(graph, backend="mermaid", output_filepath=output_filepath,
-                        collapse_properties=("leadtime",))
-        assert_text_file_equal(output_filepath, "dag_graph_collapsed_leadtime.html")
+    assert_visual(graph, "mermaid", collapse_properties=("leadtime",))
 
 
 def test_groupby(graph):
-    with tempfile.TemporaryDirectory() as tmpdirname:
-        output_filepath = f"{tmpdirname}/graph.html"
-        visualise_graph(graph, backend="mermaid", output_filepath=output_filepath,
-                        group_by="diagnostic")
-        assert_text_file_equal(output_filepath, "dag_graph_groupby_diagnostic.html")
+    assert_visual(graph, "mermaid", group_by="diagnostic")
 
-# def test_label_interpolate():
-#     # Ensure we support labels containing 'interpolate'.  For some reason this causes
-#     # an error in mermaid.  Putting double quotes around this fixes the issue.
-#     dummy_callable = "<function test_basic.<locals>.<lambda> at 0x7f04ce115048>"
-#     graph = {
-#         "target1": [dummy_callable, ObjectAsStr("target1"), "improver", "interpolate"],
-#     }
-#     with tempfile.TemporaryDirectory() as tmpdirname:
-#         output_filepath = f"{tmpdirname}/graph.html"
-#         visualise_graph(graph, output_filepath)
-#         assert_text_file_equal(output_filepath, "dag_graph_special_label.html")
+
+def test_special_characters_words(graph):
+    # Ensure we support labels containing 'interpolate'.  For some reason this causes
+    # an error in mermaid.  Putting double quotes around this fixes the issue.
+    #dummy_callable = 
+    for leadtime in [1, 2]:
+        node_a, node_a_data = _gen_node("a", leadtime)
+        # This is the special word so must be quoted within the html.
+        node_a_data["testparam"] = "interpolate"
+        node_a_data["call"] = list(node_a_data["call"])
+        # Common characters that need to be escaped (non-exhaustive - just typical ones).
+        node_a_data["call"][0] = "<function test_basic.<locals>.<lambda> at 0x7f04ce115048>"
+        node_a_data["call"] = tuple(node_a_data["call"])
+        graph.add_node(node_a, **node_a_data)
+
+    assert_visual(graph, "mermaid")

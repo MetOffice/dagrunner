@@ -45,7 +45,9 @@ class HTMLTable:
 class MermaidGraph:
     MERMAID_TEMPLATE = "---\ntitle: {title}\n---\ngraph TD\n{cont}"
     CARRIAGE_RETURN = "<br>"
-    WHITESPACE = "#nbsp;"
+    WHITESPACE = "#nbsp;"  # UTF-8
+    GTOP = "#gt;"
+    LTOP = "#lt;"
 
     def __init__(self, title=None):
         self._cont = ""
@@ -60,8 +62,10 @@ class MermaidGraph:
         self._cont += f'\n{nodeid}(["{label}"])'
         if tooltip:
             # https://mermaid-js.github.io/mermaid/#/flowchart?id=interaction
-            tooltip = tooltip.replace("\n", self.CARRIAGE_RETURN).replace('"', "")
             tooltip = tooltip.replace("  ", self.WHITESPACE * 2)
+            tooltip = tooltip.replace("<", self.LTOP)
+            tooltip = tooltip.replace(">", self.GTOP)
+            tooltip = tooltip.replace("\n", self.CARRIAGE_RETURN).replace('"', "")
             self._cont += f'\nclick {nodeid} callback "{tooltip}"'
         if url:
             self._cont += f'\nclick {nodeid} "{url}"'

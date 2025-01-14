@@ -21,6 +21,12 @@ def mock_config():
     "config, target, exception_class, exception_message",
     [
         (
+            "",
+            {"dagrunner_logging": {}},
+            None,
+            None,
+        ),  # empty config
+        (
             "[dagrunner_logging]\nhost=0",
             {"dagrunner_logging": {"host": 0}},
             None,
@@ -67,6 +73,7 @@ def mock_config():
 def test_parse_configuration(
     mock_config, config, target, exception_class, exception_message
 ):
+    empty_config = mock_config._config.copy()
     patch = mock.patch("dagrunner.config.open", mock.mock_open(read_data=config))
     patch2 = mock.patch(
         "os.path.expandvars", side_effect=lambda x: "0" if x == "$DAGVAR" else x
@@ -77,7 +84,7 @@ def test_parse_configuration(
                 mock_config.parse_configuration(mock.sentinel.fnme)
         else:
             mock_config.parse_configuration(mock.sentinel.fnme)
-            assert mock_config._config == target
+            assert mock_config._config == empty_config | target
 
 
 def test_parse_configuration_override(mock_config):

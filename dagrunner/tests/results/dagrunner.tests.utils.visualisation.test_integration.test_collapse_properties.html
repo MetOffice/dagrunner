@@ -1,0 +1,286 @@
+
+<!DOCTYPE html>
+<html>
+<body>
+
+<style>
+div.mermaidTooltip {
+    position: absolute;
+    text-align: left;
+    max-width: 700px;
+    padding: 2px;
+    font-family: "trebuchet ms", verdana, arial, sans-serif;
+    font-size: 12px;
+    background: hsl(80, 100%, 96.2745098039%);
+    border: 1px solid #aaaa33;
+    border-radius: 2px;
+    pointer-events: none;
+    z-index: 100;
+}
+
+tr:nth-child(even) { background: #CCC }
+tr:nth-child(odd) { background: #FFF }
+
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden; /* Prevent page scrollbars */
+    display: flex;
+    flex-direction: column;
+}
+
+/* 
+td {
+  white-space: nowrap;
+}
+*/
+
+#controls {
+    height: 25px;
+    margin-bottom: 3px;
+    margin-top: 3px;
+    flex-shrink: 0; /* Prevent shrinking */
+}
+
+#mermaid-container {
+    height: 70vh;
+    min-height: 50px; /* Allow resizing very small */
+    max-height: 90vh; /* Allow resizing very small */
+    overflow: hidden; /* Add vertical scrollbar if needed */
+    resize: vertical; /* Allow resizing */
+    flex-shrink: 0; /* Prevent flex behaviour from overriding resize */
+    border: 1px solid #ccc;
+}
+
+#table1 {
+    min-height: 0; /* Allow shrinking to 0 height */
+    flex-grow: 1; /* Take up remaining space */
+    overflow: auto; /* Add vertical scrollbar if needed */
+}
+
+#diagram-wrapper {
+    cursor: grab;
+}
+
+#diagram-wrapper:active {
+    cursor: grabbing;
+}
+
+.mermaid {
+    transform-origin: 0 0; /* Set the origin for scaling */
+}
+
+</style>
+
+<div id="controls">
+  <button id="toggle-zoom">Zoom Behaviour: Cursor-Relative</button>
+  <button id="reset-zoom">Reset to Origin</button>
+  <button id="save-diagram">Save as SVG</button>
+</div>
+<div id="mermaid-container">
+<div id="diagram-wrapper">
+<div class="mermaid">
+---
+title: 
+---
+graph TD
+
+0(["0<br>D:a_L:None"])
+click 0 callback "{'leadtime': [1, 2],<br>'node data': {{'call': ('module.path.a', {'init_arg': 'ia_a'}, {'call_arg': <br>'ca_a'}), 'prop': 'prop_a', 'diagnostic': 'a'},<br>{'call': ('module.path.b', {'init_arg': 'ia_b'}, {'call_arg': <br>'ca_b'}), 'prop': 'prop_b', 'diagnostic': 'b'},<br>{'call': ('module.path.c', {'init_arg': 'ia_c'}, {'call_arg': <br>'ca_c'}), 'prop': 'prop_c', 'diagnostic': 'c'},<br>{'call': ('module.path.d', {'init_arg': 'ia_d'}, {'call_arg': <br>'ca_d'}), 'prop': 'prop_d', 'diagnostic': 'd'},<br>{'call': ('module.path.e', {'init_arg': 'ia_e'}, {'call_arg': <br>'ca_e'}), 'prop': 'prop_e', 'diagnostic': 'e'}}}"
+1(["1<br>D:b_L:None"])
+click 1 callback "{'leadtime': [1, 2],<br>'node data': {{'call': ('module.path.a', {'init_arg': 'ia_a'}, {'call_arg': <br>'ca_a'}), 'prop': 'prop_a', 'diagnostic': 'a'},<br>{'call': ('module.path.b', {'init_arg': 'ia_b'}, {'call_arg': <br>'ca_b'}), 'prop': 'prop_b', 'diagnostic': 'b'},<br>{'call': ('module.path.c', {'init_arg': 'ia_c'}, {'call_arg': <br>'ca_c'}), 'prop': 'prop_c', 'diagnostic': 'c'},<br>{'call': ('module.path.d', {'init_arg': 'ia_d'}, {'call_arg': <br>'ca_d'}), 'prop': 'prop_d', 'diagnostic': 'd'},<br>{'call': ('module.path.e', {'init_arg': 'ia_e'}, {'call_arg': <br>'ca_e'}), 'prop': 'prop_e', 'diagnostic': 'e'}}}"
+0 --> 1
+2(["2<br>D:c_L:None"])
+click 2 callback "{'leadtime': [1, 2],<br>'node data': {{'call': ('module.path.a', {'init_arg': 'ia_a'}, {'call_arg': <br>'ca_a'}), 'prop': 'prop_a', 'diagnostic': 'a'},<br>{'call': ('module.path.b', {'init_arg': 'ia_b'}, {'call_arg': <br>'ca_b'}), 'prop': 'prop_b', 'diagnostic': 'b'},<br>{'call': ('module.path.c', {'init_arg': 'ia_c'}, {'call_arg': <br>'ca_c'}), 'prop': 'prop_c', 'diagnostic': 'c'},<br>{'call': ('module.path.d', {'init_arg': 'ia_d'}, {'call_arg': <br>'ca_d'}), 'prop': 'prop_d', 'diagnostic': 'd'},<br>{'call': ('module.path.e', {'init_arg': 'ia_e'}, {'call_arg': <br>'ca_e'}), 'prop': 'prop_e', 'diagnostic': 'e'}}}"
+3(["3<br>D:d_L:None"])
+click 3 callback "{'leadtime': [1, 2],<br>'node data': {{'call': ('module.path.a', {'init_arg': 'ia_a'}, {'call_arg': <br>'ca_a'}), 'prop': 'prop_a', 'diagnostic': 'a'},<br>{'call': ('module.path.b', {'init_arg': 'ia_b'}, {'call_arg': <br>'ca_b'}), 'prop': 'prop_b', 'diagnostic': 'b'},<br>{'call': ('module.path.c', {'init_arg': 'ia_c'}, {'call_arg': <br>'ca_c'}), 'prop': 'prop_c', 'diagnostic': 'c'},<br>{'call': ('module.path.d', {'init_arg': 'ia_d'}, {'call_arg': <br>'ca_d'}), 'prop': 'prop_d', 'diagnostic': 'd'},<br>{'call': ('module.path.e', {'init_arg': 'ia_e'}, {'call_arg': <br>'ca_e'}), 'prop': 'prop_e', 'diagnostic': 'e'}}}"
+2 --> 3
+4(["4<br>D:e_L:None"])
+click 4 callback "{'leadtime': [1, 2],<br>'node data': {{'call': ('module.path.a', {'init_arg': 'ia_a'}, {'call_arg': <br>'ca_a'}), 'prop': 'prop_a', 'diagnostic': 'a'},<br>{'call': ('module.path.b', {'init_arg': 'ia_b'}, {'call_arg': <br>'ca_b'}), 'prop': 'prop_b', 'diagnostic': 'b'},<br>{'call': ('module.path.c', {'init_arg': 'ia_c'}, {'call_arg': <br>'ca_c'}), 'prop': 'prop_c', 'diagnostic': 'c'},<br>{'call': ('module.path.d', {'init_arg': 'ia_d'}, {'call_arg': <br>'ca_d'}), 'prop': 'prop_d', 'diagnostic': 'd'},<br>{'call': ('module.path.e', {'init_arg': 'ia_e'}, {'call_arg': <br>'ca_e'}), 'prop': 'prop_e', 'diagnostic': 'e'}}}"
+1 --> 4
+3 --> 4
+</div>
+</div>
+</div>
+
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@9/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({
+        startOnLoad: true,
+        flowchart: { useMaxWidth: false, htmlLabels: true, curve: 'basis' },
+        securityLevel:'loose',
+        maxTextSize: 99999999  // beyond this "Maximum text size in diagram exceeded"
+  });
+
+  const wrapper = document.getElementById('diagram-wrapper');
+  const mermaidDiagram = document.querySelector('.mermaid');
+  const toggleButton = document.getElementById('toggle-zoom');
+  const resetButton = document.getElementById('reset-zoom');
+  const saveButton = document.getElementById('save-diagram');
+  let scale = 1;
+  let offsetX = 0;
+  let offsetY = 0;
+  let zoomRelativeToCursor = true; // Default behaviour: cursor-relative zoom
+
+  const updateTransform = () => {
+    mermaidDiagram.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
+  };
+
+  toggleButton.addEventListener('click', () => {
+    zoomRelativeToCursor = !zoomRelativeToCursor;
+    toggleButton.textContent = `Zoom Behaviour: ${zoomRelativeToCursor ? 'Cursor-Relative' : 'Origin-Based'}`;
+  });
+
+  resetButton.addEventListener('click', () => {
+      // Reset to default scale and position
+      scale = 1;
+      offsetX = 0;
+      offsetY = 0;
+      updateTransform();
+  });
+
+  saveButton.addEventListener('click', () => {
+    // Extract the rendered SVG from the DOM
+    const svgElement = document.querySelector('#mermaid-container svg');
+   if (!svgElement) {
+      alert('No diagram found to save!');
+      return;
+    }
+
+   // Serialize the SVG to a string
+    const serializer = new XMLSerializer();
+    const svgContent = serializer.serializeToString(svgElement);
+
+   // Create a Blob from the SVG string
+    const blob = new Blob([svgContent], { type: 'image/svg+xml;charset=utf-8' });
+
+   // Create a link element to trigger the download
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'mermaid-diagram.svg';
+    link.click();
+
+   // Clean up the temporary object URL
+    URL.revokeObjectURL(link.href);
+  });
+
+  // Zoom functionality
+  wrapper.addEventListener('wheel', (event) => {
+    event.preventDefault();
+    const zoomStep = 0.1;
+    const minScale = 0.2;
+    const maxScale = 2;
+    const newScale = Math.min(Math.max(scale + (event.deltaY > 0 ? -zoomStep : zoomStep), minScale), maxScale);
+    if (zoomRelativeToCursor) {
+      // Cursor-relative zoom
+      const rect = wrapper.getBoundingClientRect();
+      const cursorX = event.clientX - rect.left; // Cursor position relative to wrapper
+      const cursorY = event.clientY - rect.top;
+      offsetX -= (cursorX - offsetX) * (newScale / scale - 1);
+      offsetY -= (cursorY - offsetY) * (newScale / scale - 1);
+    }
+    scale = newScale;
+    updateTransform();
+  });
+
+  // Pan functionality
+  let isDragging = false;
+  let startX, startY;
+  wrapper.addEventListener('mousedown', (event) => {
+    isDragging = true;
+    startX = event.clientX;
+    startY = event.clientY;
+  });
+
+  wrapper.addEventListener('mousemove', (event) => {
+    if (isDragging) {
+      const deltaX = event.clientX - startX;
+      const deltaY = event.clientY - startY;
+      offsetX += deltaX;
+      offsetY += deltaY;
+      startX = event.clientX;
+      startY = event.clientY;
+      updateTransform();
+    }
+  });
+
+  wrapper.addEventListener('mouseup', () => {
+    isDragging = false;
+  });
+
+  wrapper.addEventListener('mouseleave', () => {
+    isDragging = false;
+  });
+
+</script>
+
+<div id="table1" class="scrollable">
+<table>
+<tr>
+<th>id</th>
+<th>node</th>
+<th>info</th>
+</tr>
+
+<tr><td>0</td><td>D:a_L:None</td><td>{'leadtime': [1, 2],
+'node data': {"{'call': ('module.path.a', {'init_arg': 'ia_a'}, {'call_arg': "
+"'ca_a'}), 'prop': 'prop_a', 'diagnostic': 'a'}",
+"{'call': ('module.path.b', {'init_arg': 'ia_b'}, {'call_arg': "
+"'ca_b'}), 'prop': 'prop_b', 'diagnostic': 'b'}",
+"{'call': ('module.path.c', {'init_arg': 'ia_c'}, {'call_arg': "
+"'ca_c'}), 'prop': 'prop_c', 'diagnostic': 'c'}",
+"{'call': ('module.path.d', {'init_arg': 'ia_d'}, {'call_arg': "
+"'ca_d'}), 'prop': 'prop_d', 'diagnostic': 'd'}",
+"{'call': ('module.path.e', {'init_arg': 'ia_e'}, {'call_arg': "
+"'ca_e'}), 'prop': 'prop_e', 'diagnostic': 'e'}"}}</td></tr>
+<tr><td>1</td><td>D:b_L:None</td><td>{'leadtime': [1, 2],
+'node data': {"{'call': ('module.path.a', {'init_arg': 'ia_a'}, {'call_arg': "
+"'ca_a'}), 'prop': 'prop_a', 'diagnostic': 'a'}",
+"{'call': ('module.path.b', {'init_arg': 'ia_b'}, {'call_arg': "
+"'ca_b'}), 'prop': 'prop_b', 'diagnostic': 'b'}",
+"{'call': ('module.path.c', {'init_arg': 'ia_c'}, {'call_arg': "
+"'ca_c'}), 'prop': 'prop_c', 'diagnostic': 'c'}",
+"{'call': ('module.path.d', {'init_arg': 'ia_d'}, {'call_arg': "
+"'ca_d'}), 'prop': 'prop_d', 'diagnostic': 'd'}",
+"{'call': ('module.path.e', {'init_arg': 'ia_e'}, {'call_arg': "
+"'ca_e'}), 'prop': 'prop_e', 'diagnostic': 'e'}"}}</td></tr>
+<tr><td>2</td><td>D:c_L:None</td><td>{'leadtime': [1, 2],
+'node data': {"{'call': ('module.path.a', {'init_arg': 'ia_a'}, {'call_arg': "
+"'ca_a'}), 'prop': 'prop_a', 'diagnostic': 'a'}",
+"{'call': ('module.path.b', {'init_arg': 'ia_b'}, {'call_arg': "
+"'ca_b'}), 'prop': 'prop_b', 'diagnostic': 'b'}",
+"{'call': ('module.path.c', {'init_arg': 'ia_c'}, {'call_arg': "
+"'ca_c'}), 'prop': 'prop_c', 'diagnostic': 'c'}",
+"{'call': ('module.path.d', {'init_arg': 'ia_d'}, {'call_arg': "
+"'ca_d'}), 'prop': 'prop_d', 'diagnostic': 'd'}",
+"{'call': ('module.path.e', {'init_arg': 'ia_e'}, {'call_arg': "
+"'ca_e'}), 'prop': 'prop_e', 'diagnostic': 'e'}"}}</td></tr>
+<tr><td>3</td><td>D:d_L:None</td><td>{'leadtime': [1, 2],
+'node data': {"{'call': ('module.path.a', {'init_arg': 'ia_a'}, {'call_arg': "
+"'ca_a'}), 'prop': 'prop_a', 'diagnostic': 'a'}",
+"{'call': ('module.path.b', {'init_arg': 'ia_b'}, {'call_arg': "
+"'ca_b'}), 'prop': 'prop_b', 'diagnostic': 'b'}",
+"{'call': ('module.path.c', {'init_arg': 'ia_c'}, {'call_arg': "
+"'ca_c'}), 'prop': 'prop_c', 'diagnostic': 'c'}",
+"{'call': ('module.path.d', {'init_arg': 'ia_d'}, {'call_arg': "
+"'ca_d'}), 'prop': 'prop_d', 'diagnostic': 'd'}",
+"{'call': ('module.path.e', {'init_arg': 'ia_e'}, {'call_arg': "
+"'ca_e'}), 'prop': 'prop_e', 'diagnostic': 'e'}"}}</td></tr>
+<tr><td>4</td><td>D:e_L:None</td><td>{'leadtime': [1, 2],
+'node data': {"{'call': ('module.path.a', {'init_arg': 'ia_a'}, {'call_arg': "
+"'ca_a'}), 'prop': 'prop_a', 'diagnostic': 'a'}",
+"{'call': ('module.path.b', {'init_arg': 'ia_b'}, {'call_arg': "
+"'ca_b'}), 'prop': 'prop_b', 'diagnostic': 'b'}",
+"{'call': ('module.path.c', {'init_arg': 'ia_c'}, {'call_arg': "
+"'ca_c'}), 'prop': 'prop_c', 'diagnostic': 'c'}",
+"{'call': ('module.path.d', {'init_arg': 'ia_d'}, {'call_arg': "
+"'ca_d'}), 'prop': 'prop_d', 'diagnostic': 'd'}",
+"{'call': ('module.path.e', {'init_arg': 'ia_e'}, {'call_arg': "
+"'ca_e'}), 'prop': 'prop_e', 'diagnostic': 'e'}"}}</td></tr>
+</table>
+
+</div>
+
+</body>
+</html>
