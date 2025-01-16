@@ -8,6 +8,7 @@ import operator
 import pprint
 import webbrowser
 from typing import Iterable
+import warnings
 
 import networkx as nx
 
@@ -136,6 +137,9 @@ def visualise_graph_matplotlib(
     """
     Visualise a networkx graph using matplotlib.
 
+    Note that this backend is provided as-is and not intended for production use.
+    'mermaid' graph is the recommended approach to graph visualisation.
+
     Args:
     - `graph`: The graph to visualise.
     - `node_info_lookup`: A dictionary mapping nodes to their information.
@@ -144,6 +148,7 @@ def visualise_graph_matplotlib(
     """
     import matplotlib.pyplot as plt
     from matplotlib.backend_bases import MouseButton
+    warnings.warn("This function is deprecated. Use 'mermaid' backend instead.", DeprecationWarning)
 
     pos = nx.spring_layout(graph, seed=42, k=8 / math.sqrt(graph.order()))
 

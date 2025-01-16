@@ -97,3 +97,11 @@ def test_special_characters_words(graph):
         graph.add_node(node_a, **node_a_data)
 
     assert_visual(graph, "mermaid")
+
+
+def test_basic_matplotlib_backend(graph):
+    # check that deprecation warning is issued
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        output_filepath = f"{tmpdirname}/graph.png"
+        with pytest.warns(DeprecationWarning):
+            visualise_graph(graph, backend="matplotlib", output_filepath=output_filepath)
