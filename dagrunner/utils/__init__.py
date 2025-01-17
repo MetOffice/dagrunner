@@ -23,28 +23,28 @@ import dagrunner.utils._doc_styles as doc_styles
 
 
 def subset_equality(obj_a, obj_b):
-    """Subset equality for hashable objects."""
+    """
+    Return whether obj_a is a subset of obj_b.
+
+    Supporting namedtuple, dataclasses and iterables.  Note that a 'None' value in obj_a
+    is considered a wildcard.
+    """
     # check that both objects are of the same type and hashable
-    if type(obj_a) is not type(obj_b) or not hash(obj_a) or not hash(obj_b):
+    if type(obj_a) is not type(obj_b):
         raise NotImplementedError(
-            f"Subset equality not implemented for {type(obj_a)}, {type(obj_b)}"
+            "Subset equality not implemented for different types "
+            f"{type(obj_a)}, {type(obj_b)}"
         )
 
     ret = True
-    if isinstance(obj_a, set):
-        # set
-        ret = obj_a <= obj_b
-    elif hasattr(obj_a, "issubset"):
-        # .issubset method
-        ret = obj_a.issubset(obj_b)
-    elif dataclasses.is_dataclass(obj_a):
+    if dataclasses.is_dataclass(obj_a):
         # dataclass
         for field in fields(obj_a):
             if getattr(obj_a, field.name) is not None and getattr(
                 obj_a, field.name
             ) != getattr(obj_b, field.name):
                 ret = False
-        return True
+                break
     elif hasattr(obj_a, "_fields"):
         # namedtuple
         for field in obj_a._fields:
@@ -52,8 +52,14 @@ def subset_equality(obj_a, obj_b):
                 obj_b, field
             ):
                 ret = False
+                break
     else:
-        raise NotImplementedError(f"Subset equality not implemented for {type(obj_a)}")
+        obj_a = as_iterable(obj_a)
+        obj_b = as_iterable(obj_b)
+        for a, b in itertools.zip_longest(obj_a, obj_b, fillvalue=None):
+            if a is not None and a != b:
+                ret = False
+                break
     return ret
 
 
@@ -534,7 +540,8 @@ def data_polling(
             if host:
                 # bash equivalent to python glob (glob on remote host)
                 expanded_paths = subprocess.run(
-                    f"ssh {host} 'for file in {' '.join(paths)}; do if "
+                    "ssh -o BatchMode=yes -o StrictHostKeyChecking=no "
+                    f"{host} 'for file in {' '.join(paths)}; do if "
                     '[ -e "$file" ]; then echo "$file"; fi; done\'',
                     shell=True,
                     check=True,
@@ -610,7 +617,18 @@ class _RemotePathHandler:
             # check if file exists on remote host
             exists = (
                 subprocess.run(
-                    ["ssh", self._host, "test", "-e", self._lpath], check=False
+                    [
+                        "ssh",
+                        "-o",
+                        "BatchMode=yes",
+                        "-o",
+                        "StrictHostKeyChecking=no",
+                        self._host,
+                        "test",
+                        "-e",
+                        self._lpath,
+                    ],
+                    check=False,
                 ).returncode
                 == 0
             )
@@ -622,7 +640,18 @@ class _RemotePathHandler:
         """An identity derived from modification time and file size in bytes"""
         if self._host:
             mtime = subprocess.run(
-                ["ssh", self._host, "stat", "-c", "%Y_%s", self._lpath],
+                [
+                    "ssh",
+                    "-o",
+                    "BatchMode=yes",
+                    "-o",
+                    "StrictHostKeyChecking=no",
+                    self._host,
+                    "stat",
+                    "-c",
+                    "%Y_%s",
+                    self._lpath,
+                ],
                 check=True,
                 text=True,
                 capture_output=True,

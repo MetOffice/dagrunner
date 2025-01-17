@@ -91,20 +91,6 @@ def get_subset_with_dependencies(
                 descendants=pattern.get("descendants", False),
                 ancestors=pattern.get("ancestors", True),
             )
-        # Find non-zero offset nodes: these aren't explicitly connected their zero
-        # offset versions so need to be explicitly included.
-        offset_nodes = set(
-            [
-                dataclasses.replace(node, cycle_offset=None)
-                for node in filter(
-                    lambda node: node.cycle_offset is not None, dependencies
-                )
-            ]
-        )
-        offset_nodes = set(filter(lambda node: node in graph.nodes, offset_nodes))
-        _update_node_ancestry(
-            graph, offset_nodes, dependencies, descendants=False, ancestors=True
-        )
     else:
         # include all nodes
         dependencies = set(graph.nodes)
