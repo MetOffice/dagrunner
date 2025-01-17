@@ -4,7 +4,6 @@
 # See LICENSE in the root of the repository for full licensing details.
 import argparse
 import dataclasses
-from dataclasses import dataclass, fields
 import inspect
 import itertools
 import os
@@ -16,6 +15,7 @@ import threading
 import time
 import warnings
 from abc import ABC, abstractmethod
+from dataclasses import fields
 from glob import glob
 from typing import Iterable
 
@@ -25,8 +25,10 @@ import dagrunner.utils._doc_styles as doc_styles
 def subset_equality(obj_a, obj_b):
     """Subset equality for hashable objects."""
     # check that both objects are of the same type and hashable
-    if type(obj_a) != type(obj_b) or not hash(obj_a) or not hash(obj_b):
-        raise NotImplementedError(f"Subset equality not implemented for {type(obj_a)}, {type(obj_b)}")
+    if type(obj_a) is not type(obj_b) or not hash(obj_a) or not hash(obj_b):
+        raise NotImplementedError(
+            f"Subset equality not implemented for {type(obj_a)}, {type(obj_b)}"
+        )
 
     ret = True
     if isinstance(obj_a, set):
@@ -38,13 +40,17 @@ def subset_equality(obj_a, obj_b):
     elif dataclasses.is_dataclass(obj_a):
         # dataclass
         for field in fields(obj_a):
-            if getattr(obj_a, field.name) is not None and getattr(obj_a, field.name) != getattr(obj_b, field.name):
+            if getattr(obj_a, field.name) is not None and getattr(
+                obj_a, field.name
+            ) != getattr(obj_b, field.name):
                 ret = False
         return True
     elif hasattr(obj_a, "_fields"):
         # namedtuple
         for field in obj_a._fields:
-            if getattr(obj_a, field) is not None and getattr(obj_a, field) != getattr(obj_b, field):
+            if getattr(obj_a, field) is not None and getattr(obj_a, field) != getattr(
+                obj_b, field
+            ):
                 ret = False
     else:
         raise NotImplementedError(f"Subset equality not implemented for {type(obj_a)}")
@@ -78,6 +84,7 @@ def in_notebook():
     res = False
     try:
         from IPython import get_ipython
+
         res = "IPKernelApp" in get_ipython().config
     except (ImportError, AttributeError):
         pass
@@ -527,7 +534,7 @@ def data_polling(
             if host:
                 # bash equivalent to python glob (glob on remote host)
                 expanded_paths = subprocess.run(
-                    f'ssh {host} \'for file in {" ".join(paths)}; do if '
+                    f"ssh {host} 'for file in {' '.join(paths)}; do if "
                     '[ -e "$file" ]; then echo "$file"; fi; done\'',
                     shell=True,
                     check=True,

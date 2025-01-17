@@ -6,15 +6,14 @@ import dataclasses
 import math
 import operator
 import pprint
+import warnings
 import webbrowser
 from typing import Iterable
-import warnings
 
 import networkx as nx
 
-from . import as_iterable, in_notebook
+from . import as_iterable, in_notebook, subset_equality
 from .visualisation import HTMLTable, MermaidGraph, MermaidHTML
-from . import subset_equality
 
 
 def _update_node_ancestry(
@@ -148,7 +147,11 @@ def visualise_graph_matplotlib(
     """
     import matplotlib.pyplot as plt
     from matplotlib.backend_bases import MouseButton
-    warnings.warn("This function is deprecated. Use 'mermaid' backend instead.", DeprecationWarning)
+
+    warnings.warn(
+        "This function is deprecated. Use 'mermaid' backend instead.",
+        DeprecationWarning,
+    )
 
     pos = nx.spring_layout(graph, seed=42, k=8 / math.sqrt(graph.order()))
 
@@ -262,7 +265,9 @@ def visualise_graph_mermaid(
         if node not in node_target_id_map:
             node_target_id_map[node] = node_id
             label = gen_label(node_id, node, label_by)
-            tooltip = '\n'.join(map(str.strip, pprint.pformat(node_info_lookup[node]).split('\n')))
+            tooltip = "\n".join(
+                map(str.strip, pprint.pformat(node_info_lookup[node]).split("\n"))
+            )
 
             subgraphs = [
                 getattr(node, key) for key in group_by if getattr(node, key, None)
@@ -380,20 +385,24 @@ def visualise_graph(
                 )
                 for property in collapse_properties
             }
-            node_info_lookup[node].update({
-                "node data": set(
-                    [
-                        str(
-                            {
-                                key: val
-                                for key, val in graph.nodes(data=True)[gnode].items()
-                                if key not in collapse_properties
-                            }
-                        )
-                        for gnode in filtered_nodes
-                    ]
-                )
-            })
+            node_info_lookup[node].update(
+                {
+                    "node data": set(
+                        [
+                            str(
+                                {
+                                    key: val
+                                    for key, val in graph.nodes(data=True)[
+                                        gnode
+                                    ].items()
+                                    if key not in collapse_properties
+                                }
+                            )
+                            for gnode in filtered_nodes
+                        ]
+                    )
+                }
+            )
         graph = collapsed_graph
     else:
         for node, data in graph.nodes(data=True):

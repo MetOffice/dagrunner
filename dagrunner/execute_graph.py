@@ -6,11 +6,6 @@
 import importlib
 import inspect
 import logging
-import os
-from pathlib import Path
-import pickle
-import tempfile
-import warnings
 from functools import partial
 
 import dask
@@ -193,9 +188,11 @@ def plugin_executor(
         print(msg)
     res = None
     if not dry_run:
-        with TimeIt() as timer, dask.config.set(
-            scheduler="single-threaded"
-        ), CaptureProcMemory() as mem:
+        with (
+            TimeIt() as timer,
+            dask.config.set(scheduler="single-threaded"),
+            CaptureProcMemory() as mem,
+        ):
             try:
                 res = callable_obj(*args, **callable_kwargs)
             except Exception as err:
@@ -384,9 +381,12 @@ class ExecuteGraph:
         visualise_graph(self._nxgraph, **kwargs)
 
     def __call__(self):
-        with TimeIt(verbose=True), self._scheduler(
-            self._num_workers, profiler_filepath=self._profiler_output
-        ) as scheduler:
+        with (
+            TimeIt(verbose=True),
+            self._scheduler(
+                self._num_workers, profiler_filepath=self._profiler_output
+            ) as scheduler,
+        ):
             res = scheduler.run(self._exec_graph)
         return res
 

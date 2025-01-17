@@ -2,15 +2,14 @@
 #
 # This file is part of 'dagrunner' and is released under the BSD 3-Clause license.
 # See LICENSE in the root of the repository for full licensing details.
-from dataclasses import dataclass
 import inspect
 import tempfile
+from dataclasses import dataclass
 
-import pytest
 import networkx as nx
+import pytest
 
 from dagrunner.tests import assert_text_file_equal
-from dagrunner.utils import ObjectAsStr
 from dagrunner.utils.networkx import visualise_graph
 
 
@@ -26,12 +25,16 @@ class Node:
 def _gen_node(diag, leadtime):
     return (
         Node(diagnostic=diag, leadtime=leadtime),
-        {"call":(f"module.path.{diag}",
-                 {"init_arg": f"ia_{diag}"},
-                 {"call_arg": f"ca_{diag}"}),
-         "prop": f"prop_{diag}",
-         "leadtime": leadtime,
-         "diagnostic": diag}
+        {
+            "call": (
+                f"module.path.{diag}",
+                {"init_arg": f"ia_{diag}"},
+                {"call_arg": f"ca_{diag}"},
+            ),
+            "prop": f"prop_{diag}",
+            "leadtime": leadtime,
+            "diagnostic": diag,
+        },
     )
 
 
@@ -43,7 +46,9 @@ def assert_visual(graph, backend, **kwargs):
 
     with tempfile.TemporaryDirectory() as tmpdirname:
         output_filepath = f"{tmpdirname}/graph.html"
-        visualise_graph(graph, backend="mermaid", output_filepath=output_filepath, **kwargs)
+        visualise_graph(
+            graph, backend="mermaid", output_filepath=output_filepath, **kwargs
+        )
         assert_text_file_equal(output_filepath, f"{module_name}.{func_name}.html")
 
 
@@ -85,14 +90,16 @@ def test_groupby(graph):
 def test_special_characters_words(graph):
     # Ensure we support labels containing 'interpolate'.  For some reason this causes
     # an error in mermaid.  Putting double quotes around this fixes the issue.
-    #dummy_callable = 
+    # dummy_callable =
     for leadtime in [1, 2]:
         node_a, node_a_data = _gen_node("a", leadtime)
         # This is the special word so must be quoted within the html.
         node_a_data["testparam"] = "interpolate"
         node_a_data["call"] = list(node_a_data["call"])
-        # Common characters that need to be escaped (non-exhaustive - just typical ones).
-        node_a_data["call"][0] = "<function test_basic.<locals>.<lambda> at 0x7f04ce115048>"
+        # Common characters that need to be escaped (non-exhaustive).
+        node_a_data["call"][0] = (
+            "<function test_basic.<locals>.<lambda> at 0x7f04ce115048>"
+        )
         node_a_data["call"] = tuple(node_a_data["call"])
         graph.add_node(node_a, **node_a_data)
 
@@ -104,4 +111,6 @@ def test_basic_matplotlib_backend(graph):
     with tempfile.TemporaryDirectory() as tmpdirname:
         output_filepath = f"{tmpdirname}/graph.png"
         with pytest.warns(DeprecationWarning):
-            visualise_graph(graph, backend="matplotlib", output_filepath=output_filepath)
+            visualise_graph(
+                graph, backend="matplotlib", output_filepath=output_filepath
+            )

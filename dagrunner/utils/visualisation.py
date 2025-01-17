@@ -5,6 +5,7 @@
 """
 Module responsible for scheduler independent graph visualisation
 """
+
 import base64
 import os
 
@@ -74,17 +75,17 @@ class MermaidGraph:
 
     def __str__(self):
         return self.MERMAID_TEMPLATE.format(title=self._title, cont=self._cont)
-    
+
     def display(self):
         # in jupiter 7.1, we have native markdown support for mermaid
-        from IPython.display import Image, Markdown, display
         import notebook
         import requests
+        from IPython.display import Image, Markdown, display
 
         # Mermaid graph definition
         graph = self.__str__()
 
-        notebook_version = tuple(map(int, notebook.__version__.split('.')))
+        notebook_version = tuple(map(int, notebook.__version__.split(".")))
         if notebook_version >= (7, 1) and False:
             # Use native Mermaid rendering in Markdown (doesn't support special
             # characters so disabled for now).
@@ -142,7 +143,7 @@ html, body {{
     flex-direction: column;
 }}
 
-/* 
+/*
 td {{
   white-space: nowrap;
 }}
@@ -315,7 +316,7 @@ td {{
 
 </body>
 </html>
-"""
+"""  # noqa: E501
 
     def __init__(self, mermaid, table=None):
         self._graph, self._html_table = mermaid, table

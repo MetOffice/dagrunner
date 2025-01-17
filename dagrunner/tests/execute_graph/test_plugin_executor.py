@@ -7,7 +7,7 @@ from unittest import mock
 import pytest
 
 from dagrunner.config import GlobalConfiguration
-from dagrunner.execute_graph import plugin_executor, IGNORE_EVENT, SKIP_EVENT
+from dagrunner.execute_graph import IGNORE_EVENT, SKIP_EVENT, plugin_executor
 
 
 @pytest.fixture(autouse=True)

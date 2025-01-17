@@ -237,7 +237,7 @@ def format_index(index):
     """Format the index for a markdown file."""
     index = sorted(set(index), key=lambda x: x[0])
     return "\n".join(
-        [f"{'  '*len(dot_path.split('.'))}- {link}" for dot_path, link in index]
+        [f"{'  ' * len(dot_path.split('.'))}- {link}" for dot_path, link in index]
     )
 
 
