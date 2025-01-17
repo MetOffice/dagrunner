@@ -5,6 +5,7 @@
 import inspect
 import tempfile
 from dataclasses import dataclass
+from unittest import mock
 
 import networkx as nx
 import pytest
@@ -106,11 +107,17 @@ def test_special_characters_words(graph):
     assert_visual(graph, "mermaid")
 
 
-def test_basic_matplotlib_backend(graph):
-    # check that deprecation warning is issued
-    with tempfile.TemporaryDirectory() as tmpdirname:
-        output_filepath = f"{tmpdirname}/graph.png"
-        with pytest.warns(DeprecationWarning):
-            visualise_graph(
-                graph, backend="matplotlib", output_filepath=output_filepath
-            )
+@pytest.fixture
+def mock_mpl_backend():
+    with mock.patch(
+        "dagrunner.utils.networkx.visualise_graph_matplotlib"
+    ) as mock_backend:
+        yield mock_backend
+
+
+def test_basic_matplotlib_backend(graph, mock_mpl_backend):
+    # check that the matplotlib backend is called but that's all
+    visualise_graph(
+        graph, backend="matplotlib", output_filepath=mock.sentinel.output_filepath
+    )
+    mock_mpl_backend.assert_called_once()

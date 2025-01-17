@@ -18,7 +18,6 @@ license = {file = "LICENSE"}
 dependencies = [
   'networkx >= 3.2',
   'dask[distributed] >= 2024.1.1',
-  'requests',
 ]
 
 [project.optional-dependencies]
