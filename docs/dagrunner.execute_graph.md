@@ -2,31 +2,39 @@
 
 [Source](../dagrunner/execute_graph.py#L0)
 
+see [GlobalConfiguration: dagrunner.config.CONFIG](dagrunner.config.md#globalconfiguration-config)
+
 see [class: dagrunner.utils.CaptureProcMemory](dagrunner.utils.md#class-captureprocmemory)
+
+see [_IgnoreEvent: dagrunner.plugin_framework.IGNORE_EVENT](dagrunner.plugin_framework.md#_ignoreevent-ignore_event)
 
 see [class: dagrunner.plugin_framework.NodeAwarePlugin](dagrunner.plugin_framework.md#class-nodeawareplugin)
 
+see [_SkipEvent: dagrunner.plugin_framework.SKIP_EVENT](dagrunner.plugin_framework.md#_skipevent-skip_event)
+
 see [class: dagrunner.utils.TimeIt](dagrunner.utils.md#class-timeit)
+
+see [function: dagrunner.utils.as_iterable](dagrunner.utils.md#function-as_iterable)
 
 see [function: dagrunner.utils.function_to_argparse_parse_args](dagrunner.utils.md#function-function_to_argparse_parse_args)
 
 see [module: dagrunner.utils.logger](dagrunner.utils.logger.md#module-dagrunnerutilslogger)
 
-see [function: dagrunner.utils.visualisation.visualise_graph](dagrunner.utils.visualisation.md#function-visualise_graph)
+see [function: dagrunner.utils.networkx.visualise_graph](dagrunner.utils.networkx.md#function-visualise_graph)
 
 ## class: `ExecuteGraph`
 
-[Source](../dagrunner/execute_graph.py#L286)
+[Source](../dagrunner/execute_graph.py#L260)
 
 ### Call Signature:
 
 ```python
-ExecuteGraph(networkx_graph: str, networkx_graph_kwargs: dict = None, <function plugin_executor>, scheduler: str = 'multiprocessing', num_workers: int = 1, profiler_filepath: str = None, dry_run: bool = False, verbose: bool = False, **kwargs)
+ExecuteGraph(networkx_graph: str, networkx_graph_kwargs: dict = None, <function plugin_executor>, scheduler: str = 'multiprocessing', num_workers: int = 1, profiler_filepath: str = None, config_filepath: str = None, dry_run: bool = False, verbose: bool = False, **kwargs)
 ```
 
 ### function: `__call__`
 
-[Source](../dagrunner/execute_graph.py#L397)
+[Source](../dagrunner/execute_graph.py#L383)
 
 #### Call Signature:
 
@@ -38,12 +46,12 @@ Call self as a function.
 
 ### function: `__init__`
 
-[Source](../dagrunner/execute_graph.py#L287)
+[Source](../dagrunner/execute_graph.py#L261)
 
 #### Call Signature:
 
 ```python
-__init__(self, networkx_graph: str, networkx_graph_kwargs: dict = None, <function plugin_executor>, scheduler: str = 'multiprocessing', num_workers: int = 1, profiler_filepath: str = None, dry_run: bool = False, verbose: bool = False, **kwargs)
+__init__(self, networkx_graph: str, networkx_graph_kwargs: dict = None, <function plugin_executor>, scheduler: str = 'multiprocessing', num_workers: int = 1, profiler_filepath: str = None, config_filepath: str = None, dry_run: bool = False, verbose: bool = False, **kwargs)
 ```
 
 Execute a networkx graph using a chosen scheduler.
@@ -79,6 +87,9 @@ Args:
   Optional.
 - `num_workers` (int):
   Number of processes or threads to use.  Optional.
+- `config_filepath` (str):
+  Path to the configuration file.  See [dagrunner.config](dagrunner.config.md).
+  Optional.
 - `dry_run` (bool):
   Print executed commands but don't actually run them.  Optional.
 - `profiler_filepath` (str):
@@ -92,36 +103,19 @@ Args:
 
 ### function: `visualise`
 
-[Source](../dagrunner/execute_graph.py#L394)
+[Source](../dagrunner/execute_graph.py#L380)
 
 #### Call Signature:
 
 ```python
-visualise(self, output_filepath: str)
+visualise(self, **kwargs)
 ```
 
 ## dict: `SCHEDULERS`
 
-## _SKIP_EVENT: `SKIP_EVENT`
-
-## class: `SkipBranch`
-
-[Source](../dagrunner/execute_graph.py#L53)
-
-This exception is used to skip a branch of the execution graph.
-
-To be used in combination to one of the multiprocessing dask schedulers.
-In the single-threaded scheduler, Dask executes tasks sequentially, and
-exceptions will propagate as they occur, potentially halting the execution of
-subsequent tasks.
-
-## Warning
-
-Status: experimental.
-
 ## function: `main`
 
-[Source](../dagrunner/execute_graph.py#L408)
+[Source](../dagrunner/execute_graph.py#L394)
 
 ### Call Signature:
 
@@ -134,12 +128,12 @@ Parses command line arguments and executes the graph using the ExecuteGraph clas
 
 ## function: `plugin_executor`
 
-[Source](../dagrunner/execute_graph.py#L85)
+[Source](../dagrunner/execute_graph.py#L43)
 
 ### Call Signature:
 
 ```python
-plugin_executor(*args, call=None, verbose=False, dry_run=False, common_kwargs=None, **node_properties)
+plugin_executor(*args, call=None, verbose=False, dry_run=False, common_kwargs=None, node_id=None, **node_properties)
 ```
 
 Executes a plugin callable with the provided arguments and keyword arguments.

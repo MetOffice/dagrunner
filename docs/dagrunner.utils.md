@@ -6,11 +6,13 @@ see [module: _doc_styles](dagrunner.utils._doc_styles.md#module-dagrunnerutils_d
 
 see [module: logger](dagrunner.utils.logger.md#module-dagrunnerutilslogger)
 
+see [module: networkx](dagrunner.utils.networkx.md#module-dagrunnerutilsnetworkx)
+
 see [module: visualisation](dagrunner.utils.visualisation.md#module-dagrunnerutilsvisualisation)
 
 ## class: `CaptureProcMemory`
 
-[Source](../dagrunner/utils/__init__.py#L118)
+[Source](../dagrunner/utils/__init__.py#L223)
 
 ### Call Signature:
 
@@ -24,7 +26,7 @@ See `get_proc_mem_stat` for more information.
 
 ### function: `__enter__`
 
-[Source](../dagrunner/utils/__init__.py#L99)
+[Source](../dagrunner/utils/__init__.py#L204)
 
 #### Call Signature:
 
@@ -34,7 +36,7 @@ __enter__(self)
 
 ### function: `__exit__`
 
-[Source](../dagrunner/utils/__init__.py#L104)
+[Source](../dagrunner/utils/__init__.py#L209)
 
 #### Call Signature:
 
@@ -44,7 +46,7 @@ __exit__(self, exc_type, exc_value, traceback)
 
 ### function: `__init__`
 
-[Source](../dagrunner/utils/__init__.py#L129)
+[Source](../dagrunner/utils/__init__.py#L234)
 
 #### Call Signature:
 
@@ -63,7 +65,7 @@ Args:
 
 ### function: `max`
 
-[Source](../dagrunner/utils/__init__.py#L108)
+[Source](../dagrunner/utils/__init__.py#L213)
 
 #### Call Signature:
 
@@ -78,7 +80,7 @@ Returns:
 
 ## class: `CaptureSysMemory`
 
-[Source](../dagrunner/utils/__init__.py#L170)
+[Source](../dagrunner/utils/__init__.py#L275)
 
 ### Call Signature:
 
@@ -92,7 +94,7 @@ See `get_sys_mem_stat` for more information.
 
 ### function: `__enter__`
 
-[Source](../dagrunner/utils/__init__.py#L99)
+[Source](../dagrunner/utils/__init__.py#L204)
 
 #### Call Signature:
 
@@ -102,7 +104,7 @@ __enter__(self)
 
 ### function: `__exit__`
 
-[Source](../dagrunner/utils/__init__.py#L104)
+[Source](../dagrunner/utils/__init__.py#L209)
 
 #### Call Signature:
 
@@ -112,7 +114,7 @@ __exit__(self, exc_type, exc_value, traceback)
 
 ### function: `__init__`
 
-[Source](../dagrunner/utils/__init__.py#L67)
+[Source](../dagrunner/utils/__init__.py#L172)
 
 #### Call Signature:
 
@@ -130,7 +132,7 @@ Args:
 
 ### function: `max`
 
-[Source](../dagrunner/utils/__init__.py#L108)
+[Source](../dagrunner/utils/__init__.py#L213)
 
 #### Call Signature:
 
@@ -145,7 +147,7 @@ Returns:
 
 ## class: `KeyValueAction`
 
-[Source](../dagrunner/utils/__init__.py#L288)
+[Source](../dagrunner/utils/__init__.py#L393)
 
 ### Call Signature:
 
@@ -204,7 +206,7 @@ Keyword Arguments:
 
 ### function: `__call__`
 
-[Source](../dagrunner/utils/__init__.py#L289)
+[Source](../dagrunner/utils/__init__.py#L394)
 
 #### Call Signature:
 
@@ -216,7 +218,7 @@ Call self as a function.
 
 ## class: `ObjectAsStr`
 
-[Source](../dagrunner/utils/__init__.py#L182)
+[Source](../dagrunner/utils/__init__.py#L287)
 
 ### Call Signature:
 
@@ -228,7 +230,7 @@ Hide object under a string.
 
 ### function: `__hash__`
 
-[Source](../dagrunner/utils/__init__.py#L196)
+[Source](../dagrunner/utils/__init__.py#L301)
 
 #### Call Signature:
 
@@ -240,7 +242,7 @@ Return hash(self).
 
 ### function: `__new__`
 
-[Source](../dagrunner/utils/__init__.py#L187)
+[Source](../dagrunner/utils/__init__.py#L292)
 
 #### Call Signature:
 
@@ -252,7 +254,7 @@ Create and return a new object.  See help(type) for accurate signature.
 
 ### function: `obj_to_name`
 
-[Source](../dagrunner/utils/__init__.py#L200)
+[Source](../dagrunner/utils/__init__.py#L305)
 
 #### Call Signature:
 
@@ -260,9 +262,27 @@ Create and return a new object.  See help(type) for accurate signature.
 obj_to_name(obj, cls)
 ```
 
+## class: `Singleton`
+
+[Source](../dagrunner/utils/__init__.py#L108)
+
+Singleton metaclass.
+
+### function: `__call__`
+
+[Source](../dagrunner/utils/__init__.py#L115)
+
+#### Call Signature:
+
+```python
+__call__(cls, *args, **kwargs)
+```
+
+Call self as a function.
+
 ## class: `TimeIt`
 
-[Source](../dagrunner/utils/__init__.py#L208)
+[Source](../dagrunner/utils/__init__.py#L313)
 
 ### Call Signature:
 
@@ -291,7 +311,7 @@ Example as a standalone timer:
 
 ### function: `__enter__`
 
-[Source](../dagrunner/utils/__init__.py#L237)
+[Source](../dagrunner/utils/__init__.py#L342)
 
 #### Call Signature:
 
@@ -301,7 +321,7 @@ __enter__(self)
 
 ### function: `__exit__`
 
-[Source](../dagrunner/utils/__init__.py#L241)
+[Source](../dagrunner/utils/__init__.py#L346)
 
 #### Call Signature:
 
@@ -311,7 +331,7 @@ __exit__(self, *args)
 
 ### function: `__init__`
 
-[Source](../dagrunner/utils/__init__.py#L231)
+[Source](../dagrunner/utils/__init__.py#L336)
 
 #### Call Signature:
 
@@ -323,7 +343,7 @@ Initialize self.  See help(type(self)) for accurate signature.
 
 ### function: `__str__`
 
-[Source](../dagrunner/utils/__init__.py#L266)
+[Source](../dagrunner/utils/__init__.py#L371)
 
 #### Call Signature:
 
@@ -335,7 +355,7 @@ Print elapsed time in seconds.
 
 ### function: `start`
 
-[Source](../dagrunner/utils/__init__.py#L247)
+[Source](../dagrunner/utils/__init__.py#L352)
 
 #### Call Signature:
 
@@ -345,7 +365,7 @@ start(self)
 
 ### function: `stop`
 
-[Source](../dagrunner/utils/__init__.py#L251)
+[Source](../dagrunner/utils/__init__.py#L356)
 
 #### Call Signature:
 
@@ -353,9 +373,47 @@ start(self)
 stop(self)
 ```
 
+## function: `as_iterable`
+
+[Source](../dagrunner/utils/__init__.py#L100)
+
+### Call Signature:
+
+```python
+as_iterable(obj)
+```
+
+## function: `data_polling`
+
+[Source](../dagrunner/utils/__init__.py#L494)
+
+### Call Signature:
+
+```python
+data_polling(*args, timeout=120, polling=1, file_count=None, fail_fast=True, verbose=False)
+```
+
+Poll for the availability of files
+
+Poll for data and return when all data is available or otherwise raise an
+exception if the timeout is reached.
+
+Args:
+- *args: Variable length argument list of file patterns to be checked.
+    `<hostname>:<path>` syntax supported for files on a remote host.
+
+Args:
+- timeout (int): Timeout in seconds (default is 120 seconds).
+- polling (int): Time interval in seconds between each poll (default is 1
+    second).
+- file_count (int): Expected number of files to be found for globular
+    expansion (default is >= 1 files per pattern).
+- fail_fast (bool): Stop when a file is not found (default is True).
+- verbose (bool): Print verbose output.
+
 ## function: `docstring_parse`
 
-[Source](../dagrunner/utils/__init__.py#L271)
+[Source](../dagrunner/utils/__init__.py#L376)
 
 ### Call Signature:
 
@@ -365,7 +423,7 @@ docstring_parse(obj)
 
 ## function: `function_to_argparse`
 
-[Source](../dagrunner/utils/__init__.py#L300)
+[Source](../dagrunner/utils/__init__.py#L405)
 
 ### Call Signature:
 
@@ -377,7 +435,7 @@ Generate an argparse from a function signature
 
 ## function: `function_to_argparse_parse_args`
 
-[Source](../dagrunner/utils/__init__.py#L377)
+[Source](../dagrunner/utils/__init__.py#L482)
 
 ### Call Signature:
 
@@ -387,7 +445,7 @@ function_to_argparse_parse_args(*args, **kwargs)
 
 ## function: `get_proc_mem_stat`
 
-[Source](../dagrunner/utils/__init__.py#L36)
+[Source](../dagrunner/utils/__init__.py#L141)
 
 ### Call Signature:
 
@@ -409,7 +467,7 @@ Returns:
 
 ## function: `get_sys_mem_stat`
 
-[Source](../dagrunner/utils/__init__.py#L144)
+[Source](../dagrunner/utils/__init__.py#L249)
 
 ### Call Signature:
 
@@ -426,9 +484,39 @@ Returns:
 - Dictionary with memory statistics in MB.  Fields are Committed_AS, MemFree,
   Buffers, Cached and MemTotal.
 
+## function: `in_notebook`
+
+[Source](../dagrunner/utils/__init__.py#L88)
+
+### Call Signature:
+
+```python
+in_notebook()
+```
+
+Determine whether we are in a Jupyter notebook.
+
+## function: `pairwise`
+
+[Source](../dagrunner/utils/__init__.py#L66)
+
+### Call Signature:
+
+```python
+pairwise(iterable)
+```
+
+Return successive overlapping pairs taken from the input iterable.
+
+The number of 2-tuples in the output iterator will be one fewer than the
+number of inputs. It will be empty if the input iterable has fewer than
+two values.
+
+pairwise('ABCDEFG') → AB BC CD DE EF FG
+
 ## function: `process_path`
 
-[Source](../dagrunner/utils/__init__.py#L16)
+[Source](../dagrunner/utils/__init__.py#L121)
 
 ### Call Signature:
 
@@ -444,4 +532,37 @@ Args:
 
 Returns:
 - Processed path
+
+## function: `stage_to_dir`
+
+[Source](../dagrunner/utils/__init__.py#L679)
+
+### Call Signature:
+
+```python
+stage_to_dir(*args, staging_dir, verbose=False)
+```
+
+Copy input filepaths to a staging area and update paths.
+
+Hard link copies are preferred (same host) and physical copies are made otherwise.
+File name, size and modification time are used to evaluate if the destination file
+exists already (matching criteria of rsync).  If exists already, skip the copy.
+Staged files are named: `<modification-time>_<file-size>_<filename>` to avoid
+collision with identically names files.
+
+## function: `subset_equality`
+
+[Source](../dagrunner/utils/__init__.py#L25)
+
+### Call Signature:
+
+```python
+subset_equality(obj_a, obj_b)
+```
+
+Return whether obj_a is a subset of obj_b.
+
+Supporting namedtuple, dataclasses and iterables.  Note that a 'None' value in obj_a
+is considered a wildcard.
 
