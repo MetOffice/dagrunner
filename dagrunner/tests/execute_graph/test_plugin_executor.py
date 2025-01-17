@@ -6,7 +6,15 @@ from unittest import mock
 
 import pytest
 
-from dagrunner.execute_graph import plugin_executor
+from dagrunner.config import GlobalConfiguration
+from dagrunner.execute_graph import plugin_executor, IGNORE_EVENT, SKIP_EVENT
+
+
+@pytest.fixture(autouse=True)
+def patch_config():
+    """Stop picking up any configuration from the environment."""
+    with mock.patch("dagrunner.execute_graph.CONFIG", new=GlobalConfiguration()):
+        yield
 
 
 class DummyPlugin:
@@ -97,6 +105,23 @@ def test_pass_class_arg_kwargs(plugin, init_args, call_args, target):
     call = tuple([plugin, init_args, call_args])
     res = plugin_executor(*args, call=call)
     assert res == target
+
+
+def test_ignore_event():
+    """Check what happens a subset of arguments and all arguments are IGNORE_EVENT."""
+    call = tuple([lambda x: x + 5])
+    res = plugin_executor(*(5, IGNORE_EVENT), call=call)
+    assert res == 10
+
+    res = plugin_executor(*(IGNORE_EVENT, IGNORE_EVENT), call=call)
+    assert res == IGNORE_EVENT
+
+
+def test_skip_event():
+    """Check what happens a subset of arguments are SKIP_EVENT."""
+    call = tuple([lambda x: x + 5])
+    res = plugin_executor(*(5, SKIP_EVENT), call=call)
+    assert res == SKIP_EVENT
 
 
 def test_pass_common_args():

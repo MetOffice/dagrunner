@@ -48,10 +48,10 @@ class GlobalConfiguration(object, metaclass=Singleton):
         label_by
 
         [dagrunner_runtime]
-        pickle_dir
 
         # Logging
         [dagrunner_logging]
+        enabled
         host
         port
 
@@ -61,7 +61,7 @@ class GlobalConfiguration(object, metaclass=Singleton):
     # specified vs unspecified by the user.
     # Logic around default values belong in the functions which use them.
     _INI_PARAMETERS = {
-        "dagrunner_logging": {"host": None, "port": None},
+        "dagrunner_logging": {"host": None, "port": None, "enabled": None},
         "dagrunner_visualisation": {
             "enabled": None,
             "title": None,
@@ -71,7 +71,7 @@ class GlobalConfiguration(object, metaclass=Singleton):
             "group_by": None,
             "label_by": None,
         },
-        "dagrunner_runtime": {"pickle_dir": None},
+        "dagrunner_runtime": {},
     }
 
     def __init__(self):

@@ -8,6 +8,7 @@ import inspect
 import logging
 import os
 from pathlib import Path
+import pickle
 import tempfile
 import warnings
 from functools import partial
@@ -50,7 +51,6 @@ def plugin_executor(
     verbose=False,
     dry_run=False,
     common_kwargs=None,
-    pickle=False,
     node_id=None,
     **node_properties,
 ):
@@ -88,24 +88,8 @@ def plugin_executor(
     Raises:
     - ValueError: If the `call` argument is not provided.
     """  # noqa: E501
-    logger.client_attach_socket_handler(CONFIG["dagrunner_logging"])
-
-    try:
-        pickle_dir = Path(CONFIG["dagrunner_runtime"]["pickle_dir"])
-    except KeyError:
-        pickle_dir = Path(tempfile.gettempdir())
-    pickle_filepath = pickle_dir / f"{tokenize(node_id)}.pickle"
-
-    if pickle:
-        if os.path.exists(pickle_filepath):
-            if verbose:
-                print(f"loading pickle for {node_id}")
-            with open(pickle_filepath, "rb") as f:
-                return pickle.load(f)
-        else:
-            if verbose:
-                print(f"pickle not found for {node_id}, ignoring")
-            return IGNORE_EVENT
+    if CONFIG["dagrunner_logging"].pop("enabled", False) is True:
+        logger.client_attach_socket_handler(CONFIG["dagrunner_logging"])
 
     if common_kwargs is None:
         common_kwargs = {}
@@ -178,7 +162,11 @@ def plugin_executor(
     callable_kwargs = {} if callable_kwargs is None else callable_kwargs
 
     call_msg = ""
-    obj_name = callable_obj.__name__
+    try:
+        obj_name = callable_obj.__name__
+    except AttributeError:
+        obj_name = type(callable_obj).__name__
+
     if isinstance(callable_obj, type):
         if issubclass(callable_obj, NodeAwarePlugin):
             callable_kwargs["node_properties"] = node_properties
@@ -226,22 +214,7 @@ def plugin_executor(
         except (TypeError, AttributeError):
             # fallback
             print(f"result: {res}")
-
-    if pickle:
-        pickle_dir.mkdir(parents=True, exist_ok=True)
-        if verbose:
-            print(f"saving to pickle: {pickle_filepath}")
-        with open(pickle_filepath, "wb") as f:
-            pickle.dump(res, f)
     return res
-
-
-def _attempt_visualise_graph(graph, graph_output):
-    """Visualise graph but if fails, turn into a warning."""
-    try:
-        visualise_graph(graph, graph_output)
-    except Exception as err:
-        warnings.warn(f"{err}. Skipping execution graph visualisation.")
 
 
 def _process_nodes(node):
