@@ -6,7 +6,7 @@
 ![PR CI status](https://github.com/MetOffice/dagrunner/actions/workflows/tests.yml/badge.svg)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://github.com/pre-commit/pre-commit)
 
-# <img src="https://github.com/user-attachments/assets/f7403532-a9bc-4d24-af60-d797b74a2857" alt="dagrunner_icon" width=200px>![](https://placehold.co/600x200/transparent/929292?text=DAGrunner)
+# <img src="docs/symbol.svg" alt="dagrunner_icon" width=200px>![](https://placehold.co/600x200/transparent/929292?text=DAGrunner)
 
 DAGrunner serves as a Directed Acyclic Graph (DAG) runner, primarily designed to ensure a clear distinction between a project's graph definition (typically in native networkx format) and its execution method. In essence, DAGrunner offers various schedulers for executing the graph, but it firmly separates these operational concepts from the scientific configuration or recipe, i.e., the graph itself. Consequently, while DAGrunner currently provides convenient scheduling options, it remains adaptable to future changes or alternative solutions, ensuring that the scientific configuration can persist regardless of the technologies or tools employed, whether DAGrunner is utilized or not.
 
