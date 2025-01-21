@@ -113,7 +113,7 @@ def plugin_executor(
     # ignore execution if any SKIP_EVENT in args (pass along).
     if SKIP_EVENT in args:
         if verbose:
-            print(f"Retuning 'SKIP_EVENT' event {call[0]}")
+            print(f"Returning 'SKIP_EVENT' event {call[0]}")
         return SKIP_EVENT
 
     callable_obj = call[0]
