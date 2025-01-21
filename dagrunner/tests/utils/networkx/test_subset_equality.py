@@ -5,6 +5,8 @@
 from collections import namedtuple
 from dataclasses import dataclass
 
+import pytest
+
 from dagrunner.utils.networkx import subset_equality
 
 
@@ -41,18 +43,10 @@ def test_dataclass():
     assert subset_equality(node_pattern, node) is False
 
 
-def test_iterable():
-    node = {1, 2, 3}
-
-    node_pattern = {1, 2, 3}
-    assert subset_equality(node_pattern, node) is True
-
-    node_pattern = {None, 2, 3}
-    assert subset_equality(node_pattern, node) is True
-
-    node_pattern = {1, 2, 6}
-    assert subset_equality(node_pattern, node) is False
-
-    # unequal length
-    node_pattern = {1, 2}
-    assert subset_equality(node_pattern, node) is True
+def test_other_type():
+    # check warning is issued
+    msg = "subset equality on incompatible object types"
+    with pytest.warns(UserWarning, match=msg):
+        assert subset_equality(1, 1) is True
+    with pytest.warns(UserWarning, match=msg):
+        assert subset_equality(1, 2) is False

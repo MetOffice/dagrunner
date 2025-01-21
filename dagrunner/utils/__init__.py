@@ -26,18 +26,12 @@ def subset_equality(obj_a, obj_b):
     """
     Return whether obj_a is a subset of obj_b.
 
-    Supporting namedtuple, dataclasses and iterables.  Note that a 'None' value in obj_a
-    is considered a wildcard.
+    Supporting namedtuple and dataclasses, otherwise fallback to equality.  Note that
+    a 'None' value in obj_a is considered a wildcard.
     """
-    # check that both objects are of the same type and hashable
-    if type(obj_a) is not type(obj_b):
-        raise NotImplementedError(
-            "Subset equality not implemented for different types "
-            f"{type(obj_a)}, {type(obj_b)}"
-        )
-
     ret = True
-    if dataclasses.is_dataclass(obj_a):
+    sametype = type(obj_a) is type(obj_b)
+    if sametype and dataclasses.is_dataclass(obj_a):
         # dataclass
         for field in fields(obj_a):
             if getattr(obj_a, field.name) is not None and getattr(
@@ -45,7 +39,7 @@ def subset_equality(obj_a, obj_b):
             ) != getattr(obj_b, field.name):
                 ret = False
                 break
-    elif hasattr(obj_a, "_fields"):
+    elif sametype and hasattr(obj_a, "_fields"):
         # namedtuple
         for field in obj_a._fields:
             if getattr(obj_a, field) is not None and getattr(obj_a, field) != getattr(
@@ -54,12 +48,11 @@ def subset_equality(obj_a, obj_b):
                 ret = False
                 break
     else:
-        obj_a = as_iterable(obj_a)
-        obj_b = as_iterable(obj_b)
-        for a, b in itertools.zip_longest(obj_a, obj_b, fillvalue=None):
-            if a is not None and a != b:
-                ret = False
-                break
+        warnings.warn(
+            f"subset equality on incompatible object types '{type(obj_a)}' "
+            f"with '{type(obj_b)}', falling back to equality"
+        )
+        ret = obj_a == obj_b
     return ret
 
 

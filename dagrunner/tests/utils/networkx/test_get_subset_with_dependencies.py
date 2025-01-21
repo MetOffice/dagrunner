@@ -2,6 +2,8 @@
 #
 # This file is part of 'dagrunner' and is released under the BSD 3-Clause license.
 # See LICENSE in the root of the repository for full licensing details.
+import warnings
+
 import networkx as nx
 import pytest
 
@@ -65,5 +67,7 @@ def graph():
     ids=["fff", "ftf", "fft", "tff", "ttf", "tft"],
 )
 def test_filters(graph, filters, target):
-    res = get_subset_with_dependencies(graph, [filters])
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        res = get_subset_with_dependencies(graph, [filters])
     assert set(res.nodes) == set(target)
