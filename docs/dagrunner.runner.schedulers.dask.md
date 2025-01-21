@@ -15,7 +15,7 @@ See the following useful background reading:
 
 ## class: `DaskOnRay`
 
-[Source](../dagrunner/runner/schedulers/dask.py#L215)
+[Source](../dagrunner/runner/schedulers/dask.py#L217)
 
 ### Call Signature:
 
@@ -27,7 +27,7 @@ A class to run dask graphs using the 'dak-on-ray' scheduler.
 
 ### function: `__enter__`
 
-[Source](../dagrunner/runner/schedulers/dask.py#L223)
+[Source](../dagrunner/runner/schedulers/dask.py#L225)
 
 #### Call Signature:
 
@@ -37,7 +37,7 @@ __enter__(self)
 
 ### function: `__exit__`
 
-[Source](../dagrunner/runner/schedulers/dask.py#L226)
+[Source](../dagrunner/runner/schedulers/dask.py#L228)
 
 #### Call Signature:
 
@@ -47,7 +47,7 @@ __exit__(self, exc_type, exc_value, exc_traceback)
 
 ### function: `__init__`
 
-[Source](../dagrunner/runner/schedulers/dask.py#L218)
+[Source](../dagrunner/runner/schedulers/dask.py#L220)
 
 #### Call Signature:
 
@@ -59,7 +59,7 @@ Initialize self.  See help(type(self)) for accurate signature.
 
 ### function: `run`
 
-[Source](../dagrunner/runner/schedulers/dask.py#L231)
+[Source](../dagrunner/runner/schedulers/dask.py#L233)
 
 #### Call Signature:
 
@@ -169,7 +169,7 @@ __enter__(self)
 
 ### function: `__exit__`
 
-[Source](../dagrunner/runner/schedulers/dask.py#L211)
+[Source](../dagrunner/runner/schedulers/dask.py#L213)
 
 #### Call Signature:
 

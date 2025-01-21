@@ -6,18 +6,8 @@
 Module responsible for scheduler independent graph visualisation
 """
 
+import base64
 import os
-
-from dask.core import get_deps
-
-
-def _shorten_path(path):
-    """Shorten paths for the visual graph"""
-    if "/share/" in path:
-        path = path[path.index("/share/") + 1 :]
-    elif "/etc/" in path:
-        path = path[path.index("/etc/") + 1 :]
-    return path
 
 
 def _as_html(msg):
@@ -25,7 +15,7 @@ def _as_html(msg):
     return str(msg).replace(">", "&gt;").replace("<", "&lt;")
 
 
-class _HTMLTable:
+class HTMLTable:
     TABLE_TEMPLATE = """<table>
 <tr>
 {table_header}
@@ -53,11 +43,18 @@ class _HTMLTable:
 
 
 class MermaidGraph:
-    MERMAID_TEMPLATE = "graph TD\n{cont}"
+    MERMAID_TEMPLATE = "---\ntitle: {title}\n---\ngraph TD\n{cont}"
     CARRIAGE_RETURN = "<br>"
+    WHITESPACE = "#nbsp;"  # UTF-8
+    GTOP = "#gt;"
+    LTOP = "#lt;"
 
-    def __init__(self):
+    def __init__(self, title=None):
         self._cont = ""
+        self._title = title or ""
+
+    def add_raw(self, raw):
+        self._cont += f"\n{raw}"
 
     def add_node(self, nodeid, label=None, tooltip=None, url=None):
         if label:
@@ -65,7 +62,10 @@ class MermaidGraph:
         self._cont += f'\n{nodeid}(["{label}"])'
         if tooltip:
             # https://mermaid-js.github.io/mermaid/#/flowchart?id=interaction
-            tooltip = tooltip.replace("\n", self.CARRIAGE_RETURN)
+            tooltip = tooltip.replace("  ", self.WHITESPACE * 2)
+            tooltip = tooltip.replace("<", self.LTOP)
+            tooltip = tooltip.replace(">", self.GTOP)
+            tooltip = tooltip.replace("\n", self.CARRIAGE_RETURN).replace('"', "")
             self._cont += f'\nclick {nodeid} callback "{tooltip}"'
         if url:
             self._cont += f'\nclick {nodeid} "{url}"'
@@ -74,7 +74,39 @@ class MermaidGraph:
         self._cont += f"\n{id1} --> {id2}"
 
     def __str__(self):
-        return self.MERMAID_TEMPLATE.format(cont=self._cont)
+        return self.MERMAID_TEMPLATE.format(title=self._title, cont=self._cont)
+
+    def display(self):
+        # in jupiter 7.1, we have native markdown support for mermaid
+        import notebook
+        import requests
+        from IPython.display import Image, Markdown, display
+
+        # Mermaid graph definition
+        graph = self.__str__()
+
+        notebook_version = tuple(map(int, notebook.__version__.split(".")))
+        if notebook_version >= (7, 1) and False:
+            # Use native Mermaid rendering in Markdown (doesn't support special
+            # characters so disabled for now).
+            display(Markdown(f"```mermaid\n{graph}\n```"))
+        else:
+            # Use the Mermaid API via mermaid.ink to render the graph as an image
+
+            # Encode the graph for use in the Mermaid API
+            graphbytes = graph.encode("ascii")
+            base64_bytes = base64.b64encode(graphbytes)
+            base64_string = base64_bytes.decode("ascii")
+
+            # Fetch the rendered image from the Mermaid API
+            image_url = f"https://mermaid.ink/img/{base64_string}"
+            response = requests.get(image_url)
+
+            # Display the image directly in the notebook
+            if response.status_code == 200:
+                display(Image(response.content))
+            else:
+                print(f"Failed to fetch the image. Status code: {response.status_code}")
 
 
 class MermaidHTML:
@@ -101,10 +133,70 @@ div.mermaidTooltip {{
 
 tr:nth-child(even) {{ background: #CCC }}
 tr:nth-child(odd) {{ background: #FFF }}
+
+html, body {{
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden; /* Prevent page scrollbars */
+    display: flex;
+    flex-direction: column;
+}}
+
+/*
+td {{
+  white-space: nowrap;
+}}
+*/
+
+#controls {{
+    height: 25px;
+    margin-bottom: 3px;
+    margin-top: 3px;
+    flex-shrink: 0; /* Prevent shrinking */
+}}
+
+#mermaid-container {{
+    height: 70vh;
+    min-height: 50px; /* Allow resizing very small */
+    max-height: 90vh; /* Allow resizing very small */
+    overflow: hidden; /* Add vertical scrollbar if needed */
+    resize: vertical; /* Allow resizing */
+    flex-shrink: 0; /* Prevent flex behaviour from overriding resize */
+    border: 1px solid #ccc;
+}}
+
+#table1 {{
+    min-height: 0; /* Allow shrinking to 0 height */
+    flex-grow: 1; /* Take up remaining space */
+    overflow: auto; /* Add vertical scrollbar if needed */
+}}
+
+#diagram-wrapper {{
+    cursor: grab;
+}}
+
+#diagram-wrapper:active {{
+    cursor: grabbing;
+}}
+
+.mermaid {{
+    transform-origin: 0 0; /* Set the origin for scaling */
+}}
+
 </style>
 
+<div id="controls">
+  <button id="toggle-zoom">Zoom Behaviour: Cursor-Relative</button>
+  <button id="reset-zoom">Reset to Origin</button>
+  <button id="save-diagram">Save as SVG</button>
+</div>
+<div id="mermaid-container">
+<div id="diagram-wrapper">
 <div class="mermaid">
 {graph}
+</div>
+</div>
 </div>
 
 <script type="module">
@@ -115,79 +207,119 @@ tr:nth-child(odd) {{ background: #FFF }}
         securityLevel:'loose',
         maxTextSize: 99999999  // beyond this "Maximum text size in diagram exceeded"
   }});
+
+  const wrapper = document.getElementById('diagram-wrapper');
+  const mermaidDiagram = document.querySelector('.mermaid');
+  const toggleButton = document.getElementById('toggle-zoom');
+  const resetButton = document.getElementById('reset-zoom');
+  const saveButton = document.getElementById('save-diagram');
+  let scale = 1;
+  let offsetX = 0;
+  let offsetY = 0;
+  let zoomRelativeToCursor = true; // Default behaviour: cursor-relative zoom
+
+  const updateTransform = () => {{
+    mermaidDiagram.style.transform = `translate(${{offsetX}}px, ${{offsetY}}px) scale(${{scale}})`;
+  }};
+
+  toggleButton.addEventListener('click', () => {{
+    zoomRelativeToCursor = !zoomRelativeToCursor;
+    toggleButton.textContent = `Zoom Behaviour: ${{zoomRelativeToCursor ? 'Cursor-Relative' : 'Origin-Based'}}`;
+  }});
+
+  resetButton.addEventListener('click', () => {{
+      // Reset to default scale and position
+      scale = 1;
+      offsetX = 0;
+      offsetY = 0;
+      updateTransform();
+  }});
+
+  saveButton.addEventListener('click', () => {{
+    // Extract the rendered SVG from the DOM
+    const svgElement = document.querySelector('#mermaid-container svg');
+   if (!svgElement) {{
+      alert('No diagram found to save!');
+      return;
+    }}
+
+   // Serialize the SVG to a string
+    const serializer = new XMLSerializer();
+    const svgContent = serializer.serializeToString(svgElement);
+
+   // Create a Blob from the SVG string
+    const blob = new Blob([svgContent], {{ type: 'image/svg+xml;charset=utf-8' }});
+
+   // Create a link element to trigger the download
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'mermaid-diagram.svg';
+    link.click();
+
+   // Clean up the temporary object URL
+    URL.revokeObjectURL(link.href);
+  }});
+
+  // Zoom functionality
+  wrapper.addEventListener('wheel', (event) => {{
+    event.preventDefault();
+    const zoomStep = 0.1;
+    const minScale = 0.2;
+    const maxScale = 2;
+    const newScale = Math.min(Math.max(scale + (event.deltaY > 0 ? -zoomStep : zoomStep), minScale), maxScale);
+    if (zoomRelativeToCursor) {{
+      // Cursor-relative zoom
+      const rect = wrapper.getBoundingClientRect();
+      const cursorX = event.clientX - rect.left; // Cursor position relative to wrapper
+      const cursorY = event.clientY - rect.top;
+      offsetX -= (cursorX - offsetX) * (newScale / scale - 1);
+      offsetY -= (cursorY - offsetY) * (newScale / scale - 1);
+    }}
+    scale = newScale;
+    updateTransform();
+  }});
+
+  // Pan functionality
+  let isDragging = false;
+  let startX, startY;
+  wrapper.addEventListener('mousedown', (event) => {{
+    isDragging = true;
+    startX = event.clientX;
+    startY = event.clientY;
+  }});
+
+  wrapper.addEventListener('mousemove', (event) => {{
+    if (isDragging) {{
+      const deltaX = event.clientX - startX;
+      const deltaY = event.clientY - startY;
+      offsetX += deltaX;
+      offsetY += deltaY;
+      startX = event.clientX;
+      startY = event.clientY;
+      updateTransform();
+    }}
+  }});
+
+  wrapper.addEventListener('mouseup', () => {{
+    isDragging = false;
+  }});
+
+  wrapper.addEventListener('mouseleave', () => {{
+    isDragging = false;
+  }});
+
 </script>
 
+<div id="table1" class="scrollable">
 {table}
+</div>
 
 </body>
 </html>
-"""
+"""  # noqa: E501
 
-    def __init__(self, graph):
-        self._graph, self._html_table = self._graph_engine_gen_with_table(graph)
-
-    @classmethod
-    def _get_tooltip(cls, tgt, args):
-        args = " ".join(tuple(map(_shorten_path, args)))
-        tgt = _shorten_path(tgt)
-        return f"target:\n{tgt}\n\nargs:\n{args}"
-
-    @classmethod
-    def _get_url(cls, command, args):
-        """Derive URL from the provided command and arguments"""
-        url = None
-        if args[0] == "improver":
-            url = (
-                "https://improver.readthedocs.io/en/latest/"
-                f"improver.cli.{command.replace('-', '_')}.html"
-            )
-        return url
-
-    @classmethod
-    def _graph_engine_gen_with_table(cls, graph):
-        def get_command(tgt):
-            if graph[tgt][2] == "improver":
-                return graph[tgt][3], graph[tgt][2:]
-            else:
-                return graph[tgt][2], graph[tgt][2:]
-
-        table = _HTMLTable(["node ID", "command", "target", "args"])
-        graph_engine = cls.GRAPH_ENGINE()
-        node_target_id_map = {}
-        node_id = 0
-        pred_deps, _ = get_deps(graph)
-
-        for target in pred_deps:
-            if target not in node_target_id_map:
-                node_target_id_map[target] = node_id
-                command, args = get_command(target)
-                url = cls._get_url(command, args)
-                graph_engine.add_node(
-                    node_id,
-                    label=f"{node_id}\n{command}",
-                    tooltip=cls._get_tooltip(target, args),
-                    url=url,
-                )
-                table.add_row(node_id, command, target, " ".join(args))
-                node_id += 1
-
-            for pred in pred_deps[target]:
-                if pred not in node_target_id_map:
-                    node_target_id_map[pred] = node_id
-                    command, args = get_command(target)
-                    url = cls._get_url(command, args)
-                    graph_engine.add_node(
-                        node_id,
-                        label=f"{node_id}\n{command}",
-                        tooltip=cls._get_tooltip(pred, args),
-                        url=url,
-                    )
-                    table.add_row(node_id, command, pred, " ".join(args))
-                    node_id += 1
-                graph_engine.add_connection(
-                    node_target_id_map[pred], node_target_id_map[target]
-                )
-        return graph_engine, table
+    def __init__(self, mermaid, table=None):
+        self._graph, self._html_table = mermaid, table
 
     def __str__(self):
         return self.HTML_TEMPLATE.format(
@@ -200,18 +332,3 @@ tr:nth-child(odd) {{ background: #FFF }}
         ], "Expecting graph output file extension to be .html"
         with open(output_filepath, "w") as fh:
             fh.write(str(self))
-
-
-def visualise_graph(graph, output_filepath):
-    """
-    Args:
-        graph (dict):
-            Graph with keys representing 'targets' and values representing
-            (function, *args).
-        output_filepath (str):
-            Node graph visualisation html output filepath.
-
-    Returns:
-        None:
-    """
-    MermaidHTML(graph).save(output_filepath)

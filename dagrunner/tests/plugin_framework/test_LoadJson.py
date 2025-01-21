@@ -65,7 +65,7 @@ def test_load_remote_rsync(tmp_files, staged_directory):
     with patch(
         "dagrunner.utils.socket.gethostname", return_value="dummy_host.dummy_domain"
     ):
-        res = LoadJson()(fpath, staging_dir=staged_directory)
+        res = LoadJson(staging_dir=staged_directory)(fpath)
     assert res == {"key1": "value1"}
     staged_files = glob(str(staged_directory / f"*_{tmp_file1.name}"))
     assert len(staged_files) == 1
@@ -76,7 +76,7 @@ def test_load_remote_rsync(tmp_files, staged_directory):
 def test_load_local_staged_hardlink(tmp_files, staged_directory):
     """Test staging a local file, hardlinking that file."""
     tmp_file1, _ = tmp_files
-    res = LoadJson()(tmp_file1, staging_dir=staged_directory)
+    res = LoadJson(staging_dir=staged_directory)(tmp_file1)
     assert res == {"key1": "value1"}
     staged_files = glob(str(staged_directory / f"*_{tmp_file1.name}"))
     assert len(staged_files) == 1

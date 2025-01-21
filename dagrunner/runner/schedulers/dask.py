@@ -182,9 +182,11 @@ class SingleMachine:
                 visualize,
             )
 
-            with Profiler() as prof, ResourceProfiler(
-                dt=1
-            ) as rprof, CacheProfiler() as cprof:
+            with (
+                Profiler() as prof,
+                ResourceProfiler(dt=1) as rprof,
+                CacheProfiler() as cprof,
+            ):
                 res = self._dask_container.compute(
                     scheduler=self._scheduler,
                     num_workers=self._num_workers,

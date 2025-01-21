@@ -6,7 +6,6 @@
 import importlib
 import inspect
 import logging
-import warnings
 from functools import partial
 
 import dask
@@ -14,58 +13,17 @@ import networkx as nx
 from dask.base import tokenize
 from dask.utils import apply
 
-from dagrunner.plugin_framework import NodeAwarePlugin
+from dagrunner.config import CONFIG
+from dagrunner.plugin_framework import IGNORE_EVENT, SKIP_EVENT, NodeAwarePlugin
 from dagrunner.runner.schedulers import SCHEDULERS
 from dagrunner.utils import (
     CaptureProcMemory,
     TimeIt,
+    as_iterable,
     function_to_argparse_parse_args,
     logger,
 )
-from dagrunner.utils.visualisation import visualise_graph
-
-
-class _SKIP_EVENT:
-    """
-    This object is used to indicate to `plugin_executor` to skip execution of its node.
-    """
-
-    _instance = None
-
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(_SKIP_EVENT, cls).__new__(cls)
-        return cls._instance
-
-    def __repr__(self):
-        return "SKIP_EVENT"
-
-    def __hash__(self):
-        return hash("SKIP_EVENT")
-
-    def __reduce__(self):
-        return (self.__class__, ())
-
-
-SKIP_EVENT = _SKIP_EVENT()
-
-
-class SkipBranch(Exception):
-    """
-    This exception is used to skip a branch of the execution graph.
-
-    To be used in combination to one of the multiprocessing dask schedulers.
-    In the single-threaded scheduler, Dask executes tasks sequentially, and
-    exceptions will propagate as they occur, potentially halting the execution of
-    subsequent tasks.
-
-    ## Warning
-
-    Status: experimental.
-
-    """
-
-    pass
+from dagrunner.utils.networkx import visualise_graph
 
 
 def _get_common_args_matching_signature(callable_obj, common_kwargs, keys=None):
@@ -88,6 +46,7 @@ def plugin_executor(
     verbose=False,
     dry_run=False,
     common_kwargs=None,
+    node_id=None,
     **node_properties,
 ):
     """
@@ -124,15 +83,15 @@ def plugin_executor(
     Raises:
     - ValueError: If the `call` argument is not provided.
     """  # noqa: E501
-    logger.client_attach_socket_handler()
+    if CONFIG["dagrunner_logging"].pop("enabled", False) is True:
+        logger.client_attach_socket_handler(CONFIG["dagrunner_logging"])
 
     if common_kwargs is None:
         common_kwargs = {}
     common_kwargs.update({"verbose": verbose, "dry_run": dry_run})
 
-    args = [
-        arg for arg in args if arg is not None
-    ]  # support plugins that have no return value
+    # support plugins that have no return value
+    args = list(filter(lambda x: x is not None, args))
     if call is None:
         raise ValueError(
             f"call is a required argument\nnode_properties: {node_properties}"
@@ -140,9 +99,21 @@ def plugin_executor(
     if verbose:
         print(f"args: {args}")
         print(f"call: {call}")
+
+    call = as_iterable(call)
+
+    # IGNORE_EVENT event handling
+    if set(args) == {IGNORE_EVENT}:
+        # all args are IGNORE_EVENT, return IGNORE_EVENT (pass along)
+        if verbose:
+            print(f"Retuning 'IGNORE_EVENT' event {call[0]}")
+        return IGNORE_EVENT
+    args = list(filter(lambda x: x is not IGNORE_EVENT, args))
+
+    # ignore execution if any SKIP_EVENT in args (pass along).
     if SKIP_EVENT in args:
         if verbose:
-            print(f"Skipping node {call[0]}")
+            print(f"Returning 'SKIP_EVENT' event {call[0]}")
         return SKIP_EVENT
 
     callable_obj = call[0]
@@ -186,7 +157,11 @@ def plugin_executor(
     callable_kwargs = {} if callable_kwargs is None else callable_kwargs
 
     call_msg = ""
-    obj_name = callable_obj.__name__
+    try:
+        obj_name = callable_obj.__name__
+    except AttributeError:
+        obj_name = type(callable_obj).__name__
+
     if isinstance(callable_obj, type):
         if issubclass(callable_obj, NodeAwarePlugin):
             callable_kwargs["node_properties"] = node_properties
@@ -213,9 +188,11 @@ def plugin_executor(
         print(msg)
     res = None
     if not dry_run:
-        with TimeIt() as timer, dask.config.set(
-            scheduler="single-threaded"
-        ), CaptureProcMemory() as mem:
+        with (
+            TimeIt() as timer,
+            dask.config.set(scheduler="single-threaded"),
+            CaptureProcMemory() as mem,
+        ):
             try:
                 res = callable_obj(*args, **callable_kwargs)
             except Exception as err:
@@ -228,16 +205,13 @@ def plugin_executor(
     logging.info(msg)
 
     if verbose:
-        print(f"result: {res}")
+        try:
+            # cube looking UI
+            print(f"result: {res.summary(shorten=True)}")
+        except (TypeError, AttributeError):
+            # fallback
+            print(f"result: {res}")
     return res
-
-
-def _attempt_visualise_graph(graph, graph_output):
-    """Visualise graph but if fails, turn into a warning."""
-    try:
-        visualise_graph(graph, graph_output)
-    except Exception as err:
-        warnings.warn(f"{err}. Skipping execution graph visualisation.")
 
 
 def _process_nodes(node):
@@ -292,6 +266,7 @@ class ExecuteGraph:
         scheduler: str = "multiprocessing",
         num_workers: int = 1,
         profiler_filepath: str = None,
+        config_filepath: str = None,
         dry_run: bool = False,
         verbose: bool = False,
         **kwargs,
@@ -330,6 +305,9 @@ class ExecuteGraph:
           Optional.
         - `num_workers` (int):
           Number of processes or threads to use.  Optional.
+        - `config_filepath` (str):
+          Path to the configuration file.  See [dagrunner.config](dagrunner.config.md).
+          Optional.
         - `dry_run` (bool):
           Print executed commands but don't actually run them.  Optional.
         - `profiler_filepath` (str):
@@ -341,6 +319,9 @@ class ExecuteGraph:
         - `**kwargs`:
           Optional global keyword arguments to apply to all applicable plugins.
         """
+        if config_filepath:
+            CONFIG.parse_configuration(config_filepath)
+
         self._nxgraph = _get_networkx(networkx_graph)
         self._nxgraph_kwargs = networkx_graph_kwargs or {}
         self._plugin_executor = plugin_executor
@@ -349,6 +330,8 @@ class ExecuteGraph:
                 f"scheduler '{scheduler}' not recognised, please choose from "
                 f"{list(SCHEDULERS.keys())}"
             )
+        if dry_run:
+            scheduler = "single-threaded"
         self._scheduler = SCHEDULERS[scheduler]
         self._num_workers = num_workers
         self._profiler_output = profiler_filepath
@@ -379,6 +362,9 @@ class ExecuteGraph:
         if callable(self._nxgraph):
             self._nxgraph = self._nxgraph(**self._nxgraph_kwargs)
 
+        if CONFIG["dagrunner_visualisation"].pop("enabled", False) is True:
+            self.visualise(**CONFIG["dagrunner_visualisation"])
+
         exec_graph = {}
         for node_id, properties in self._nxgraph.nodes(data=True):
             # don't use nodes in our graph as some schedulers (dask
@@ -386,22 +372,22 @@ class ExecuteGraph:
             # of types (tuples, bytes, int, float and str).
             key = tokenize(node_id)
             args = [tokenize(arg) for arg in self._nxgraph.predecessors(node_id)]
-            exec_graph[key] = (apply, executor, args, properties)
+            exec_graph[key] = (apply, executor, args, properties | {"node_id": node_id})
 
         # handle_clobber(graph, workflow, no_clobber, verbose)
         return exec_graph
 
-    def visualise(self, output_filepath: str):
-        _attempt_visualise_graph(self._exec_graph, output_filepath)
+    def visualise(self, **kwargs):
+        visualise_graph(self._nxgraph, **kwargs)
 
     def __call__(self):
-        with TimeIt(verbose=True), self._scheduler(
-            self._num_workers, profiler_filepath=self._profiler_output
-        ) as scheduler:
-            try:
-                res = scheduler.run(self._exec_graph)
-            except SkipBranch:
-                pass
+        with (
+            TimeIt(verbose=True),
+            self._scheduler(
+                self._num_workers, profiler_filepath=self._profiler_output
+            ) as scheduler,
+        ):
+            res = scheduler.run(self._exec_graph)
         return res
 
 
