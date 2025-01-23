@@ -365,12 +365,17 @@ def visualise_graph(
                 filter(lambda gnode: subset_equality(node, gnode), graph.nodes)
             )
             node_info_lookup[node] = {
-                property: sorted(
-                    set([getattr(node, property) for node in filtered_nodes]),
-                    key=lambda x: (x is None, x),
-                )
+                property: set([getattr(node, property) for node in filtered_nodes])
                 for property in collapse_properties
             }
+            for key in node_info_lookup[node]:
+                try:
+                    node_info_lookup[node][key] = sorted(
+                        node_info_lookup[node][key], key=lambda x: (x is None, x)
+                    )
+                except TypeError:
+                    continue
+
             node_info_lookup[node].update(
                 {
                     "node data": set(
