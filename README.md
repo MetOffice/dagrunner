@@ -43,7 +43,7 @@ usage: dagrunner-execute-graph [-h] [--scheduler SCHEDULER] [--num-workers NUM_W
 ```
 see `dagrunner-execute-graph --help` for more information.
 
-## Example DAGRunner usage
+## Example DAGrunner usage
 
 See [docs/demo.ipynb](docs/demo.ipynb)
 
@@ -56,7 +56,7 @@ See [here](docs/dagrunner.plugin_framework.md) for more information.
 
 ## Schedulers
 
-The `dagrunner-execute-graph` script exposes a scheduler argument for specifying our preferred scheduler.  DAGRunner provides a layer of abstraction for schedulers.  This enables a range of schedulers to be selected as per requirement.
+The `dagrunner-execute-graph` script exposes a scheduler argument for specifying our preferred scheduler.  DAGrunner provides a layer of abstraction for schedulers.  This enables a range of schedulers to be selected as per requirement.
 
 These range from [dask](https://www.dask.org/), [ray](https://docs.ray.io/en/latest/ray-more-libs/dask-on-ray.html) to our own in-house multiprocessing asynchronous scheduler (built upon the [multiprocessing](https://docs.python.org/3/library/multiprocessing.html) library).  See command help for further details.
 

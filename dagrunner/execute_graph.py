@@ -290,7 +290,7 @@ class ExecuteGraph:
             4. Add node to attributes lookup to this graph ('settings' from the tuple
               provided).
             It is recommended that the user instead provide the networkx graph directly
-            rather than relying on DAGRunner to decide how to construct it.
+            rather than relying on DAGrunner to decide how to construct it.
         - `networkx_graph_kwargs` (dict):
           Keyword arguments to pass to the `networkx_graph` when it represents a
           callable.  Optional.
