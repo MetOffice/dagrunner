@@ -107,6 +107,23 @@ def test_special_characters_words(graph):
     assert_visual(graph, "mermaid")
 
 
+def test_node_properties_unsortable_types(graph):
+    # Mixed types that are not sortable
+    # Here we assign a diagnostic name of integer 0 while the remaining nodes remain
+    # are strings.
+    node_0, node_0_data = _gen_node(0, 1)
+    graph.add_node(node_0, **node_0_data)
+
+    with mock.patch("dagrunner.utils.networkx.visualise_graph_mermaid") as mock_mermaid:
+        visualise_graph(
+            graph,
+            backend="mermaid",
+            output_filepath=mock.sentinel.output_filepath,
+            collapse_properties=["diagnostic"],
+        )
+    mock_mermaid.assert_called_once()
+
+
 @pytest.fixture
 def mock_mpl_backend():
     with mock.patch(
