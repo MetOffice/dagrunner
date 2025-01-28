@@ -40,6 +40,15 @@ def test_missing_file():
         call_dp(filepath, verbose=False)
 
 
+def test_missing_file_non_zero_poll():
+    """Reaching timeout after not finding the file."""
+    filepath = "/dummy/file/path.dat"
+    msg = f"Timeout waiting for: {filepath}"
+    with pytest.raises(FileNotFoundError, match=msg):
+        dp = DataPolling(timeout=0.2, polling=0.1, verbose=False)
+        dp(filepath)
+
+
 def test_globular_pattern_matching(tmp_file, capsys):
     glob_tmp_file = tmp_file.parent / "*.txt"
     call_dp(glob_tmp_file)

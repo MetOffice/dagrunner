@@ -566,8 +566,8 @@ def data_polling(
                             f"polling for {host_msg}{paths}, time taken: "
                             f"{time_taken}s of limit {timeout}s"
                         )
-                        time.sleep(polling)
-                        time_taken += polling
+                    time.sleep(polling)
+                    time_taken += polling
                 else:
                     break
             else:
