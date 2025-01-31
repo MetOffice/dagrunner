@@ -152,7 +152,7 @@ Returns:
 ### Call Signature:
 
 ```python
-KeyValueAction(option_strings, dest, nargs=None, const=None, default=None, type=None, choices=None, required=False, help=None, metavar=None)
+KeyValueAction(option_strings, dest, nargs=None, const=None, default=None, type=None, choices=None, required=False, help=None, metavar=None, deprecated=False)
 ```
 
 Information about how to convert command line strings to Python objects.
