@@ -233,7 +233,8 @@ def visualise_graph_mermaid(
         label = f"{node_id}"
         if label_by:
             for key in label_by:
-                label += f"\n{key}: {getattr(node, key)}"
+                if (val := getattr(node, key)) is not None:
+                    label += f"\n{key}: {val}"
         else:
             label += f"\n{str(node)}"
         return label
