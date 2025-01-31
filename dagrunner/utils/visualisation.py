@@ -200,7 +200,7 @@ td {{
 </div>
 
 <script type="module">
-  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@9/dist/mermaid.esm.min.mjs';
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
   mermaid.initialize({{
         startOnLoad: true,
         flowchart: {{ useMaxWidth: false, htmlLabels: true, curve: 'basis' }},
