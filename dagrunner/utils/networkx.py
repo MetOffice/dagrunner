@@ -8,7 +8,7 @@ import operator
 import pprint
 import warnings
 import webbrowser
-from typing import Iterable
+from typing import Hashable, Iterable, Union
 
 import networkx as nx
 
@@ -18,12 +18,12 @@ from .visualisation import HTMLTable, MermaidGraph, MermaidHTML
 
 def _update_node_ancestry(
     graph: nx.DiGraph,
-    filter_nodes: Iterable,
-    filtered_nodes: Iterable = None,
+    filter_nodes: set[Hashable],
+    filtered_nodes: set[Hashable] = None,
     ancestors: bool = True,
     descendants: bool = False,
     exclude: bool = False,
-) -> Iterable:
+) -> set[Hashable]:
     """
     Helper function to easily filter networkx graphs.
 
@@ -53,7 +53,7 @@ def _update_node_ancestry(
 
 
 def get_subset_with_dependencies(
-    graph: nx.DiGraph, filter_list: Iterable
+    graph: nx.DiGraph, filter_list: Union[dict, Iterable[dict]]
 ) -> nx.DiGraph:
     """
     Helper function to easily filter networkx graphs.
@@ -67,6 +67,7 @@ def get_subset_with_dependencies(
         Each item in this list should take the form:
             {node: <node>, exclude: <bool>, descendants: <bool>, ancestors: <bool>}
     """
+    filter_list = as_iterable(filter_list)
     include_subset = [
         pattern for pattern in filter_list if not pattern.get("exclude", False)
     ]
@@ -216,24 +217,28 @@ def visualise_graph_mermaid(
     node_info_lookup: dict = None,
     title: str = None,
     output_filepath: str = None,
-    group_by: str = None,
-    label_by: Iterable = None,
+    group_by: Union[str, Iterable[str]] = None,
+    label_by: Union[str, Iterable[str]] = None,
 ):
     """
-    Visualise a networkx graph using matplotlib.
+    Visualise a networkx graph using mermaid.
 
     Args:
     - `graph`: The graph to visualise.
     - `node_info_lookup`: A dictionary mapping nodes to their information.
     - `title`: The title of the visualisation.
     - `output_filepath`: The output filepath to save the visualisation to.
+    - `group_by`: One or more property to group nodes by (i.e.
+      [subgraph](https://mermaid-js.github.io/mermaid/#/subgraph)).
+    - `label_by`: One or more property to label visualisation nodes by.
     """
 
     def gen_label(node_id, node, label_by):
         label = f"{node_id}"
         if label_by:
             for key in label_by:
-                label += f"\n{key}: {getattr(node, key)}"
+                if (val := getattr(node, key)) is not None:
+                    label += f"\n{key}: {val}"
         else:
             label += f"\n{str(node)}"
         return label
@@ -319,10 +324,10 @@ def visualise_graph_mermaid(
 
 def visualise_graph(
     graph: nx.DiGraph,
-    backend="mermaid",
-    collapse_properties: Iterable = None,
-    title=None,
-    output_filepath=None,
+    backend: str = "mermaid",
+    collapse_properties: Union[str, Iterable[str]] = None,
+    title: str = None,
+    output_filepath: str = None,
     **kwargs,
 ):
     """
@@ -337,7 +342,8 @@ def visualise_graph(
     - `graph`: The graph to visualise.
     - `backend`: The backend to use for visualisation.  Supported values include
       'mermaid' (javascript, default) and 'matplotlib'.
-    - `collapse_properties`: A list of properties to collapse nodes on.  Only
+      See [visualise_graph_mermaid](#function-visualise_graph_mermaid).
+    - `collapse_properties`: One or more properties to collapse nodes on.  Only
       supported for nodes represented by dataclasses right now.
     - `title`: The title of the visualisation.
     - `output_filepath`: The output filepath to save the visualisation to.

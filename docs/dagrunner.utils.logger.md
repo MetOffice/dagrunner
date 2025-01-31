@@ -59,7 +59,7 @@ attributes in a LogRecord are described by:
 %(lineno)d          Source line number where the logging call was issued
                     (if available)
 %(funcName)s        Function name
-%(created)f         Time when the LogRecord was created (time.time()
+%(created)f         Time when the LogRecord was created (time.time_ns() / 1e9
                     return value)
 %(asctime)s         Textual time when the LogRecord was created
 %(msecs)d           Millisecond portion of the creation time

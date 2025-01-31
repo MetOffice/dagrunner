@@ -107,6 +107,13 @@ def test_special_characters_words(graph):
     assert_visual(graph, "mermaid")
 
 
+def test_properties_of_none(graph):
+    # label should not display properties of None (less information is more useful)
+    node_z, node_z_data = _gen_node("z", None)
+    graph.add_node(node_z, **node_z_data)
+    assert_visual(graph, "mermaid", label_by=["diagnostic", "leadtime"])
+
+
 def test_node_properties_unsortable_types(graph):
     # Mixed types that are not sortable
     # Here we assign a diagnostic name of integer 0 while the remaining nodes remain
