@@ -200,6 +200,7 @@ td {{
 </div>
 
 <script type="module">
+  // pin mermaid version to 11.0: https://github.com/MetOffice/dagrunner/pull/75
   import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11.0/dist/mermaid.esm.min.mjs';
   mermaid.initialize({{
         startOnLoad: true,
