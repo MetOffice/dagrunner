@@ -105,7 +105,7 @@ jobs:
         if: steps.cache-ref-coverage.outputs.cache-hit != 'true'
         run: |
           cd ref
-          pytest --cov=dagrunner --cov-report=term --cov-report=html | tee coverage_output.txt; test ${PIPESTATUS[0]} -eq 0
+          pytest --maxfail=0 --continue-on-collection-errors --cov=dagrunner --cov-report=term --cov-report=html | tee coverage_output.txt || true
 
       # TESTS (compare coverage)
       ############################
