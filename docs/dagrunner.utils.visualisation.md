@@ -134,7 +134,7 @@ MermaidHTML(mermaid, table=None)
 
 ### function: `__init__`
 
-[Source](../dagrunner/utils/visualisation.py#L321)
+[Source](../dagrunner/utils/visualisation.py#L322)
 
 #### Call Signature:
 
@@ -146,7 +146,7 @@ Initialize self.  See help(type(self)) for accurate signature.
 
 ### function: `__str__`
 
-[Source](../dagrunner/utils/visualisation.py#L324)
+[Source](../dagrunner/utils/visualisation.py#L325)
 
 #### Call Signature:
 
@@ -158,7 +158,7 @@ Return str(self).
 
 ### function: `save`
 
-[Source](../dagrunner/utils/visualisation.py#L329)
+[Source](../dagrunner/utils/visualisation.py#L330)
 
 #### Call Signature:
 
