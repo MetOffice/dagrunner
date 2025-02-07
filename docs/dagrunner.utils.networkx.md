@@ -21,7 +21,7 @@ see [function: dagrunner.utils.subset_equality](dagrunner.utils.md#function-subs
 ### Call Signature:
 
 ```python
-get_subset_with_dependencies(graph: networkx.classes.digraph.DiGraph, filter_list: Iterable)
+get_subset_with_dependencies(graph: networkx.classes.digraph.DiGraph, filter_list: Union[dict, Iterable[dict]])
 ```
 
 Helper function to easily filter networkx graphs.
@@ -37,12 +37,12 @@ Args:
 
 ## function: `visualise_graph`
 
-[Source](../dagrunner/utils/networkx.py#L320)
+[Source](../dagrunner/utils/networkx.py#L325)
 
 ### Call Signature:
 
 ```python
-visualise_graph(graph: networkx.classes.digraph.DiGraph, backend='mermaid', collapse_properties: Iterable = None, title=None, output_filepath=None, **kwargs)
+visualise_graph(graph: networkx.classes.digraph.DiGraph, backend: str = 'mermaid', collapse_properties: Union[str, Iterable[str]] = None, title: str = None, output_filepath: str = None, **kwargs)
 ```
 
 Visualise a networkx graph.
@@ -56,14 +56,15 @@ Args:
 - `graph`: The graph to visualise.
 - `backend`: The backend to use for visualisation.  Supported values include
   'mermaid' (javascript, default) and 'matplotlib'.
-- `collapse_properties`: A list of properties to collapse nodes on.  Only
+  See [visualise_graph_mermaid](#function-visualise_graph_mermaid).
+- `collapse_properties`: One or more properties to collapse nodes on.  Only
   supported for nodes represented by dataclasses right now.
 - `title`: The title of the visualisation.
 - `output_filepath`: The output filepath to save the visualisation to.
 
 ## function: `visualise_graph_matplotlib`
 
-[Source](../dagrunner/utils/networkx.py#L116)
+[Source](../dagrunner/utils/networkx.py#L117)
 
 ### Call Signature:
 
@@ -84,19 +85,22 @@ Args:
 
 ## function: `visualise_graph_mermaid`
 
-[Source](../dagrunner/utils/networkx.py#L214)
+[Source](../dagrunner/utils/networkx.py#L215)
 
 ### Call Signature:
 
 ```python
-visualise_graph_mermaid(graph: networkx.classes.digraph.DiGraph, node_info_lookup: dict = None, title: str = None, output_filepath: str = None, group_by: str = None, label_by: Iterable = None)
+visualise_graph_mermaid(graph: networkx.classes.digraph.DiGraph, node_info_lookup: dict = None, title: str = None, output_filepath: str = None, group_by: Union[str, Iterable[str]] = None, label_by: Union[str, Iterable[str]] = None)
 ```
 
-Visualise a networkx graph using matplotlib.
+Visualise a networkx graph using mermaid.
 
 Args:
 - `graph`: The graph to visualise.
 - `node_info_lookup`: A dictionary mapping nodes to their information.
 - `title`: The title of the visualisation.
 - `output_filepath`: The output filepath to save the visualisation to.
+- `group_by`: One or more property to group nodes by (i.e.
+  [subgraph](https://mermaid-js.github.io/mermaid/#/subgraph)).
+- `label_by`: One or more property to label visualisation nodes by.
 
