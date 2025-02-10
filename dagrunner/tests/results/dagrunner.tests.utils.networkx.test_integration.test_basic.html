@@ -123,28 +123,28 @@ graph TD
 click 0 callback "{'node data': {'call': ('module.path.a',<br>{'init_arg': 'ia_a'},<br>{'call_arg': 'ca_a'}),<br>'diagnostic': 'a',<br>'leadtime': 1,<br>'prop': 'prop_a'}}"
 1(["1<br>D:b_L:1"])
 click 1 callback "{'node data': {'call': ('module.path.b',<br>{'init_arg': 'ia_b'},<br>{'call_arg': 'ca_b'}),<br>'diagnostic': 'b',<br>'leadtime': 1,<br>'prop': 'prop_b'}}"
-0 --> 1
 2(["2<br>D:c_L:1"])
 click 2 callback "{'node data': {'call': ('module.path.c',<br>{'init_arg': 'ia_c'},<br>{'call_arg': 'ca_c'}),<br>'diagnostic': 'c',<br>'leadtime': 1,<br>'prop': 'prop_c'}}"
 3(["3<br>D:d_L:1"])
 click 3 callback "{'node data': {'call': ('module.path.d',<br>{'init_arg': 'ia_d'},<br>{'call_arg': 'ca_d'}),<br>'diagnostic': 'd',<br>'leadtime': 1,<br>'prop': 'prop_d'}}"
-2 --> 3
 4(["4<br>D:e_L:1"])
 click 4 callback "{'node data': {'call': ('module.path.e',<br>{'init_arg': 'ia_e'},<br>{'call_arg': 'ca_e'}),<br>'diagnostic': 'e',<br>'leadtime': 1,<br>'prop': 'prop_e'}}"
-1 --> 4
-3 --> 4
 5(["5<br>D:a_L:2"])
 click 5 callback "{'node data': {'call': ('module.path.a',<br>{'init_arg': 'ia_a'},<br>{'call_arg': 'ca_a'}),<br>'diagnostic': 'a',<br>'leadtime': 2,<br>'prop': 'prop_a'}}"
 6(["6<br>D:b_L:2"])
 click 6 callback "{'node data': {'call': ('module.path.b',<br>{'init_arg': 'ia_b'},<br>{'call_arg': 'ca_b'}),<br>'diagnostic': 'b',<br>'leadtime': 2,<br>'prop': 'prop_b'}}"
-5 --> 6
 7(["7<br>D:c_L:2"])
 click 7 callback "{'node data': {'call': ('module.path.c',<br>{'init_arg': 'ia_c'},<br>{'call_arg': 'ca_c'}),<br>'diagnostic': 'c',<br>'leadtime': 2,<br>'prop': 'prop_c'}}"
 8(["8<br>D:d_L:2"])
 click 8 callback "{'node data': {'call': ('module.path.d',<br>{'init_arg': 'ia_d'},<br>{'call_arg': 'ca_d'}),<br>'diagnostic': 'd',<br>'leadtime': 2,<br>'prop': 'prop_d'}}"
-7 --> 8
 9(["9<br>D:e_L:2"])
 click 9 callback "{'node data': {'call': ('module.path.e',<br>{'init_arg': 'ia_e'},<br>{'call_arg': 'ca_e'}),<br>'diagnostic': 'e',<br>'leadtime': 2,<br>'prop': 'prop_e'}}"
+0 --> 1
+2 --> 3
+1 --> 4
+3 --> 4
+5 --> 6
+7 --> 8
 6 --> 9
 8 --> 9
         </div>
@@ -168,7 +168,7 @@ click 9 callback "{'node data': {'call': ('module.path.e',<br>{'init_arg': 'ia_e
 </div>
 
 <script type="module">
-import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11.0/dist/mermaid.esm.min.mjs';
+import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@9/dist/mermaid.esm.min.mjs';
 mermaid.initialize({
     startOnLoad: true,
     flowchart: { useMaxWidth: false, htmlLabels: true, curve: 'basis' },

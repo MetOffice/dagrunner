@@ -251,7 +251,6 @@ def visualise_graph_mermaid(
         node_target_id_map,
         node_info_lookup,
         label_by,
-        group_by,
     ):
         if node not in node_target_id_map:
             node_target_id_map[node] = node_id
@@ -259,19 +258,11 @@ def visualise_graph_mermaid(
             tooltip = "\n".join(
                 map(str.strip, pprint.pformat(node_info_lookup[node]).split("\n"))
             )
-
-            subgraphs = [
-                getattr(node, key) for key in group_by if getattr(node, key, None)
-            ]
-            for subgraph in subgraphs:
-                mermaid.add_raw(f"subgraph {subgraph}")
             mermaid.add_node(
                 node_id,
                 label=label,
                 tooltip=tooltip,
             )
-            for subgraph in subgraphs:
-                mermaid.add_raw("end")
             table.add_row(node_id, node, tooltip)
             node_id += 1
         return node_id
@@ -284,7 +275,32 @@ def visualise_graph_mermaid(
 
     node_target_id_map = {}
     node_id = 0
-    for target in graph.nodes:
+    nodes = graph.nodes
+    if group_by:
+        nodes = sorted(
+            graph.nodes,
+            key=lambda node: [getattr(node, key, "") or "" for key in group_by],
+        )
+
+    curr_subgraphs = None
+    for target in nodes:
+        if group_by:
+            subgraphs = [
+                getattr(target, key) for key in group_by if getattr(target, key, None)
+            ]
+            if subgraphs != curr_subgraphs:
+                if curr_subgraphs is not None:
+                    for subgraph in curr_subgraphs:
+                        mermaid.add_raw("end")
+                curr_subgraphs = subgraphs
+
+                for subg_ind, subgraph in enumerate(subgraphs):
+                    subg_id = "_".join(subgraphs[: subg_ind + 1])
+                    if len(subgraphs) > 1:
+                        mermaid.add_raw(f"subgraph {subg_id}[{subgraph}]")
+                    else:
+                        mermaid.add_raw(f"subgraph {subg_id}")
+
         node_id = add_node(
             target,
             mermaid,
@@ -293,20 +309,12 @@ def visualise_graph_mermaid(
             node_target_id_map,
             node_info_lookup,
             label_by,
-            group_by,
         )
-
+    if curr_subgraphs is not None:
+        for subgraph in curr_subgraphs:
+            mermaid.add_raw("end")
+    for target in nodes:
         for pred in graph.predecessors(target):
-            node_id = add_node(
-                pred,
-                mermaid,
-                table,
-                node_id,
-                node_target_id_map,
-                node_info_lookup,
-                label_by,
-                group_by,
-            )
             mermaid.add_connection(node_target_id_map[pred], node_target_id_map[target])
 
     if output_filepath:

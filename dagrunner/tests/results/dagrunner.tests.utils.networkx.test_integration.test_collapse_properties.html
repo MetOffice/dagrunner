@@ -123,14 +123,14 @@ graph TD
 click 0 callback "{'leadtime': [1, 2],<br>'node data': {{'call': ('module.path.a', {'init_arg': 'ia_a'}, {'call_arg': <br>'ca_a'}), 'prop': 'prop_a', 'diagnostic': 'a'}}}"
 1(["1<br>D:b_L:None"])
 click 1 callback "{'leadtime': [1, 2],<br>'node data': {{'call': ('module.path.b', {'init_arg': 'ia_b'}, {'call_arg': <br>'ca_b'}), 'prop': 'prop_b', 'diagnostic': 'b'}}}"
-0 --> 1
 2(["2<br>D:c_L:None"])
 click 2 callback "{'leadtime': [1, 2],<br>'node data': {{'call': ('module.path.c', {'init_arg': 'ia_c'}, {'call_arg': <br>'ca_c'}), 'prop': 'prop_c', 'diagnostic': 'c'}}}"
 3(["3<br>D:d_L:None"])
 click 3 callback "{'leadtime': [1, 2],<br>'node data': {{'call': ('module.path.d', {'init_arg': 'ia_d'}, {'call_arg': <br>'ca_d'}), 'prop': 'prop_d', 'diagnostic': 'd'}}}"
-2 --> 3
 4(["4<br>D:e_L:None"])
 click 4 callback "{'leadtime': [1, 2],<br>'node data': {{'call': ('module.path.e', {'init_arg': 'ia_e'}, {'call_arg': <br>'ca_e'}), 'prop': 'prop_e', 'diagnostic': 'e'}}}"
+0 --> 1
+2 --> 3
 1 --> 4
 3 --> 4
         </div>
@@ -154,7 +154,7 @@ click 4 callback "{'leadtime': [1, 2],<br>'node data': {{'call': ('module.path.e
 </div>
 
 <script type="module">
-import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11.0/dist/mermaid.esm.min.mjs';
+import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@9/dist/mermaid.esm.min.mjs';
 mermaid.initialize({
     startOnLoad: true,
     flowchart: { useMaxWidth: false, htmlLabels: true, curve: 'basis' },
