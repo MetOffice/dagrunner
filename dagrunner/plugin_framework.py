@@ -157,14 +157,14 @@ class Load(Plugin):
             except FileNotFoundError as e:
                 if self._ignore_missing:
                     warnings.warn(str(e))
-                    return SKIP_EVENT
+                    return IGNORE_EVENT
                 raise e
         else:
             missing_files = [not os.path.exists(arg) for arg in args]
             if any(missing_files):
                 if self._ignore_missing:
                     warnings.warn("Ignoring missing files.")
-                    return SKIP_EVENT
+                    return IGNORE_EVENT
                 else:
                     raise FileNotFoundError(
                         f"Missing files: {', '.join(missing_files)}"
