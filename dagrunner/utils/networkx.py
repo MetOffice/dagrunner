@@ -15,6 +15,16 @@ import networkx as nx
 from . import as_iterable, in_notebook, subset_equality
 from .visualisation import HTMLTable, MermaidGraph, MermaidHTML
 
+MERMAID_SUBGRAPH_COLORS = [
+    "#D4A76A",  # Muted Orange)
+    "#A0C4DE",  # Muted Sky Blue)
+    "#78B69A",  # Muted Green)
+    "#DDD290",  # Muted Yellow)
+    "#7E9ACD",  # Muted Blue)
+    "#BF8163",  # Muted Vermillion)
+    "#B58FA4",  # Muted Reddish Purple)
+]
+
 
 def _update_node_ancestry(
     graph: nx.DiGraph,
@@ -276,6 +286,7 @@ def visualise_graph_mermaid(
     node_target_id_map = {}
     node_id = 0
     nodes = graph.nodes
+
     if group_by:
         nodes = sorted(
             graph.nodes,
@@ -296,7 +307,11 @@ def visualise_graph_mermaid(
 
                 for subg_ind, subgraph in enumerate(subgraphs):
                     subg_id = "_".join(subgraphs[: subg_ind + 1])
-                    if len(subgraphs) > 1:
+                    if subg_ind > 0:
+                        colour = MERMAID_SUBGRAPH_COLORS[
+                            subg_ind % len(MERMAID_SUBGRAPH_COLORS)
+                        ]
+                        mermaid.add_raw(f"style {subg_id} fill:{colour}")
                         mermaid.add_raw(f"subgraph {subg_id}[{subgraph}]")
                     else:
                         mermaid.add_raw(f"subgraph {subg_id}")

@@ -119,7 +119,8 @@ title:
 ---
 graph TD
 
-subgraph a[a]
+subgraph a
+style a_b fill:#A0C4DE
 subgraph a_b[b]
 0(["0<br>Node(diagnostic='a', model='b', step='a')"])
 click 0 callback "{'node data': {}}"
@@ -127,13 +128,15 @@ click 0 callback "{'node data': {}}"
 click 1 callback "{'node data': {}}"
 end
 end
-subgraph a[a]
+subgraph a
+style a_x fill:#A0C4DE
 subgraph a_x[x]
 2(["2<br>Node(diagnostic='a', model='x', step='a')"])
 click 2 callback "{'node data': {}}"
 end
 end
-subgraph x[x]
+subgraph x
+style x_b fill:#A0C4DE
 subgraph x_b[b]
 3(["3<br>Node(diagnostic='x', model='b', step='a')"])
 click 3 callback "{'node data': {}}"
