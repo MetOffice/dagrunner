@@ -265,20 +265,29 @@ def visualise_graph_mermaid(
         if node not in node_target_id_map:
             node_target_id_map[node] = node_id
             label = gen_label(node_id, node, label_by)
-            tooltip = "\n".join(
-                map(str.strip, pprint.pformat(node_info_lookup[node]).split("\n"))
+            tooltip = "collapsed over:\n" + "\n".join(
+                map(
+                    str.strip,
+                    pprint.pformat(node_info_lookup[node]["collapsed"]).split("\n"),
+                )
+            )
+            info = "\n".join(
+                map(
+                    str.strip,
+                    pprint.pformat(node_info_lookup[node]["node data"]).split("\n"),
+                )
             )
             mermaid.add_node(
                 node_id,
                 label=label,
                 tooltip=tooltip,
             )
-            table.add_row(node_id, node, tooltip)
+            table.add_row(node_id, node, tooltip, info)
             node_id += 1
         return node_id
 
     mermaid = MermaidGraph(title=title or "")
-    table = HTMLTable(["id", "node", "info"])
+    table = HTMLTable(["id", "node", "collapsed", "info"])
 
     label_by = as_iterable(label_by)
     group_by = as_iterable(group_by)
@@ -415,35 +424,31 @@ def visualise_graph(
             filtered_nodes = set(
                 filter(lambda gnode: subset_equality(node, gnode), graph.nodes)
             )
-            node_info_lookup[node] = {
+            node_info_lookup[node] = {}
+            node_info_lookup[node]["collapsed"] = {
                 property: set([getattr(node, property) for node in filtered_nodes])
                 for property in collapse_properties
             }
-            for key in node_info_lookup[node]:
+            for key in node_info_lookup[node]["collapsed"]:
                 try:
-                    node_info_lookup[node][key] = sorted(
-                        node_info_lookup[node][key], key=lambda x: (x is None, x)
+                    node_info_lookup[node]["collapsed"][key] = sorted(
+                        node_info_lookup[node]["collapsed"][key],
+                        key=lambda x: (x is None, x),
                     )
                 except TypeError:
                     continue
 
-            node_info_lookup[node].update(
-                {
-                    "node data": set(
-                        [
-                            str(
-                                {
-                                    key: val
-                                    for key, val in graph.nodes(data=True)[
-                                        gnode
-                                    ].items()
-                                    if key not in collapse_properties
-                                }
-                            )
-                            for gnode in filtered_nodes
-                        ]
+            node_info_lookup[node]["node data"] = set(
+                [
+                    str(
+                        {
+                            key: val
+                            for key, val in graph.nodes(data=True)[gnode].items()
+                            if key not in collapse_properties
+                        }
                     )
-                }
+                    for gnode in filtered_nodes
+                ]
             )
         graph = collapsed_graph
     else:
