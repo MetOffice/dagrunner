@@ -119,32 +119,51 @@ title:
 ---
 graph TD
 
-subgraph a
-style a_b fill:#A0C4DE
-subgraph a_b[b]
-0(["0<br>Node(diagnostic='a', model='b', step='a')"])
+subgraph None
+style None_cc fill:#D4A76A
+subgraph None_cc[cc]
+0(["0<br>Node(diagnostic='None', model='cc', step='zzz')"])
 click 0 callback "{'node data': {}}"
-1(["1<br>Node(diagnostic='a', model='b', step='b')"])
-click 1 callback "{'node data': {}}"
 end
 end
 subgraph a
-style a_x fill:#A0C4DE
-subgraph a_x[x]
-2(["2<br>Node(diagnostic='a', model='x', step='a')"])
+style a_bb fill:#D4A76A
+subgraph a_bb[bb]
+1(["1<br>Node(diagnostic='a', model='bb', step='aaa')"])
+click 1 callback "{'node data': {}}"
+2(["2<br>Node(diagnostic='a', model='bb', step='bbb')"])
 click 2 callback "{'node data': {}}"
 end
-end
-subgraph x
-style x_b fill:#A0C4DE
-subgraph x_b[b]
-3(["3<br>Node(diagnostic='x', model='b', step='a')"])
+style a_xx fill:#D4A76A
+subgraph a_xx[xx]
+3(["3<br>Node(diagnostic='a', model='xx', step='aaa')"])
 click 3 callback "{'node data': {}}"
 end
 end
-0 --> 1
-3 --> 2
-1 --> 3
+subgraph x
+style x_bb fill:#D4A76A
+subgraph x_bb[bb]
+4(["4<br>Node(diagnostic='x', model='bb', step='aaa')"])
+click 4 callback "{'node data': {}}"
+end
+end
+subgraph y
+5(["5<br>Node(diagnostic='y', model=None, step='zzz')"])
+click 5 callback "{'node data': {}}"
+end
+subgraph z
+style z_zz fill:#D4A76A
+subgraph z_zz[zz]
+6(["6<br>Node(diagnostic='z', model='zz', step='zzz')"])
+click 6 callback "{'node data': {}}"
+end
+end
+5 --> 0
+1 --> 2
+4 --> 3
+2 --> 4
+6 --> 5
+3 --> 6
         </div>
     </div>
 
@@ -316,10 +335,13 @@ wrapToggleButton.addEventListener('click', () => {
 <th>info</th>
 </tr>
 
-<tr><td>0</td><td>Node(diagnostic='a', model='b', step='a')</td><td>{'node data': {}}</td></tr>
-<tr><td>1</td><td>Node(diagnostic='a', model='b', step='b')</td><td>{'node data': {}}</td></tr>
-<tr><td>2</td><td>Node(diagnostic='a', model='x', step='a')</td><td>{'node data': {}}</td></tr>
-<tr><td>3</td><td>Node(diagnostic='x', model='b', step='a')</td><td>{'node data': {}}</td></tr>
+<tr><td>0</td><td>Node(diagnostic='None', model='cc', step='zzz')</td><td>{'node data': {}}</td></tr>
+<tr><td>1</td><td>Node(diagnostic='a', model='bb', step='aaa')</td><td>{'node data': {}}</td></tr>
+<tr><td>2</td><td>Node(diagnostic='a', model='bb', step='bbb')</td><td>{'node data': {}}</td></tr>
+<tr><td>3</td><td>Node(diagnostic='a', model='xx', step='aaa')</td><td>{'node data': {}}</td></tr>
+<tr><td>4</td><td>Node(diagnostic='x', model='bb', step='aaa')</td><td>{'node data': {}}</td></tr>
+<tr><td>5</td><td>Node(diagnostic='y', model=None, step='zzz')</td><td>{'node data': {}}</td></tr>
+<tr><td>6</td><td>Node(diagnostic='z', model='zz', step='zzz')</td><td>{'node data': {}}</td></tr>
 </table>
 
         <button class="wrap-toggle">➡️</button>

@@ -296,25 +296,46 @@ def visualise_graph_mermaid(
     curr_subgraphs = None
     for target in nodes:
         if group_by:
-            subgraphs = [
-                getattr(target, key) for key in group_by if getattr(target, key, None)
-            ]
-            if subgraphs != curr_subgraphs:
-                if curr_subgraphs is not None:
-                    for subgraph in curr_subgraphs:
-                        mermaid.add_raw("end")
-                curr_subgraphs = subgraphs
+            subgraphs_raw = [getattr(target, key) for key in group_by]
+            subgraphs = list(filter(None, subgraphs_raw))
 
-                for subg_ind, subgraph in enumerate(subgraphs):
-                    subg_id = "_".join(subgraphs[: subg_ind + 1])
-                    if subg_ind > 0:
-                        colour = MERMAID_SUBGRAPH_COLORS[
-                            subg_ind % len(MERMAID_SUBGRAPH_COLORS)
-                        ]
-                        mermaid.add_raw(f"style {subg_id} fill:{colour}")
-                        mermaid.add_raw(f"subgraph {subg_id}[{subgraph}]")
-                    else:
-                        mermaid.add_raw(f"subgraph {subg_id}")
+            # determining whether subgraphing remains the same
+            if curr_subgraphs is not None:
+                len_min = min(len(curr_subgraphs), len(subgraphs))
+                diff_ind = len_min
+                for ind in range(len_min):
+                    if curr_subgraphs[ind] != subgraphs[ind]:
+                        diff_ind = ind
+                        break
+                indent_chng = max(0, len(curr_subgraphs) - len(subgraphs)) + (
+                    len_min - diff_ind
+                )
+                for _ in range(indent_chng):
+                    mermaid.add_raw("end")
+
+            gen_subgraph = False
+            for subg_ind, subgraph in enumerate(subgraphs):
+                if gen_subgraph is False and curr_subgraphs is not None:
+                    if (
+                        len(curr_subgraphs) > subg_ind
+                        and curr_subgraphs[subg_ind] == subgraph
+                    ):
+                        # same subgraph so don't redefine it
+                        continue
+                gen_subgraph = True
+
+                subg_id = "_".join(subgraphs[: subg_ind + 1])
+                colour_index = subgraphs_raw.index(subgraph) - 1
+                if colour_index >= 0:
+                    colour = MERMAID_SUBGRAPH_COLORS[
+                        colour_index % len(MERMAID_SUBGRAPH_COLORS)
+                    ]
+                    mermaid.add_raw(f"style {subg_id} fill:{colour}")
+                if subg_ind > 0:
+                    mermaid.add_raw(f"subgraph {subg_id}[{subgraph}]")
+                else:
+                    mermaid.add_raw(f"subgraph {subg_id}")
+            curr_subgraphs = subgraphs
 
         node_id = add_node(
             target,
@@ -325,9 +346,10 @@ def visualise_graph_mermaid(
             node_info_lookup,
             label_by,
         )
-    if curr_subgraphs is not None:
-        for subgraph in curr_subgraphs:
+    if group_by:
+        for nesting in range(len(subg_id.split("_"))):
             mermaid.add_raw("end")
+
     for target in nodes:
         for pred in graph.predecessors(target):
             mermaid.add_connection(node_target_id_map[pred], node_target_id_map[target])
