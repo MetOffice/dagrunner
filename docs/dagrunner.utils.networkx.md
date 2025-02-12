@@ -14,9 +14,11 @@ see [function: dagrunner.utils.in_notebook](dagrunner.utils.md#function-in_noteb
 
 see [function: dagrunner.utils.subset_equality](dagrunner.utils.md#function-subset_equality)
 
+## list: `MERMAID_SUBGRAPH_COLORS`
+
 ## function: `get_subset_with_dependencies`
 
-[Source](../dagrunner/utils/networkx.py#L55)
+[Source](../dagrunner/utils/networkx.py#L65)
 
 ### Call Signature:
 
@@ -37,7 +39,7 @@ Args:
 
 ## function: `visualise_graph`
 
-[Source](../dagrunner/utils/networkx.py#L325)
+[Source](../dagrunner/utils/networkx.py#L370)
 
 ### Call Signature:
 
@@ -64,7 +66,7 @@ Args:
 
 ## function: `visualise_graph_matplotlib`
 
-[Source](../dagrunner/utils/networkx.py#L117)
+[Source](../dagrunner/utils/networkx.py#L127)
 
 ### Call Signature:
 
@@ -85,7 +87,7 @@ Args:
 
 ## function: `visualise_graph_mermaid`
 
-[Source](../dagrunner/utils/networkx.py#L215)
+[Source](../dagrunner/utils/networkx.py#L225)
 
 ### Call Signature:
 
