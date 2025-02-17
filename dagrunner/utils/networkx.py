@@ -15,6 +15,16 @@ import networkx as nx
 from . import as_iterable, in_notebook, subset_equality
 from .visualisation import HTMLTable, MermaidGraph, MermaidHTML
 
+MERMAID_SUBGRAPH_COLORS = [
+    "#D4A76A",  # Muted Orange)
+    "#A0C4DE",  # Muted Sky Blue)
+    "#78B69A",  # Muted Green)
+    "#DDD290",  # Muted Yellow)
+    "#7E9ACD",  # Muted Blue)
+    "#BF8163",  # Muted Vermillion)
+    "#B58FA4",  # Muted Reddish Purple)
+]
+
 
 def _update_node_ancestry(
     graph: nx.DiGraph,
@@ -251,7 +261,6 @@ def visualise_graph_mermaid(
         node_target_id_map,
         node_info_lookup,
         label_by,
-        group_by,
     ):
         if node not in node_target_id_map:
             node_target_id_map[node] = node_id
@@ -259,19 +268,11 @@ def visualise_graph_mermaid(
             tooltip = "\n".join(
                 map(str.strip, pprint.pformat(node_info_lookup[node]).split("\n"))
             )
-
-            subgraphs = [
-                getattr(node, key) for key in group_by if getattr(node, key, None)
-            ]
-            for subgraph in subgraphs:
-                mermaid.add_raw(f"subgraph {subgraph}")
             mermaid.add_node(
                 node_id,
                 label=label,
                 tooltip=tooltip,
             )
-            for subgraph in subgraphs:
-                mermaid.add_raw("end")
             table.add_row(node_id, node, tooltip)
             node_id += 1
         return node_id
@@ -284,7 +285,58 @@ def visualise_graph_mermaid(
 
     node_target_id_map = {}
     node_id = 0
-    for target in graph.nodes:
+    nodes = graph.nodes
+
+    if group_by:
+        nodes = sorted(
+            graph.nodes,
+            key=lambda node: [getattr(node, key, "") or "" for key in group_by],
+        )
+
+    curr_subgraphs = None
+    for target in nodes:
+        if group_by:
+            subgraphs_raw = [getattr(target, key) for key in group_by]
+            subgraphs = list(filter(None, subgraphs_raw))
+
+            # determining whether subgraphing remains the same
+            if curr_subgraphs is not None:
+                len_min = min(len(curr_subgraphs), len(subgraphs))
+                diff_ind = len_min
+                for ind in range(len_min):
+                    if curr_subgraphs[ind] != subgraphs[ind]:
+                        diff_ind = ind
+                        break
+                indent_chng = max(0, len(curr_subgraphs) - len(subgraphs)) + (
+                    len_min - diff_ind
+                )
+                for _ in range(indent_chng):
+                    mermaid.add_raw("end")
+
+            gen_subgraph = False
+            for subg_ind, subgraph in enumerate(subgraphs):
+                if gen_subgraph is False and curr_subgraphs is not None:
+                    if (
+                        len(curr_subgraphs) > subg_ind
+                        and curr_subgraphs[subg_ind] == subgraph
+                    ):
+                        # same subgraph so don't redefine it
+                        continue
+                gen_subgraph = True
+
+                subg_id = "_".join(subgraphs[: subg_ind + 1])
+                colour_index = subgraphs_raw.index(subgraph) - 1
+                if colour_index >= 0:
+                    colour = MERMAID_SUBGRAPH_COLORS[
+                        colour_index % len(MERMAID_SUBGRAPH_COLORS)
+                    ]
+                    mermaid.add_raw(f"style {subg_id} fill:{colour}")
+                if subg_ind > 0:
+                    mermaid.add_raw(f"subgraph {subg_id}[{subgraph}]")
+                else:
+                    mermaid.add_raw(f"subgraph {subg_id}")
+            curr_subgraphs = subgraphs
+
         node_id = add_node(
             target,
             mermaid,
@@ -293,20 +345,13 @@ def visualise_graph_mermaid(
             node_target_id_map,
             node_info_lookup,
             label_by,
-            group_by,
         )
+    if group_by:
+        for nesting in range(len(subg_id.split("_"))):
+            mermaid.add_raw("end")
 
+    for target in nodes:
         for pred in graph.predecessors(target):
-            node_id = add_node(
-                pred,
-                mermaid,
-                table,
-                node_id,
-                node_target_id_map,
-                node_info_lookup,
-                label_by,
-                group_by,
-            )
             mermaid.add_connection(node_target_id_map[pred], node_target_id_map[target])
 
     if output_filepath:

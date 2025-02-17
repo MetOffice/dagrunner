@@ -88,6 +88,28 @@ def test_groupby(graph):
     assert_visual(graph, "mermaid", group_by="diagnostic")
 
 
+def test_groupby_recursive(graph):
+    from collections import namedtuple
+
+    Node = namedtuple("Node", ["diagnostic", "model", "step"])
+    graph = nx.DiGraph()
+    a = Node("a", "bb", "aaa")
+    b = Node("a", "bb", "bbb")
+    c = Node("x", "bb", "aaa")
+    d = Node("a", "xx", "aaa")
+    e = Node("z", "zz", "zzz")
+    f = Node("y", None, "zzz")
+    g = Node("None", "cc", "zzz")
+
+    graph.add_edge(a, b)
+    graph.add_edge(b, c)
+    graph.add_edge(c, d)
+    graph.add_edge(d, e)
+    graph.add_edge(e, f)
+    graph.add_edge(f, g)
+    assert_visual(graph, "mermaid", group_by=["diagnostic", "model"])
+
+
 def test_special_characters_words(graph):
     # Ensure we support labels containing 'interpolate'.  For some reason this causes
     # an error in mermaid.  Putting double quotes around this fixes the issue.
