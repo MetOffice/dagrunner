@@ -143,7 +143,9 @@ def test_node_properties_unsortable_types(graph):
     node_0, node_0_data = _gen_node(0, 1)
     graph.add_node(node_0, **node_0_data)
 
-    with mock.patch("dagrunner.utils.networkx.visualise_graph_mermaid") as mock_mermaid:
+    with mock.patch(
+        "dagrunner.utils.visualisation.visualise_graph_mermaid"
+    ) as mock_mermaid:
         visualise_graph(
             graph,
             backend="mermaid",
@@ -156,7 +158,7 @@ def test_node_properties_unsortable_types(graph):
 @pytest.fixture
 def mock_mpl_backend():
     with mock.patch(
-        "dagrunner.utils.networkx.visualise_graph_matplotlib"
+        "dagrunner.utils.visualisation.visualise_graph_matplotlib"
     ) as mock_backend:
         yield mock_backend
 
