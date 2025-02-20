@@ -10,6 +10,7 @@ import base64
 import math
 import os
 import pprint
+import sys
 import warnings
 import webbrowser
 from typing import Iterable, Union
@@ -17,6 +18,13 @@ from typing import Iterable, Union
 import networkx as nx
 
 from . import as_iterable, in_notebook
+
+# set web component path to local file when running pytest
+if "pytest" in sys.modules:
+    WEBCOMPONENT_PATH = "../../../visual/mermaid-table-standard.js"
+else:
+    WEBCOMPONENT_PATH = "https://cdn.jsdelivr.net/gh/MetOffice/dagrunner@vvisual_tooltip_table/visual/mermaid-table-standard.js"
+
 
 MERMAID_SUBGRAPH_COLORS = [
     "#D4A76A",  # Muted Orange)
@@ -135,9 +143,6 @@ class MermaidGraph:
                 print(f"Failed to fetch the image. Status code: {response.status_code}")
 
 
-WEBCOMPONENT_PATH = "../../../visual/mermaid-table-standard.js"
-
-
 class MermaidHTML:
     GRAPH_ENGINE = MermaidGraph
     HTML_TEMPLATE = """<!DOCTYPE html>
@@ -145,7 +150,7 @@ class MermaidHTML:
 <head>
     <meta charset="UTF-8">
     <title>Mermaid diagram lookup</title>
-    <script src="../../../visual/mermaid-table-standard.js" defer></script>
+    <script src="{webcomponent_path}" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/mermaid@9/dist/mermaid.min.js"></script>
     <script>
         mermaid.initialize({{
@@ -177,6 +182,7 @@ class MermaidHTML:
         return self.HTML_TEMPLATE.format(
             graph=str(self._graph),
             table=str(self._html_table),
+            webcomponent_path=WEBCOMPONENT_PATH,
         )
 
     def save(self, output_filepath):
