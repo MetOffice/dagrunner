@@ -350,6 +350,10 @@ style.textContent = `
     td {
         white-space: nowrap;
     }
+    th, td {
+        text-align: left;
+        vertical-align: top; /* Top align */
+    }
 
     table thead th { background: #CCC; position: sticky; top: 0; z-index: 1; }
 

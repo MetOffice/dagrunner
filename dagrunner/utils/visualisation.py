@@ -9,7 +9,6 @@ Module responsible for scheduler independent graph visualisation
 import base64
 import math
 import os
-import pprint
 import sys
 import warnings
 import webbrowser
@@ -39,7 +38,7 @@ MERMAID_SUBGRAPH_COLORS = [
 
 def _as_html(msg):
     """Quick nasty convert text to html, avoid beautiful soup dep."""
-    return str(msg).replace(">", "&gt;").replace("<", "&lt;")
+    return str(msg).replace(">", "&gt;").replace("<", "&lt;").replace("\n", "<br>")
 
 
 class HTMLTable:
@@ -313,32 +312,20 @@ def _add_node(
     label_by,
     tooltip_data=None,
 ):
-    if tooltip_data is None:
-        tooltip_data = node_data
+    table_delim = "; "  # \n could be useful here
     if node not in node_target_id_map:
         node_target_id_map[node] = node_id
         label = _gen_label(node_id, node, label_by)
-        tooltip = None
-        if tooltip_data:
-            tooltip = "\n".join(
-                map(
-                    str.strip,
-                    pprint.pformat(tooltip_data).split("\n"),
-                )
-            )
-        info = "\n".join(
-            map(
-                str.strip,
-                pprint.pformat(node_data).split("\n"),
-            )
-        )
+        tt_data = tooltip_data if tooltip_data is not None else node_data
+        tooltip = [f"{key}: {repr(val)}" for key, val in tt_data.items()]
+        info = table_delim.join([repr(val) for val in as_iterable(node_data)])
         mermaid.add_node(
             node_id,
             label=label,
-            tooltip=tooltip,
+            tooltip="\n".join(tooltip),
         )
         if tooltip_data:
-            table.add_row(node_id, node, tooltip, info, id=node_id)
+            table.add_row(node_id, node, table_delim.join(tooltip), info, id=node_id)
         else:
             table.add_row(node_id, node, info, id=node_id)
         node_id += 1

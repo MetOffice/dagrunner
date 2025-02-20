@@ -93,7 +93,7 @@ def in_notebook():
 def as_iterable(obj):
     if obj is None:
         return []
-    elif not isinstance(obj, Iterable) or isinstance(obj, (str, bytes)):
+    elif not isinstance(obj, Iterable) or isinstance(obj, (str, bytes, dict)):
         obj = [obj]
     return obj
 

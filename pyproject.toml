@@ -20,6 +20,9 @@ dependencies = [
   'dask[distributed] >= 2024.1.1',
 ]
 
+[tool.setuptools.packages.find]
+exclude = ["visual"]
+
 [project.optional-dependencies]
 # for testing the project
 tests = [
