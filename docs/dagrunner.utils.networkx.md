@@ -2,23 +2,15 @@
 
 [Source](../dagrunner/utils/networkx.py#L0)
 
-see [class: dagrunner.utils.visualisation.HTMLTable](dagrunner.utils.visualisation.md#class-htmltable)
-
-see [class: dagrunner.utils.visualisation.MermaidGraph](dagrunner.utils.visualisation.md#class-mermaidgraph)
-
-see [class: dagrunner.utils.visualisation.MermaidHTML](dagrunner.utils.visualisation.md#class-mermaidhtml)
-
 see [function: dagrunner.utils.as_iterable](dagrunner.utils.md#function-as_iterable)
-
-see [function: dagrunner.utils.in_notebook](dagrunner.utils.md#function-in_notebook)
 
 see [function: dagrunner.utils.subset_equality](dagrunner.utils.md#function-subset_equality)
 
-## list: `MERMAID_SUBGRAPH_COLORS`
+see [module: dagrunner.utils.visualisation](dagrunner.utils.visualisation.md#module-dagrunnerutilsvisualisation)
 
 ## function: `get_subset_with_dependencies`
 
-[Source](../dagrunner/utils/networkx.py#L65)
+[Source](../dagrunner/utils/networkx.py#L50)
 
 ### Call Signature:
 
@@ -39,7 +31,7 @@ Args:
 
 ## function: `visualise_graph`
 
-[Source](../dagrunner/utils/networkx.py#L370)
+[Source](../dagrunner/utils/networkx.py#L163)
 
 ### Call Signature:
 
@@ -57,52 +49,15 @@ dimensions (e.g. collapsing along the 'leadtime' property).
 Args:
 - `graph`: The graph to visualise.
 - `backend`: The backend to use for visualisation.  Supported values include
-  'mermaid' (javascript, default) and 'matplotlib'.
+  'mermaid' (javascript, default) and 'matplotlib' (experimental and unsupported).
   See [visualise_graph_mermaid](#function-visualise_graph_mermaid).
 - `collapse_properties`: One or more properties to collapse nodes on.  Only
   supported for nodes represented by dataclasses right now.
 - `title`: The title of the visualisation.
 - `output_filepath`: The output filepath to save the visualisation to.
-
-## function: `visualise_graph_matplotlib`
-
-[Source](../dagrunner/utils/networkx.py#L127)
-
-### Call Signature:
-
-```python
-visualise_graph_matplotlib(graph: networkx.classes.digraph.DiGraph, node_info_lookup: dict = None, title: str = None, output_filepath: str = None)
-```
-
-Visualise a networkx graph using matplotlib.
-
-Note that this backend is provided as-is and not intended for production use.
-'mermaid' graph is the recommended approach to graph visualisation.
-
-Args:
-- `graph`: The graph to visualise.
-- `node_info_lookup`: A dictionary mapping nodes to their information.
-- `title`: The title of the visualisation.
-- `output_filepath`: The output filepath to save the visualisation to.
-
-## function: `visualise_graph_mermaid`
-
-[Source](../dagrunner/utils/networkx.py#L225)
-
-### Call Signature:
-
-```python
-visualise_graph_mermaid(graph: networkx.classes.digraph.DiGraph, node_info_lookup: dict = None, title: str = None, output_filepath: str = None, group_by: Union[str, Iterable[str]] = None, label_by: Union[str, Iterable[str]] = None)
-```
-
-Visualise a networkx graph using mermaid.
-
-Args:
-- `graph`: The graph to visualise.
-- `node_info_lookup`: A dictionary mapping nodes to their information.
-- `title`: The title of the visualisation.
-- `output_filepath`: The output filepath to save the visualisation to.
-- `group_by`: One or more property to group nodes by (i.e.
-  [subgraph](https://mermaid-js.github.io/mermaid/#/subgraph)).
-- `label_by`: One or more property to label visualisation nodes by.
+- `**kwargs`: Additional keyword arguments to pass to the visualisation backend.
+  The default and only supported backend right now (mermaid) supports the following
+  keyword arguments:
+  - `group_by`: One or more property to group nodes by (i.e. subgraphing)
+  - `label_by`: One or more property to label visualisation nodes by.
 
