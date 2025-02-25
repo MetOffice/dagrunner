@@ -19,6 +19,7 @@ class TableStandardFmt extends HTMLElement {
         this.setupSvgExport();
         this.setupTextWrapToggle();
         this.setupMermaidClickHandling();
+        this.setupThemeToggle();
     }
 
     render() {
@@ -28,7 +29,26 @@ class TableStandardFmt extends HTMLElement {
                     display: flex;
                     flex-direction: column;
                     height: 100%;
+
+                    color-scheme: light dark;
+                    --primary-color: light-dark(rgb(43, 43, 43),rgb(233, 233, 233));
+                    --primary-background: light-dark(rgb(255, 255, 255),rgb(43, 43, 43));
+                    --highlight-color: light-dark(yellow, #CD853F);
+                    --primary-accent: light-dark(rgb(190, 190, 190),rgb(100, 100, 100));
+
+                    color: var(--primary-color);
+                    background-color: var(--primary-background);
+                    transition: color 0.4s, background-color 0.4s;
                 }
+
+            /* Force light or dark mode based on data-theme */
+            :host([data-theme="light"]) {
+                color-scheme: light;
+            }
+
+            :host([data-theme="dark"]) {
+                color-scheme: dark;
+            }
 
             #mermaid-container {
                 height: 70vh;
@@ -38,7 +58,7 @@ class TableStandardFmt extends HTMLElement {
                 resize: vertical; /* Allow resizing */
                 flex-shrink: 0; /* Prevent flex behaviour from overriding resize */
                 position: relative; /* For positioning zoom buttons */
-                border: 1px solid #ccc;
+                border: 1px solid var(--primary-accent);
                 border-radius: 5px;
                 box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
             }
@@ -93,6 +113,12 @@ class TableStandardFmt extends HTMLElement {
                 right: 10px;
             }
 
+            #toggle-theme {
+                background-color: transparent;
+                color: transparent;
+                border-color: transparent;
+            }
+
             #banner {
                 position: absolute;
                 bottom: 2px;
@@ -105,6 +131,12 @@ class TableStandardFmt extends HTMLElement {
             </style>
 
             <div id="mermaid-container">
+                <button id="toggle-theme" type="button">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16">
+                    <circle r="7" cx="8" cy="8" stroke=var(--primary-color) fill="none" />
+                    <path stroke=var(--primary-color) fill=var(--primary-color) d="M8 15A1 1 0 0 0 8 1" />
+                </svg>
+                </button>
                 <button id="save-diagram">📥</button>
                 <div id="diagram-wrapper">
                     <slot name="mermaid"></slot>
@@ -133,6 +165,17 @@ class TableStandardFmt extends HTMLElement {
                 </div>
             </div>
         `;
+    }
+
+    setupThemeToggle() {
+        const themeToggleButton = this.shadowRoot.querySelector("#toggle-theme");
+        let theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        this.setAttribute("data-theme", theme);
+    
+        themeToggleButton.addEventListener("click", () => {
+            theme = theme === "light" ? "dark" : "light";
+            this.setAttribute("data-theme", theme);
+        });
     }
 
     setupRowClickHandling() {
@@ -341,11 +384,11 @@ style.textContent = `
     }
 
     .highlighted {
-        background: #ffeb3b !important;
+        background: var(--highlight-color) !important;
     }
 
-    tr:nth-child(even) { background: #CCC }
-    tr:nth-child(odd) { background: #FFF }
+    tr:nth-child(even) { background: var(--primary-background) }
+    tr:nth-child(odd) { background: var(--primary-accent) }
 
     td {
         white-space: nowrap;
@@ -355,7 +398,7 @@ style.textContent = `
         vertical-align: top; /* Top align */
     }
 
-    table thead th { background: #CCC; position: sticky; top: 0; z-index: 1; }
+    table thead th { background: var(--primary-background); position: sticky; top: 0; z-index: 1; }
 
 `;
 document.head.appendChild(style);
