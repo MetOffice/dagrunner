@@ -162,7 +162,7 @@ class TableStandardFmt extends HTMLElement {
             <div class="table_box">
                 <div class="table_content">
                     <slot name="table"></slot>
-                    <button class="wrap-toggle">➡️</button>
+                    <button class="wrap-toggle" title="word wrap toggle">➡️</button>
                 </div>
             </div>
         `;
