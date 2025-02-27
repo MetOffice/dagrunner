@@ -4,15 +4,6 @@
     <meta charset="UTF-8">
     <title>Mermaid diagram lookup</title>
     <script src="../../../visual/mermaid-table-standard.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/mermaid@9/dist/mermaid.min.js"></script>
-    <script>
-        mermaid.initialize({
-            startOnLoad: false,
-            flowchart: { useMaxWidth: false, htmlLabels: true, curve: 'basis' },
-            securityLevel:'loose',  // required for mermaid@9 tooltip functionality
-            maxTextSize: 99999999  // beyond this "Maximum text size in diagram exceeded"
-        });
-    </script>
 </head>
 
 <body>
@@ -24,13 +15,13 @@ title:
 ---
 graph TD
 
-subgraph None
+subgraph None[None]
 style None_cc fill:#D4A76A
 subgraph None_cc[cc]
 0(["0<br>Node(diagnostic='None', model='cc', step='zzz')"])
 end
 end
-subgraph a
+subgraph a[a]
 style a_bb fill:#D4A76A
 subgraph a_bb[bb]
 1(["1<br>Node(diagnostic='a', model='bb', step='aaa')"])
@@ -41,16 +32,16 @@ subgraph a_xx[xx]
 3(["3<br>Node(diagnostic='a', model='xx', step='aaa')"])
 end
 end
-subgraph x
+subgraph x[x]
 style x_bb fill:#D4A76A
 subgraph x_bb[bb]
 4(["4<br>Node(diagnostic='x', model='bb', step='aaa')"])
 end
 end
-subgraph y
+subgraph y[y]
 5(["5<br>Node(diagnostic='y', model=None, step='zzz')"])
 end
-subgraph z
+subgraph z[z]
 style z_zz fill:#D4A76A
 subgraph z_zz[zz]
 6(["6<br>Node(diagnostic='z', model='zz', step='zzz')"])
