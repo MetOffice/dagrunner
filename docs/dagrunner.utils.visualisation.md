@@ -140,7 +140,7 @@ MermaidHTML(mermaid, table=None)
 
 ### function: `__init__`
 
-[Source](../dagrunner/utils/visualisation.py#L176)
+[Source](../dagrunner/utils/visualisation.py#L167)
 
 #### Call Signature:
 
@@ -152,7 +152,7 @@ Initialize self.  See help(type(self)) for accurate signature.
 
 ### function: `__str__`
 
-[Source](../dagrunner/utils/visualisation.py#L179)
+[Source](../dagrunner/utils/visualisation.py#L170)
 
 #### Call Signature:
 
@@ -164,7 +164,7 @@ Return str(self).
 
 ### function: `save`
 
-[Source](../dagrunner/utils/visualisation.py#L186)
+[Source](../dagrunner/utils/visualisation.py#L177)
 
 #### Call Signature:
 
@@ -176,7 +176,7 @@ save(self, output_filepath)
 
 ## function: `visualise_graph_matplotlib`
 
-[Source](../dagrunner/utils/visualisation.py#L194)
+[Source](../dagrunner/utils/visualisation.py#L185)
 
 ### Call Signature:
 
@@ -197,7 +197,7 @@ Args:
 
 ## function: `visualise_graph_mermaid`
 
-[Source](../dagrunner/utils/visualisation.py#L334)
+[Source](../dagrunner/utils/visualisation.py#L325)
 
 ### Call Signature:
 
