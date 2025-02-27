@@ -7,33 +7,65 @@ Module responsible for scheduler independent graph visualisation
 """
 
 import base64
+import math
 import os
+import warnings
+import webbrowser
+from typing import Iterable, Union
+
+import networkx as nx
+
+from . import as_iterable, in_notebook
+
+# set web component path to relative local file when running pytest
+if os.environ.get("PYTEST_VERSION") is not None:
+    WEBCOMPONENT_PATH = "../../../visual/mermaid-table-standard.js"
+else:
+    WEBCOMPONENT_PATH = "https://cdn.jsdelivr.net/gh/MetOffice/dagrunner@vvisual_tooltip_table/visual/mermaid-table-standard.js"
+
+
+MERMAID_SUBGRAPH_COLORS = [
+    "#D4A76A",  # Muted Orange)
+    "#A0C4DE",  # Muted Sky Blue)
+    "#78B69A",  # Muted Green)
+    "#DDD290",  # Muted Yellow)
+    "#7E9ACD",  # Muted Blue)
+    "#BF8163",  # Muted Vermillion)
+    "#B58FA4",  # Muted Reddish Purple)
+]
 
 
 def _as_html(msg):
     """Quick nasty convert text to html, avoid beautiful soup dep."""
-    return str(msg).replace(">", "&gt;").replace("<", "&lt;")
+    return str(msg).replace(">", "&gt;").replace("<", "&lt;").replace("\n", "<br>")
 
 
 class HTMLTable:
-    TABLE_TEMPLATE = """<table>
-<tr>
-{table_header}
-</tr>
-{table_cont}
+    TABLE_TEMPLATE = """<table slot="table">
+    <thead>{table_header}
+    </thead>
+    <tbody>{table_cont}
+    </tbody>
 </table>
 """
 
     def __init__(self, column_names):
         self._table_cont = ""
-        self._table_header = "\n".join(
-            [f"<th>{column_name}</th>" for column_name in column_names]
+        self._table_header = (
+            "\n        <tr>"
+            + "".join([f"<th>{column_name}</th>" for column_name in column_names])
+            + "</tr>"
         )
         self._ncols = len(column_names)
 
-    def add_row(self, *args):
+    def add_row(self, *args, id=None):
+        tr = ""
+        if id is not None:
+            tr = f' id="row{id}"'
         self._table_cont += (
-            "\n<tr>" + "".join([f"<td>{_as_html(arg)}</td>" for arg in args]) + "</tr>"
+            f"\n        <tr{tr}>"
+            + "".join([f"<td>{_as_html(arg)}</td>" for arg in args])
+            + "</tr>"
         )
 
     def __str__(self):
@@ -111,291 +143,31 @@ class MermaidGraph:
 
 class MermaidHTML:
     GRAPH_ENGINE = MermaidGraph
-    HTML_TEMPLATE = """
-<!DOCTYPE html>
+    HTML_TEMPLATE = """<!DOCTYPE html>
 <html>
+<head>
+    <meta charset="UTF-8">
+    <title>Mermaid diagram lookup</title>
+    <script src="{webcomponent_path}" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@9/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({{
+            startOnLoad: false,
+            flowchart: {{ useMaxWidth: false, htmlLabels: true, curve: 'basis' }},
+            securityLevel:'loose',  // required for mermaid@9 tooltip functionality
+            maxTextSize: 99999999  // beyond this "Maximum text size in diagram exceeded"
+        }});
+    </script>
+</head>
+
 <body>
 
-<style>
-div.mermaidTooltip {{
-    position: absolute;
-    text-align: left;
-    max-width: 700px;
-    padding: 2px;
-    font-family: "trebuchet ms", verdana, arial, sans-serif;
-    font-size: 12px;
-    background: hsl(80, 100%, 96.2745098039%);
-    border: 1px solid #aaaa33;
-    border-radius: 2px;
-    pointer-events: none;
-    z-index: 100;
-}}
-
-tr:nth-child(even) {{ background: #CCC }}
-tr:nth-child(odd) {{ background: #FFF }}
-
-html, body {{
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    overflow: hidden; /* Prevent page scrollbars */
-    display: flex;
-    flex-direction: column;
-}}
-
-td {{
-    white-space: nowrap;
-}}
-
-#mermaid-container {{
-    height: 70vh;
-    min-height: 50px; /* Allow resizing very small */
-    max-height: 90vh; /* Allow resizing very small */
-    overflow: hidden; /* Add vertical scrollbar if needed */
-    resize: vertical; /* Allow resizing */
-    flex-shrink: 0; /* Prevent flex behaviour from overriding resize */
-    border: 1px solid #ccc;
-    position: relative; /* For positioning zoom buttons */
-}}
-
-.table_box {{
-    min-height: 0;
-    flex-grow: 1;
-    position: relative;
-}}
-
-.table_content {{
-    overflow: auto;
-    width: 100%;
-    height: 100%;
-}}
-
-.wrap-toggle {{
-    position: absolute;
-    bottom: 1rem;
-    right: 1rem;
-    cursor: pointer;
-}}
-
-#diagram-wrapper {{
-    cursor: grab;
-}}
-
-#diagram-wrapper:active {{
-    cursor: grabbing;
-}}
-
-.mermaid {{
-transform-origin: 0 0; /* Set the origin for scaling */
-}}
-
-#zoom-controls {{
-    position: absolute;
-    right: 10px;
-    bottom: 10px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 5px;
-}}
-
-button {{
-    padding: 5px;
-    font-size: 14px;
-    min-width: 25px;
-}}
-
-#save-diagram {{
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    cursor: pointer;
-}}
-
-#banner {{
-    position: absolute;
-    bottom: 2px;
-    left: 2px;
-    padding: 0px;
-    font-size: 16px;
-    cursor: pointer;
-}}
-
-</style>
-
-<div id="mermaid-container">
-    <button id="save-diagram" style="margin-left: auto;">📥</button> <!-- Button aligned to the right -->
-    <div id="diagram-wrapper">
-        <div class="mermaid">
+<mermaid-table-standard>
+<div class="mermaid", slot="mermaid">
 {graph}
-        </div>
-    </div>
-
-    <div id="banner">
-        <a href="https://github.com/MetOffice/dagrunner" target="_blank">
-        <img src="https://raw.githubusercontent.com/MetOffice/dagrunner/refs/heads/main/docs/symbol.svg"/>
-        <text>DAGrunner visualisation</text>
-        </a>
-    </div>
-
-    <div id="zoom-controls">
-        <button id="zoom-in" title="zoom-in">+</button>
-        <div>
-            <button id="toggle-zoom" title="make zoom cursor-relative or origin-relative">🖱️</button>
-            <button id="zoom-reset" title="reset zoom and offset">🏠</button>
-        </div>
-        <button id="zoom-out" title="zoom-out">-</button>
-    </div>
 </div>
-
-<script type="module">
-import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@9/dist/mermaid.esm.min.mjs';
-mermaid.initialize({{
-    startOnLoad: true,
-    flowchart: {{ useMaxWidth: false, htmlLabels: true, curve: 'basis' }},
-    securityLevel:'loose',
-    maxTextSize: 99999999  // beyond this "Maximum text size in diagram exceeded"
-}});
-
-const wrapper = document.getElementById('diagram-wrapper');
-const mermaidDiagram = document.querySelector('.mermaid');
-const toggleButton = document.getElementById('toggle-zoom');
-const saveButton = document.getElementById('save-diagram');
-const zoomInButton = document.getElementById('zoom-in');
-const zoomOutButton = document.getElementById('zoom-out');
-const zoomResetButton = document.getElementById('zoom-reset');
-const wrapToggleButton = document.querySelector('.wrap-toggle');
-
-let scale = 1;
-let offsetX = 0;
-let offsetY = 0;
-let zoomRelativeToCursor = true; // Default behaviour: cursor-relative zoom
-let isWrapped = false;  // Tracks whether text is wrapped or not
-
-const updateTransform = () => {{
-    mermaidDiagram.style.transform = `translate(${{offsetX}}px, ${{offsetY}}px) scale(${{scale}})`;
-}};
-
-toggleButton.addEventListener('click', () => {{
-    zoomRelativeToCursor = !zoomRelativeToCursor;
-    toggleButton.textContent = `${{zoomRelativeToCursor ? '🖱️' : '🧭'}}`;
-}});
-
-saveButton.addEventListener('click', () => {{
-    // Extract the rendered SVG from the DOM
-    const svgElement = document.querySelector('#mermaid-container svg');
-    if (!svgElement) {{
-        alert('No diagram found to save!');
-        return;
-    }}
-
-    // Serialize the SVG to a string
-    const serializer = new XMLSerializer();
-    const svgContent = serializer.serializeToString(svgElement);
-
-    // Create a Blob from the SVG string
-    const blob = new Blob([svgContent], {{ type: 'image/svg+xml;charset=utf-8' }});
-
-    // Create a link element to trigger the download
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = 'mermaid-diagram.svg';
-    link.click();
-
-    // Clean up the temporary object URL
-    URL.revokeObjectURL(link.href);
-}});
-
-// Zoom functionality
-    zoomInButton.addEventListener('click', () => {{
-    const zoomStep = 0.1;
-    const newScale = Math.min(scale + zoomStep, 2); // Limit zoom-in
-    scale = newScale;
-    updateTransform();
-}});
-
-zoomOutButton.addEventListener('click', () => {{
-    const zoomStep = 0.1;
-    const newScale = Math.max(scale - zoomStep, 0.2); // Limit zoom-out
-    scale = newScale;
-    updateTransform();
-}});
-
-// Reset Zoom functionality
-zoomResetButton.addEventListener('click', () => {{
-    // Reset zoom scale and position
-    scale = 1;
-    offsetX = 0;
-    offsetY = 0;
-    updateTransform();
-}});
-
-// Zoom functionality with mouse wheel
-wrapper.addEventListener('wheel', (event) => {{
-    event.preventDefault();
-    const zoomStep = 0.1;
-    const minScale = 0.2;
-    const maxScale = 2;
-    const newScale = Math.min(Math.max(scale + (event.deltaY > 0 ? -zoomStep : zoomStep), minScale), maxScale);
-    if (zoomRelativeToCursor) {{
-        // Cursor-relative zoom
-        const rect = wrapper.getBoundingClientRect();
-        const cursorX = event.clientX - rect.left; // Cursor position relative to wrapper
-        const cursorY = event.clientY - rect.top;
-        offsetX -= (cursorX - offsetX) * (newScale / scale - 1);
-        offsetY -= (cursorY - offsetY) * (newScale / scale - 1);
-    }}
-    scale = newScale;
-    updateTransform();
-}});
-
-// Pan functionality
-let isDragging = false;
-let startX, startY;
-wrapper.addEventListener('mousedown', (event) => {{
-    isDragging = true;
-    startX = event.clientX;
-    startY = event.clientY;
-}});
-
-wrapper.addEventListener('mousemove', (event) => {{
-    if (isDragging) {{
-        const deltaX = event.clientX - startX;
-        const deltaY = event.clientY - startY;
-        offsetX += deltaX;
-        offsetY += deltaY;
-        startX = event.clientX;
-        startY = event.clientY;
-        updateTransform();
-    }}
-}});
-
-wrapper.addEventListener('mouseup', () => {{
-    isDragging = false;
-}});
-
-wrapper.addEventListener('mouseleave', () => {{
-    isDragging = false;
-}});
-
-// Text wrap toggle functionality
-wrapToggleButton.addEventListener('click', () => {{
-    const tds = document.querySelectorAll('.table_content td');
-    isWrapped = !isWrapped;  // Toggle wrap state
-    tds.forEach(td => {{
-        td.style.whiteSpace = isWrapped ? 'normal' : 'nowrap';  // Apply the appropriate wrap style
-    }});
-    wrapToggleButton.textContent = isWrapped ? '🔄' : '➡️';  // Change the button symbol
-}});
-
-</script>
-
-<div class="table_box">
-    <div class="table_content">
 {table}
-        <button class="wrap-toggle">➡️</button>
-    </div>
-</div>
+</mermaid-table-standard>
 
 </body>
 </html>
@@ -406,7 +178,9 @@ wrapToggleButton.addEventListener('click', () => {{
 
     def __str__(self):
         return self.HTML_TEMPLATE.format(
-            graph=str(self._graph), table=str(self._html_table)
+            graph=str(self._graph),
+            table=str(self._html_table),
+            webcomponent_path=WEBCOMPONENT_PATH,
         )
 
     def save(self, output_filepath):
@@ -415,3 +189,267 @@ wrapToggleButton.addEventListener('click', () => {{
         ], "Expecting graph output file extension to be .html"
         with open(output_filepath, "w") as fh:
             fh.write(str(self))
+
+
+def visualise_graph_matplotlib(
+    graph: nx.DiGraph,
+    node_info_lookup: dict = None,
+    title: str = None,
+    output_filepath: str = None,
+):
+    """
+    Visualise a networkx graph using matplotlib.
+
+    Note that this backend is provided as-is and not intended for production use.
+    'mermaid' graph is the recommended approach to graph visualisation.
+
+    Args:
+    - `graph`: The graph to visualise.
+    - `node_info_lookup`: A dictionary mapping nodes to their information.
+    - `title`: The title of the visualisation.
+    - `output_filepath`: The output filepath to save the visualisation to.
+    """
+    import matplotlib.pyplot as plt
+    from matplotlib.backend_bases import MouseButton
+
+    warnings.warn(
+        "This function is deprecated. Use 'mermaid' backend instead.",
+        DeprecationWarning,
+    )
+
+    pos = nx.spring_layout(graph, seed=42, k=8 / math.sqrt(graph.order()))
+
+    plt.figure()
+    plt.title(title)
+
+    # Draw nodes
+    nx.draw_networkx_nodes(graph, pos)
+
+    # Get connected components
+    components = nx.weakly_connected_components(graph)
+
+    # Define a color palette with more distinct colours
+    color_palette = [
+        "red",
+        "green",
+        "blue",
+        "orange",
+        "purple",
+        "yellow",
+        "cyan",
+        "magenta",
+    ]
+
+    # Draw each disconnected graph component with a different color from the palette
+    for i, component in enumerate(components):
+        color = color_palette[i % len(color_palette)]
+        nx.draw_networkx_edges(
+            graph,
+            pos,
+            edgelist=[
+                (u, v) for u, v in graph.edges() if u in component and v in component
+            ],
+            edge_color=color,
+            arrowstyle="->",
+            arrowsize=20,
+        )
+
+        # Highlight starting and termination nodes
+        sources = {node for node in component if graph.in_degree(node) == 0}
+        targets = {node for node in component if graph.out_degree(node) == 0}
+        nx.draw_networkx_nodes(
+            graph, pos, nodelist=sources, node_color="green", node_size=200
+        )
+        nx.draw_networkx_nodes(
+            graph, pos, nodelist=targets, node_color="red", node_size=200
+        )
+
+    # Draw labels
+    nx.draw_networkx_labels(graph, pos, font_size=6, font_color="black")
+
+    # Capture clicks on nodes
+    def on_click(event):
+        if event.button is MouseButton.LEFT and event.inaxes:
+            x, y = event.xdata, event.ydata
+            for node, (nx, ny) in pos.items():
+                if (x - nx) ** 2 + (y - ny) ** 2 < 0.05:  # Click radius threshold
+                    print(f"Node clicked: {node}")
+                    if node_info_lookup:
+                        print(node_info_lookup[node])
+                    else:
+                        print(graph.nodes[node])
+                    break
+
+    # Connect the event handler
+    fig = plt.gcf()
+    fig.canvas.mpl_connect("button_press_event", on_click)
+
+    if output_filepath:
+        plt.savefig(output_filepath)
+    else:
+        plt.show()
+
+
+def _gen_label(node_id, node, label_by):
+    label = f"{node_id}"
+    if label_by:
+        for key in label_by:
+            if (val := getattr(node, key)) is not None:
+                label += f"\n{key}: {val}"
+    else:
+        label += f"\n{str(node)}"
+    return label
+
+
+def _add_node(
+    node,
+    mermaid,
+    table,
+    node_id,
+    node_target_id_map,
+    node_data,
+    label_by,
+    tooltip_data=None,
+):
+    table_delim = "; "  # \n could be useful here
+    if node not in node_target_id_map:
+        node_target_id_map[node] = node_id
+        label = _gen_label(node_id, node, label_by)
+        tt_data = tooltip_data if tooltip_data is not None else node_data
+        tooltip = [f"{key}: {repr(val)}" for key, val in tt_data.items()]
+        info = table_delim.join([repr(val) for val in as_iterable(node_data)])
+        mermaid.add_node(
+            node_id,
+            label=label,
+            tooltip="\n".join(tooltip),
+        )
+        if tooltip_data:
+            table.add_row(node_id, node, table_delim.join(tooltip), info, id=node_id)
+        else:
+            table.add_row(node_id, node, info, id=node_id)
+        node_id += 1
+    return node_id
+
+
+def visualise_graph_mermaid(
+    graph: nx.DiGraph,
+    node_data_lookup: dict = None,
+    node_tooltip_lookup: dict = None,
+    title: str = None,
+    output_filepath: str = None,
+    group_by: Union[str, Iterable[str]] = None,
+    label_by: Union[str, Iterable[str]] = None,
+):
+    """
+    Visualise a networkx graph using mermaid.
+
+    Args:
+    - `graph`: The graph to visualise.
+    - `node_info_lookup`: A dictionary mapping nodes to their information.
+    - `title`: The title of the visualisation.
+    - `output_filepath`: The output filepath to save the visualisation to.
+    - `group_by`: One or more property to group nodes by (i.e.
+      [subgraph](https://mermaid-js.github.io/mermaid/#/subgraph)).
+    - `label_by`: One or more property to label visualisation nodes by.
+    """
+    mermaid = MermaidGraph(title=title or "")
+    if node_tooltip_lookup:
+        table = HTMLTable(["id", "node", "tooltip", "info"])
+    else:
+        table = HTMLTable(["id", "node", "info"])
+
+    label_by = as_iterable(label_by)
+    group_by = as_iterable(group_by)
+
+    node_target_id_map = {}
+    node_id = 0
+    nodes = graph.nodes
+
+    if group_by:
+        nodes = sorted(
+            graph.nodes,
+            key=lambda node: [getattr(node, key, "") or "" for key in group_by],
+        )
+
+    curr_subgraphs = None
+    for target in nodes:
+        if group_by:
+            subgraphs_raw = [getattr(target, key) for key in group_by]
+            subgraphs = list(filter(None, subgraphs_raw))
+
+            # determining whether subgraphing remains the same
+            if curr_subgraphs is not None:
+                len_min = min(len(curr_subgraphs), len(subgraphs))
+                diff_ind = len_min
+                for ind in range(len_min):
+                    if curr_subgraphs[ind] != subgraphs[ind]:
+                        diff_ind = ind
+                        break
+                indent_chng = max(0, len(curr_subgraphs) - len(subgraphs)) + (
+                    len_min - diff_ind
+                )
+                for _ in range(indent_chng):
+                    mermaid.add_raw("end")
+
+            gen_subgraph = False
+            for subg_ind, subgraph in enumerate(subgraphs):
+                if gen_subgraph is False and curr_subgraphs is not None:
+                    if (
+                        len(curr_subgraphs) > subg_ind
+                        and curr_subgraphs[subg_ind] == subgraph
+                    ):
+                        # same subgraph so don't redefine it
+                        continue
+                gen_subgraph = True
+
+                subg_id = "_".join(subgraphs[: subg_ind + 1])
+                colour_index = subgraphs_raw.index(subgraph) - 1
+                if colour_index >= 0:
+                    colour = MERMAID_SUBGRAPH_COLORS[
+                        colour_index % len(MERMAID_SUBGRAPH_COLORS)
+                    ]
+                    mermaid.add_raw(f"style {subg_id} fill:{colour}")
+                if subg_ind > 0:
+                    mermaid.add_raw(f"subgraph {subg_id}[{subgraph}]")
+                else:
+                    mermaid.add_raw(f"subgraph {subg_id}")
+            curr_subgraphs = subgraphs
+
+        if node_data_lookup:
+            node_data = node_data_lookup[target]
+        else:
+            node_data = graph.nodes[target]
+
+        tooltip_data = None
+        if node_tooltip_lookup is not None:
+            tooltip_data = node_tooltip_lookup[target]
+
+        node_id = _add_node(
+            target,
+            mermaid,
+            table,
+            node_id,
+            node_target_id_map,
+            node_data,
+            label_by,
+            tooltip_data=tooltip_data,
+        )
+    if group_by:
+        for _ in range(len(subg_id.split("_"))):
+            mermaid.add_raw("end")
+
+    for target in nodes:
+        for pred in graph.predecessors(target):
+            mermaid.add_connection(node_target_id_map[pred], node_target_id_map[target])
+
+    if output_filepath:
+        MermaidHTML(mermaid, table).save(output_filepath)
+    else:
+        if in_notebook():
+            mermaid.display()
+        else:
+            import tempfile
+
+            with tempfile.NamedTemporaryFile(suffix=".html", delete=False) as f:
+                MermaidHTML(mermaid, table).save(f.name)
+                webbrowser.open(f.name)

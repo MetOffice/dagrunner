@@ -1,0 +1,363 @@
+class TableStandardFmt extends HTMLElement {
+    constructor() {
+        super();
+        this.attachShadow({ mode: 'open' });
+        this.offsetX = 0;
+        this.offsetY = 0;
+        this.scale = 1;
+        this.zoomRelativeToCursor = true;
+        this.isDragging = false;
+        this.isWrapped = false;
+    }
+
+    connectedCallback() {
+        this.render();
+        this.setupRowClickHandling();
+        this.setupMermaid();
+        this.setupPanning();
+        this.setupZooming();
+        this.setupSvgExport();
+        this.setupTextWrapToggle();
+        this.setupMermaidClickHandling();
+    }
+
+    render() {
+        this.shadowRoot.innerHTML = `
+            <style>
+                :host {
+                    display: flex;
+                    flex-direction: column;
+                    height: 100%;
+                }
+
+            #mermaid-container {
+                height: 70vh;
+                min-height: 50px; /* Allow resizing very small */
+                max-height: 90vh; /* Allow resizing very small */
+                overflow: hidden; /* Add vertical scrollbar if needed */
+                resize: vertical; /* Allow resizing */
+                flex-shrink: 0; /* Prevent flex behaviour from overriding resize */
+                position: relative; /* For positioning zoom buttons */
+                border: 1px solid #ccc;
+                border-radius: 5px;
+                box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+            }
+
+            .table_box {
+                min-height: 0;
+                flex-grow: 1;
+                position: relative;
+            }
+
+            .table_content {
+                overflow: auto;
+                width: 100%;
+                height: 100%;
+            }
+
+            .wrap-toggle {
+                position: absolute;
+                bottom: 1rem;
+                right: 1rem;
+                cursor: pointer;
+            }
+
+            #diagram-wrapper {
+                cursor: grab;
+            }
+
+            #diagram-wrapper:active {
+                cursor: grabbing;
+            }
+
+            #zoom-controls {
+                position: absolute;
+                right: 10px;
+                bottom: 10px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 5px;
+            }
+
+            button {
+                padding: 5px;
+                font-size: 14px;
+                min-width: 25px;
+                cursor: pointer;
+            }
+
+            #save-diagram {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+            }
+
+            #banner {
+                position: absolute;
+                bottom: 2px;
+                left: 2px;
+                padding: 0px;
+                font-size: 16px;
+                cursor: pointer;
+            }
+
+            </style>
+
+            <div id="mermaid-container">
+                <button id="save-diagram">📥</button>
+                <div id="diagram-wrapper">
+                    <slot name="mermaid"></slot>
+                </div>
+                <div id="banner">
+                    <a href="https://github.com/MetOffice/dagrunner" target="_blank">
+                    <img src="https://raw.githubusercontent.com/MetOffice/dagrunner/refs/heads/main/docs/symbol.svg"/>
+                    <text>DAGrunner visualisation</text>
+                    </a>
+                </div>
+
+                <div id="zoom-controls">
+                    <button id="zoom-in" title="zoom-in">+</button>
+                    <div>
+                        <button id="toggle-zoom" title="make zoom cursor-relative or origin-relative">🖱️</button>
+                        <button id="zoom-reset" title="reset zoom and offset">🏠</button>
+                    </div>
+                    <button id="zoom-out" title="zoom-out">-</button>
+                </div>
+            </div>
+
+            <div class="table_box">
+                <div class="table_content">
+                    <slot name="table"></slot>
+                    <button class="wrap-toggle">➡️</button>
+                </div>
+            </div>
+        `;
+    }
+
+    setupRowClickHandling() {
+        const slot = this.shadowRoot.querySelector('slot[name="table"]');
+        slot.addEventListener('slotchange', () => {
+            const table = this.querySelector('table');
+            if (table) {
+                table.querySelectorAll('tr').forEach(row => {
+                    row.addEventListener('click', () => {
+                        this.highlightRow(row.id);
+                    });
+                });
+            }
+        });
+    }
+
+    setupMermaid() {
+        const slot = this.shadowRoot.querySelector('slot[name="mermaid"]');
+        slot.addEventListener('slotchange', () => {
+            const mermaidDiv = this.querySelector('.mermaid');
+            if (mermaidDiv) {
+                mermaid.init(undefined, mermaidDiv);
+                this.mermaidDiagram = mermaidDiv;
+            }
+        });
+    }
+
+    setupMermaidClickHandling() {
+        const container = this.shadowRoot.querySelector("#diagram-wrapper");
+    
+        container.addEventListener("click", (event) => {
+            const node = event.target.closest(".node"); // Find the nearest .node element
+            if (!node) return;
+    
+            const match = node.textContent.match(/^\d+/); // Extract the leading number (row ID)
+            if (match) {
+                const rowID = "row" + match[0]; // Assuming row IDs are formatted as 'row<number>'
+                this.highlightRow(rowID);
+            }
+        });
+    }
+
+    highlightRow(rowID) {
+        const row = this.querySelector(`#${rowID}`);
+        if (row) {
+            if (this.lastHighlightedRow) {
+                this.lastHighlightedRow.classList.remove('highlighted');
+            }
+            row.classList.add('highlighted');
+            row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            this.lastHighlightedRow = row;
+        }
+    }
+
+    setupPanning() {
+        const wrapper = this.shadowRoot.querySelector('#diagram-wrapper');
+
+        const updateTransform = () => {
+            if (this.mermaidDiagram) {
+                this.mermaidDiagram.style.transform = `translate(${this.offsetX}px, ${this.offsetY}px) scale(${this.scale})`;
+            }
+        };
+
+        let startX, startY;
+
+        wrapper.addEventListener('mousedown', (event) => {
+            this.isDragging = true;
+            startX = event.clientX;
+            startY = event.clientY;
+        });
+
+        wrapper.addEventListener('mousemove', (event) => {
+            if (this.isDragging) {
+                const deltaX = event.clientX - startX;
+                const deltaY = event.clientY - startY;
+                this.offsetX += deltaX;
+                this.offsetY += deltaY;
+                startX = event.clientX;
+                startY = event.clientY;
+                updateTransform();
+            }
+        });
+
+        wrapper.addEventListener('mouseup', () => { this.isDragging = false; });
+        wrapper.addEventListener('mouseleave', () => { this.isDragging = false; });
+    }
+
+    setupZooming() {
+        const wrapper = this.shadowRoot.querySelector('#diagram-wrapper');
+        const zoomInButton = this.shadowRoot.querySelector('#zoom-in');
+        const zoomOutButton = this.shadowRoot.querySelector('#zoom-out');
+        const zoomResetButton = this.shadowRoot.querySelector('#zoom-reset');
+        const toggleButton = this.shadowRoot.querySelector('#toggle-zoom');
+
+        const updateTransform = () => {
+            if (this.mermaidDiagram) {
+                this.mermaidDiagram.style.transform = `translate(${this.offsetX}px, ${this.offsetY}px) scale(${this.scale})`;
+            }
+        };
+
+        wrapper.addEventListener('wheel', (event) => {
+            event.preventDefault();
+            const zoomStep = 0.1;
+            const minScale = 0.2;
+            const maxScale = 2;
+            const newScale = Math.min(Math.max(this.scale + (event.deltaY > 0 ? -zoomStep : zoomStep), minScale), maxScale);
+
+            if (this.zoomRelativeToCursor) {
+                const rect = wrapper.getBoundingClientRect();
+                const cursorX = event.clientX - rect.left;
+                const cursorY = event.clientY - rect.top;
+                this.offsetX -= (cursorX - this.offsetX) * (newScale / this.scale - 1);
+                this.offsetY -= (cursorY - this.offsetY) * (newScale / this.scale - 1);
+            }
+
+            this.scale = newScale;
+            updateTransform();
+        });
+
+        zoomInButton.addEventListener('click', () => {
+            this.scale = Math.min(this.scale + 0.1, 2);
+            updateTransform();
+        });
+
+        zoomOutButton.addEventListener('click', () => {
+            this.scale = Math.max(this.scale - 0.1, 0.2);
+            updateTransform();
+        });
+
+        zoomResetButton.addEventListener('click', () => {
+            this.scale = 1;
+            this.offsetX = 0;
+            this.offsetY = 0;
+            updateTransform();
+        });
+
+        toggleButton.addEventListener('click', () => {
+            this.zoomRelativeToCursor = !this.zoomRelativeToCursor;
+            toggleButton.textContent = this.zoomRelativeToCursor ? '🖱️' : '🧭';
+        });
+    }
+
+    setupSvgExport() {
+        const saveButton = this.shadowRoot.querySelector('#save-diagram');
+
+        saveButton.addEventListener('click', () => {
+            const svgElement = this.querySelector('.mermaid svg');
+            if (!svgElement) {
+                alert('No diagram found to save!');
+                return;
+            }
+
+            const serializer = new XMLSerializer();
+            const svgContent = serializer.serializeToString(svgElement);
+            const blob = new Blob([svgContent], { type: 'image/svg+xml;charset=utf-8' });
+
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'mermaid-diagram.svg';
+            link.click();
+
+            URL.revokeObjectURL(link.href);
+        });
+    }
+
+    setupTextWrapToggle() {
+        const wrapToggleButton = this.shadowRoot.querySelector('.wrap-toggle');
+
+        wrapToggleButton.addEventListener('click', () => {
+            const tds = this.querySelectorAll('td');
+            this.isWrapped = !this.isWrapped;
+            tds.forEach(td => td.style.whiteSpace = this.isWrapped ? 'normal' : 'nowrap');
+            wrapToggleButton.textContent = this.isWrapped ? '🔄' : '➡️';
+        });
+    }
+}
+
+// Apply styles globally to ensure they affect the light DOM elements
+const style = document.createElement('style');
+style.textContent = `
+    html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        overflow: hidden; /* Prevent page scrollbars */
+        display: flex;
+        flex-direction: column;
+    }
+
+    div.mermaidTooltip {
+        position: absolute;
+        text-align: left;
+        max-width: 700px;
+        padding: 2px;
+        font-family: "trebuchet ms", verdana, arial, sans-serif;
+        font-size: 12px;
+        background: hsl(80, 100%, 96.2745098039%);
+        border: 1px solid #aaaa33;
+        border-radius: 2px;
+        pointer-events: none;
+        z-index: 100;
+    }
+
+    .mermaid {
+        transform-origin: 0 0; /* Set the origin for scaling */
+    }
+
+    .highlighted {
+        background: #ffeb3b !important;
+    }
+
+    tr:nth-child(even) { background: #CCC }
+    tr:nth-child(odd) { background: #FFF }
+
+    td {
+        white-space: nowrap;
+    }
+    th, td {
+        text-align: left;
+        vertical-align: top; /* Top align */
+    }
+
+    table thead th { background: #CCC; position: sticky; top: 0; z-index: 1; }
+
+`;
+document.head.appendChild(style);
+
+customElements.define('mermaid-table-standard', TableStandardFmt);

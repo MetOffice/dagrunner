@@ -1,119 +1,24 @@
-
 <!DOCTYPE html>
 <html>
+<head>
+    <meta charset="UTF-8">
+    <title>Mermaid diagram lookup</title>
+    <script src="../../../visual/mermaid-table-standard.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@9/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({
+            startOnLoad: false,
+            flowchart: { useMaxWidth: false, htmlLabels: true, curve: 'basis' },
+            securityLevel:'loose',  // required for mermaid@9 tooltip functionality
+            maxTextSize: 99999999  // beyond this "Maximum text size in diagram exceeded"
+        });
+    </script>
+</head>
+
 <body>
 
-<style>
-div.mermaidTooltip {
-    position: absolute;
-    text-align: left;
-    max-width: 700px;
-    padding: 2px;
-    font-family: "trebuchet ms", verdana, arial, sans-serif;
-    font-size: 12px;
-    background: hsl(80, 100%, 96.2745098039%);
-    border: 1px solid #aaaa33;
-    border-radius: 2px;
-    pointer-events: none;
-    z-index: 100;
-}
-
-tr:nth-child(even) { background: #CCC }
-tr:nth-child(odd) { background: #FFF }
-
-html, body {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    overflow: hidden; /* Prevent page scrollbars */
-    display: flex;
-    flex-direction: column;
-}
-
-td {
-    white-space: nowrap;
-}
-
-#mermaid-container {
-    height: 70vh;
-    min-height: 50px; /* Allow resizing very small */
-    max-height: 90vh; /* Allow resizing very small */
-    overflow: hidden; /* Add vertical scrollbar if needed */
-    resize: vertical; /* Allow resizing */
-    flex-shrink: 0; /* Prevent flex behaviour from overriding resize */
-    border: 1px solid #ccc;
-    position: relative; /* For positioning zoom buttons */
-}
-
-.table_box {
-    min-height: 0;
-    flex-grow: 1;
-    position: relative;
-}
-
-.table_content {
-    overflow: auto;
-    width: 100%;
-    height: 100%;
-}
-
-.wrap-toggle {
-    position: absolute;
-    bottom: 1rem;
-    right: 1rem;
-    cursor: pointer;
-}
-
-#diagram-wrapper {
-    cursor: grab;
-}
-
-#diagram-wrapper:active {
-    cursor: grabbing;
-}
-
-.mermaid {
-transform-origin: 0 0; /* Set the origin for scaling */
-}
-
-#zoom-controls {
-    position: absolute;
-    right: 10px;
-    bottom: 10px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 5px;
-}
-
-button {
-    padding: 5px;
-    font-size: 14px;
-    min-width: 25px;
-}
-
-#save-diagram {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    cursor: pointer;
-}
-
-#banner {
-    position: absolute;
-    bottom: 2px;
-    left: 2px;
-    padding: 0px;
-    font-size: 16px;
-    cursor: pointer;
-}
-
-</style>
-
-<div id="mermaid-container">
-    <button id="save-diagram" style="margin-left: auto;">📥</button> <!-- Button aligned to the right -->
-    <div id="diagram-wrapper">
-        <div class="mermaid">
+<mermaid-table-standard>
+<div class="mermaid", slot="mermaid">
 ---
 title: 
 ---
@@ -123,39 +28,32 @@ subgraph None
 style None_cc fill:#D4A76A
 subgraph None_cc[cc]
 0(["0<br>Node(diagnostic='None', model='cc', step='zzz')"])
-click 0 callback "{'node data': {}}"
 end
 end
 subgraph a
 style a_bb fill:#D4A76A
 subgraph a_bb[bb]
 1(["1<br>Node(diagnostic='a', model='bb', step='aaa')"])
-click 1 callback "{'node data': {}}"
 2(["2<br>Node(diagnostic='a', model='bb', step='bbb')"])
-click 2 callback "{'node data': {}}"
 end
 style a_xx fill:#D4A76A
 subgraph a_xx[xx]
 3(["3<br>Node(diagnostic='a', model='xx', step='aaa')"])
-click 3 callback "{'node data': {}}"
 end
 end
 subgraph x
 style x_bb fill:#D4A76A
 subgraph x_bb[bb]
 4(["4<br>Node(diagnostic='x', model='bb', step='aaa')"])
-click 4 callback "{'node data': {}}"
 end
 end
 subgraph y
 5(["5<br>Node(diagnostic='y', model=None, step='zzz')"])
-click 5 callback "{'node data': {}}"
 end
 subgraph z
 style z_zz fill:#D4A76A
 subgraph z_zz[zz]
 6(["6<br>Node(diagnostic='z', model='zz', step='zzz')"])
-click 6 callback "{'node data': {}}"
 end
 end
 5 --> 0
@@ -164,189 +62,23 @@ end
 2 --> 4
 6 --> 5
 3 --> 6
-        </div>
-    </div>
-
-    <div id="banner">
-        <a href="https://github.com/MetOffice/dagrunner" target="_blank">
-        <img src="https://raw.githubusercontent.com/MetOffice/dagrunner/refs/heads/main/docs/symbol.svg"/>
-        <text>DAGrunner visualisation</text>
-        </a>
-    </div>
-
-    <div id="zoom-controls">
-        <button id="zoom-in" title="zoom-in">+</button>
-        <div>
-            <button id="toggle-zoom" title="make zoom cursor-relative or origin-relative">🖱️</button>
-            <button id="zoom-reset" title="reset zoom and offset">🏠</button>
-        </div>
-        <button id="zoom-out" title="zoom-out">-</button>
-    </div>
 </div>
-
-<script type="module">
-import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@9/dist/mermaid.esm.min.mjs';
-mermaid.initialize({
-    startOnLoad: true,
-    flowchart: { useMaxWidth: false, htmlLabels: true, curve: 'basis' },
-    securityLevel:'loose',
-    maxTextSize: 99999999  // beyond this "Maximum text size in diagram exceeded"
-});
-
-const wrapper = document.getElementById('diagram-wrapper');
-const mermaidDiagram = document.querySelector('.mermaid');
-const toggleButton = document.getElementById('toggle-zoom');
-const saveButton = document.getElementById('save-diagram');
-const zoomInButton = document.getElementById('zoom-in');
-const zoomOutButton = document.getElementById('zoom-out');
-const zoomResetButton = document.getElementById('zoom-reset');
-const wrapToggleButton = document.querySelector('.wrap-toggle');
-
-let scale = 1;
-let offsetX = 0;
-let offsetY = 0;
-let zoomRelativeToCursor = true; // Default behaviour: cursor-relative zoom
-let isWrapped = false;  // Tracks whether text is wrapped or not
-
-const updateTransform = () => {
-    mermaidDiagram.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
-};
-
-toggleButton.addEventListener('click', () => {
-    zoomRelativeToCursor = !zoomRelativeToCursor;
-    toggleButton.textContent = `${zoomRelativeToCursor ? '🖱️' : '🧭'}`;
-});
-
-saveButton.addEventListener('click', () => {
-    // Extract the rendered SVG from the DOM
-    const svgElement = document.querySelector('#mermaid-container svg');
-    if (!svgElement) {
-        alert('No diagram found to save!');
-        return;
-    }
-
-    // Serialize the SVG to a string
-    const serializer = new XMLSerializer();
-    const svgContent = serializer.serializeToString(svgElement);
-
-    // Create a Blob from the SVG string
-    const blob = new Blob([svgContent], { type: 'image/svg+xml;charset=utf-8' });
-
-    // Create a link element to trigger the download
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = 'mermaid-diagram.svg';
-    link.click();
-
-    // Clean up the temporary object URL
-    URL.revokeObjectURL(link.href);
-});
-
-// Zoom functionality
-    zoomInButton.addEventListener('click', () => {
-    const zoomStep = 0.1;
-    const newScale = Math.min(scale + zoomStep, 2); // Limit zoom-in
-    scale = newScale;
-    updateTransform();
-});
-
-zoomOutButton.addEventListener('click', () => {
-    const zoomStep = 0.1;
-    const newScale = Math.max(scale - zoomStep, 0.2); // Limit zoom-out
-    scale = newScale;
-    updateTransform();
-});
-
-// Reset Zoom functionality
-zoomResetButton.addEventListener('click', () => {
-    // Reset zoom scale and position
-    scale = 1;
-    offsetX = 0;
-    offsetY = 0;
-    updateTransform();
-});
-
-// Zoom functionality with mouse wheel
-wrapper.addEventListener('wheel', (event) => {
-    event.preventDefault();
-    const zoomStep = 0.1;
-    const minScale = 0.2;
-    const maxScale = 2;
-    const newScale = Math.min(Math.max(scale + (event.deltaY > 0 ? -zoomStep : zoomStep), minScale), maxScale);
-    if (zoomRelativeToCursor) {
-        // Cursor-relative zoom
-        const rect = wrapper.getBoundingClientRect();
-        const cursorX = event.clientX - rect.left; // Cursor position relative to wrapper
-        const cursorY = event.clientY - rect.top;
-        offsetX -= (cursorX - offsetX) * (newScale / scale - 1);
-        offsetY -= (cursorY - offsetY) * (newScale / scale - 1);
-    }
-    scale = newScale;
-    updateTransform();
-});
-
-// Pan functionality
-let isDragging = false;
-let startX, startY;
-wrapper.addEventListener('mousedown', (event) => {
-    isDragging = true;
-    startX = event.clientX;
-    startY = event.clientY;
-});
-
-wrapper.addEventListener('mousemove', (event) => {
-    if (isDragging) {
-        const deltaX = event.clientX - startX;
-        const deltaY = event.clientY - startY;
-        offsetX += deltaX;
-        offsetY += deltaY;
-        startX = event.clientX;
-        startY = event.clientY;
-        updateTransform();
-    }
-});
-
-wrapper.addEventListener('mouseup', () => {
-    isDragging = false;
-});
-
-wrapper.addEventListener('mouseleave', () => {
-    isDragging = false;
-});
-
-// Text wrap toggle functionality
-wrapToggleButton.addEventListener('click', () => {
-    const tds = document.querySelectorAll('.table_content td');
-    isWrapped = !isWrapped;  // Toggle wrap state
-    tds.forEach(td => {
-        td.style.whiteSpace = isWrapped ? 'normal' : 'nowrap';  // Apply the appropriate wrap style
-    });
-    wrapToggleButton.textContent = isWrapped ? '🔄' : '➡️';  // Change the button symbol
-});
-
-</script>
-
-<div class="table_box">
-    <div class="table_content">
-<table>
-<tr>
-<th>id</th>
-<th>node</th>
-<th>info</th>
-</tr>
-
-<tr><td>0</td><td>Node(diagnostic='None', model='cc', step='zzz')</td><td>{'node data': {}}</td></tr>
-<tr><td>1</td><td>Node(diagnostic='a', model='bb', step='aaa')</td><td>{'node data': {}}</td></tr>
-<tr><td>2</td><td>Node(diagnostic='a', model='bb', step='bbb')</td><td>{'node data': {}}</td></tr>
-<tr><td>3</td><td>Node(diagnostic='a', model='xx', step='aaa')</td><td>{'node data': {}}</td></tr>
-<tr><td>4</td><td>Node(diagnostic='x', model='bb', step='aaa')</td><td>{'node data': {}}</td></tr>
-<tr><td>5</td><td>Node(diagnostic='y', model=None, step='zzz')</td><td>{'node data': {}}</td></tr>
-<tr><td>6</td><td>Node(diagnostic='z', model='zz', step='zzz')</td><td>{'node data': {}}</td></tr>
+<table slot="table">
+    <thead>
+        <tr><th>id</th><th>node</th><th>info</th></tr>
+    </thead>
+    <tbody>
+        <tr id="row0"><td>0</td><td>Node(diagnostic='None', model='cc', step='zzz')</td><td>{}</td></tr>
+        <tr id="row1"><td>1</td><td>Node(diagnostic='a', model='bb', step='aaa')</td><td>{}</td></tr>
+        <tr id="row2"><td>2</td><td>Node(diagnostic='a', model='bb', step='bbb')</td><td>{}</td></tr>
+        <tr id="row3"><td>3</td><td>Node(diagnostic='a', model='xx', step='aaa')</td><td>{}</td></tr>
+        <tr id="row4"><td>4</td><td>Node(diagnostic='x', model='bb', step='aaa')</td><td>{}</td></tr>
+        <tr id="row5"><td>5</td><td>Node(diagnostic='y', model=None, step='zzz')</td><td>{}</td></tr>
+        <tr id="row6"><td>6</td><td>Node(diagnostic='z', model='zz', step='zzz')</td><td>{}</td></tr>
+    </tbody>
 </table>
 
-        <button class="wrap-toggle">➡️</button>
-    </div>
-</div>
+</mermaid-table-standard>
 
 </body>
 </html>
