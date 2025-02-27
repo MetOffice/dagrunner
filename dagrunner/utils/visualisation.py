@@ -395,10 +395,9 @@ def visualise_graph_mermaid(
                 gen_subgraph = True
 
                 # subgraph ID is a concatenation of all subgraph IDs within its
-                # hierarchy.  '_' is removed to increase readability and more
-                # easily deduce nesting depth.
+                # hierarchy.
                 subg_id = "_".join(
-                    map(lambda x: x.replace("_", ""), subgraphs[: subg_ind + 1])
+                    map(lambda x: x.replace(" ", "_"), subgraphs[: subg_ind + 1])
                 )
                 depth = len(subgraphs[: subg_ind + 1])
                 colour_index = subgraphs_raw.index(subgraph) - 1
