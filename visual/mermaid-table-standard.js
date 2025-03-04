@@ -34,7 +34,7 @@ class TableStandardFmt extends HTMLElement {
                     color-scheme: light dark;
                     --primary-color: light-dark(rgb(43, 43, 43),rgb(233, 233, 233));
                     --primary-background: light-dark(rgb(255, 255, 255),rgb(43, 43, 43));
-                    --highlight-color: light-dark(yellow, #CD853F);
+                    --highlight-color: light-dark(yellow,rgb(173, 114, 54));
                     --primary-accent: light-dark(rgb(190, 190, 190),rgb(100, 100, 100));
 
                     color: var(--primary-color);
