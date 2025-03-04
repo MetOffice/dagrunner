@@ -9,7 +9,6 @@ Module responsible for scheduler independent graph visualisation
 import base64
 import math
 import os
-import sys
 import warnings
 import webbrowser
 from typing import Iterable, Union
@@ -19,12 +18,10 @@ import networkx as nx
 from . import as_iterable, in_notebook
 
 # set web component path to relative local file when running pytest
-if os.environ.get("PYTEST_VERSION") is not None and any(
-    "dagrunner" in arg for arg in sys.argv
-):
+if os.environ.get("PYTEST_VERSION") is not None:
     WEBCOMPONENT_PATH = "../../../visual/mermaid-table-standard.js"
 else:
-    WEBCOMPONENT_PATH = "https://cdn.jsdelivr.net/gh/MetOffice/dagrunner@vvisual_theme_toggle/visual/mermaid-table-standard.js"
+    WEBCOMPONENT_PATH = "https://cdn.jsdelivr.net/gh/MetOffice/dagrunner@0.2.2/visual/mermaid-table-standard.js"
 
 
 MERMAID_SUBGRAPH_COLORS = [
