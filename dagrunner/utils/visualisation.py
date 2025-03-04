@@ -302,7 +302,7 @@ def _add_node(
     label_by,
     tooltip_data=None,
 ):
-    table_delim = "; "  # \n could be useful here
+    table_delim = "\n"
     if node not in node_target_id_map:
         node_target_id_map[node] = node_id
         label = _gen_label(node_id, node, label_by)

@@ -10,6 +10,7 @@ class TableStandardFmt extends HTMLElement {
         this.isWrapped = false;
         this.user_initialised_mermaid = true;
         this.table_ascending = true;
+        this.br_hidden = false;
     }
 
     connectedCallback() {
@@ -23,6 +24,7 @@ class TableStandardFmt extends HTMLElement {
         this.setupMermaidClickHandling();
         this.setupThemeToggle();
         this.setupTableHeaderClickHandling();
+        this.setupTextNewlineDelimToggle();
     }
 
     render() {
@@ -78,11 +80,13 @@ class TableStandardFmt extends HTMLElement {
                     height: 100%;
                 }
 
-                .wrap-toggle {
+                #table-controls {
                     position: absolute;
                     bottom: 1rem;
                     right: 1rem;
                     cursor: pointer;
+                    align-items: center;
+                    z-index: 1;
                 }
 
                 #diagram-wrapper {
@@ -164,7 +168,10 @@ class TableStandardFmt extends HTMLElement {
             <div class="table_box">
                 <div class="table_content">
                     <slot name="table"></slot>
-                    <button class="wrap-toggle" title="word wrap toggle">➡️</button>
+                    <div id="table-controls">
+                        <button class="newline_delim" title="newline delimiter toggle">&lt;br&gt;</button>
+                        <button class="wrap-toggle" title="word wrap toggle">➡️</button>
+                    </div>
                 </div>
             </div>
         `;
@@ -459,6 +466,22 @@ class TableStandardFmt extends HTMLElement {
             this.isWrapped = !this.isWrapped;
             tds.forEach(td => td.style.whiteSpace = this.isWrapped ? 'normal' : 'nowrap');
             wrapToggleButton.textContent = this.isWrapped ? '🔄' : '➡️';
+        });
+    }
+
+    setupTextNewlineDelimToggle() {
+        const delimToggleButton = this.shadowRoot.querySelector('.newline_delim');
+
+        delimToggleButton.addEventListener('click', () => {
+            this.querySelectorAll("tr").forEach(cell => {
+                if (!this.br_hidden) {
+                    cell.innerHTML = cell.innerHTML.replace(/<br\s*\/?>/g, "; <!--<br>-->");
+                } else {
+                    cell.innerHTML = cell.innerHTML.replace(/; <\!--<br>-->/g, "<br>");
+                }
+                delimToggleButton.textContent = this.br_hidden ? '<br>' : ';';
+            });
+            this.br_hidden = !this.br_hidden;
         });
     }
 }
