@@ -21,7 +21,7 @@ from . import as_iterable, in_notebook
 if os.environ.get("PYTEST_VERSION") is not None:
     WEBCOMPONENT_PATH = "../../../visual/mermaid-table-standard.js"
 else:
-    WEBCOMPONENT_PATH = "https://cdn.jsdelivr.net/gh/MetOffice/dagrunner@vvisual_tooltip_table/visual/mermaid-table-standard.js"
+    WEBCOMPONENT_PATH = "https://cdn.jsdelivr.net/gh/MetOffice/dagrunner@0.2.2/visual/mermaid-table-standard.js"
 
 
 MERMAID_SUBGRAPH_COLORS = [
@@ -149,15 +149,6 @@ class MermaidHTML:
     <meta charset="UTF-8">
     <title>Mermaid diagram lookup</title>
     <script src="{webcomponent_path}" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/mermaid@9/dist/mermaid.min.js"></script>
-    <script>
-        mermaid.initialize({{
-            startOnLoad: false,
-            flowchart: {{ useMaxWidth: false, htmlLabels: true, curve: 'basis' }},
-            securityLevel:'loose',  // required for mermaid@9 tooltip functionality
-            maxTextSize: 99999999  // beyond this "Maximum text size in diagram exceeded"
-        }});
-    </script>
 </head>
 
 <body>
@@ -311,7 +302,7 @@ def _add_node(
     label_by,
     tooltip_data=None,
 ):
-    table_delim = "; "  # \n could be useful here
+    table_delim = "\n"
     if node not in node_target_id_map:
         node_target_id_map[node] = node_id
         label = _gen_label(node_id, node, label_by)
@@ -372,6 +363,7 @@ def visualise_graph_mermaid(
         )
 
     curr_subgraphs = None
+    depth = 0
     for target in nodes:
         if group_by:
             subgraphs_raw = [getattr(target, key) for key in group_by]
@@ -402,17 +394,19 @@ def visualise_graph_mermaid(
                         continue
                 gen_subgraph = True
 
-                subg_id = "_".join(subgraphs[: subg_ind + 1])
+                # subgraph ID is a concatenation of all subgraph IDs within its
+                # hierarchy.
+                subg_id = "_".join(
+                    map(lambda x: x.replace(" ", "_"), subgraphs[: subg_ind + 1])
+                )
+                depth = len(subgraphs[: subg_ind + 1])
                 colour_index = subgraphs_raw.index(subgraph) - 1
                 if colour_index >= 0:
                     colour = MERMAID_SUBGRAPH_COLORS[
                         colour_index % len(MERMAID_SUBGRAPH_COLORS)
                     ]
                     mermaid.add_raw(f"style {subg_id} fill:{colour}")
-                if subg_ind > 0:
-                    mermaid.add_raw(f"subgraph {subg_id}[{subgraph}]")
-                else:
-                    mermaid.add_raw(f"subgraph {subg_id}")
+                mermaid.add_raw(f"subgraph {subg_id}[{subgraph}]")
             curr_subgraphs = subgraphs
 
         if node_data_lookup:
@@ -434,8 +428,8 @@ def visualise_graph_mermaid(
             label_by,
             tooltip_data=tooltip_data,
         )
-    if group_by:
-        for _ in range(len(subg_id.split("_"))):
+    if group_by and depth > 0:
+        for _ in range(depth):
             mermaid.add_raw("end")
 
     for target in nodes:

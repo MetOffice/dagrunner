@@ -8,6 +8,9 @@ class TableStandardFmt extends HTMLElement {
         this.zoomRelativeToCursor = true;
         this.isDragging = false;
         this.isWrapped = false;
+        this.user_initialised_mermaid = true;
+        this.table_ascending = true;
+        this.br_hidden = false;
     }
 
     connectedCallback() {
@@ -19,6 +22,9 @@ class TableStandardFmt extends HTMLElement {
         this.setupSvgExport();
         this.setupTextWrapToggle();
         this.setupMermaidClickHandling();
+        this.setupThemeToggle();
+        this.setupTableHeaderClickHandling();
+        this.setupTextNewlineDelimToggle();
     }
 
     render() {
@@ -28,83 +34,116 @@ class TableStandardFmt extends HTMLElement {
                     display: flex;
                     flex-direction: column;
                     height: 100%;
+
+                    color-scheme: light dark;
+                    --primary-color: light-dark(rgb(43, 43, 43),rgb(233, 233, 233));
+                    --primary-background: light-dark(rgb(255, 255, 255),rgb(43, 43, 43));
+                    --highlight-color: light-dark(yellow,rgb(173, 114, 54));
+                    --primary-accent: light-dark(rgb(190, 190, 190),rgb(100, 100, 100));
+
+                    color: var(--primary-color);
+                    background-color: var(--primary-background);
+                    transition: color 0.4s, background-color 0.4s;
                 }
 
-            #mermaid-container {
-                height: 70vh;
-                min-height: 50px; /* Allow resizing very small */
-                max-height: 90vh; /* Allow resizing very small */
-                overflow: hidden; /* Add vertical scrollbar if needed */
-                resize: vertical; /* Allow resizing */
-                flex-shrink: 0; /* Prevent flex behaviour from overriding resize */
-                position: relative; /* For positioning zoom buttons */
-                border: 1px solid #ccc;
-                border-radius: 5px;
-                box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
-            }
+                /* Force light or dark mode based on data-theme */
+                :host([data-theme="light"]) {
+                    color-scheme: light;
+                }
 
-            .table_box {
-                min-height: 0;
-                flex-grow: 1;
-                position: relative;
-            }
+                :host([data-theme="dark"]) {
+                    color-scheme: dark;
+                }
 
-            .table_content {
-                overflow: auto;
-                width: 100%;
-                height: 100%;
-            }
+                #mermaid-container {
+                    height: 70vh;
+                    min-height: 50px; /* Allow resizing very small */
+                    max-height: 90vh; /* Allow resizing very small */
+                    overflow: hidden; /* Add vertical scrollbar if needed */
+                    resize: vertical; /* Allow resizing */
+                    flex-shrink: 0; /* Prevent flex behaviour from overriding resize */
+                    position: relative; /* For positioning zoom buttons */
+                    border: 1px solid var(--primary-accent);
+                    border-radius: 5px;
+                    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+                }
 
-            .wrap-toggle {
-                position: absolute;
-                bottom: 1rem;
-                right: 1rem;
-                cursor: pointer;
-            }
+                .table_box {
+                    min-height: 0;
+                    flex-grow: 1;
+                    position: relative;
+                }
 
-            #diagram-wrapper {
-                cursor: grab;
-            }
+                .table_content {
+                    overflow: auto;
+                    width: 100%;
+                    height: 100%;
+                }
 
-            #diagram-wrapper:active {
-                cursor: grabbing;
-            }
+                #table-controls {
+                    position: absolute;
+                    bottom: 1rem;
+                    right: 1rem;
+                    cursor: pointer;
+                    align-items: center;
+                    z-index: 1;
+                }
 
-            #zoom-controls {
-                position: absolute;
-                right: 10px;
-                bottom: 10px;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                gap: 5px;
-            }
+                #diagram-wrapper {
+                    cursor: grab;
+                }
 
-            button {
-                padding: 5px;
-                font-size: 14px;
-                min-width: 25px;
-                cursor: pointer;
-            }
+                #diagram-wrapper:active {
+                    cursor: grabbing;
+                }
 
-            #save-diagram {
-                position: absolute;
-                top: 10px;
-                right: 10px;
-            }
+                #zoom-controls {
+                    position: absolute;
+                    right: 10px;
+                    bottom: 10px;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 5px;
+                }
 
-            #banner {
-                position: absolute;
-                bottom: 2px;
-                left: 2px;
-                padding: 0px;
-                font-size: 16px;
-                cursor: pointer;
-            }
+                button {
+                    padding: 5px;
+                    font-size: 14px;
+                    min-width: 25px;
+                    cursor: pointer;
+                }
+
+                #save-diagram {
+                    position: absolute;
+                    top: 10px;
+                    right: 10px;
+                }
+
+                #toggle-theme {
+                    background-color: transparent;
+                    color: transparent;
+                    border-color: transparent;
+                }
+
+                #banner {
+                    position: absolute;
+                    bottom: 2px;
+                    left: 2px;
+                    padding: 0px;
+                    font-size: 16px;
+                    cursor: pointer;
+                }
 
             </style>
 
             <div id="mermaid-container">
+                <button id="toggle-theme" type="button">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16">
+                    <circle r="7" cx="8" cy="8" stroke=var(--primary-color) fill="none" />
+                    <path stroke=var(--primary-color) fill=var(--primary-color) d="M8 15A1 1 0 0 0 8 1" />
+                </svg>
+                </button>
                 <button id="save-diagram">📥</button>
                 <div id="diagram-wrapper">
                     <slot name="mermaid"></slot>
@@ -129,10 +168,77 @@ class TableStandardFmt extends HTMLElement {
             <div class="table_box">
                 <div class="table_content">
                     <slot name="table"></slot>
-                    <button class="wrap-toggle">➡️</button>
+                    <div id="table-controls">
+                        <button class="newline_delim" title="newline delimiter toggle">&lt;br&gt;</button>
+                        <button class="wrap-toggle" title="word wrap toggle">➡️</button>
+                    </div>
                 </div>
             </div>
         `;
+    }
+
+    setupTableHeaderClickHandling() {
+        const slot = this.shadowRoot.querySelector('slot[name="table"]');
+        slot.addEventListener('slotchange', () => {
+            const table = this.querySelector('table');
+            if (table) {
+                table.querySelectorAll('th').forEach(th => {
+                    th.addEventListener('click', () => {
+                        this.sortTable(th.cellIndex);
+                    });
+                });
+            }
+        }
+        );
+    }
+
+    sortTable(columnIndex) {
+        var rows, switching, i, x, y, shouldSwitch;
+        const table = this.querySelector('table');
+        switching = true;
+        while (switching) {
+            switching = false;
+            rows = table.rows;
+            for (i = 1; i < (rows.length - 1); i++) {
+                shouldSwitch = false;
+                x = rows[i].getElementsByTagName("TD")[columnIndex];
+                y = rows[i + 1].getElementsByTagName("TD")[columnIndex];
+                if (this.table_ascending) {
+                    if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                        shouldSwitch = true;
+                        break;
+                    }
+                } else {
+                    if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+                        shouldSwitch = true;
+                        break;
+                    }
+                }
+            }
+            if (shouldSwitch) {
+                rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                switching = true;
+            }
+        }
+        this.table_ascending = !this.table_ascending;
+    }
+
+    setupThemeToggle() {
+        const themeToggleButton = this.shadowRoot.querySelector("#toggle-theme");
+        let theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        this.setAttribute("data-theme", theme);
+    
+        const updateTheme = () => {
+            theme = theme === "light" ? "dark" : "light";
+            this.setAttribute("data-theme", theme);
+    
+            // Only update Mermaid theme if we were the ones who initialized it
+            const mermaidDiv = this.querySelector('.mermaid');
+            const alreadyInitialized = mermaidDiv?.querySelector("svg") !== null;
+            this.initializeMermaidWithTheme(theme);
+        };
+    
+        themeToggleButton.addEventListener("click", updateTheme);
     }
 
     setupRowClickHandling() {
@@ -140,24 +246,78 @@ class TableStandardFmt extends HTMLElement {
         slot.addEventListener('slotchange', () => {
             const table = this.querySelector('table');
             if (table) {
-                table.querySelectorAll('tr').forEach(row => {
-                    row.addEventListener('click', () => {
-                        this.highlightRow(row.id);
-                    });
+            const tbody = table.querySelector('tbody');
+            if (tbody) {
+                tbody.querySelectorAll('tr').forEach(row => {
+                row.addEventListener('click', () => {
+                    this.highlightRow(row.id);
                 });
+                });
+            }
             }
         });
     }
 
     setupMermaid() {
         const slot = this.shadowRoot.querySelector('slot[name="mermaid"]');
-        slot.addEventListener('slotchange', () => {
+        slot.addEventListener('slotchange', async () => {
             const mermaidDiv = this.querySelector('.mermaid');
-            if (mermaidDiv) {
-                mermaid.init(undefined, mermaidDiv);
-                this.mermaidDiagram = mermaidDiv;
+            if (!mermaidDiv) return;
+    
+            const alreadyInitialized = mermaidDiv.querySelector("svg") !== null;
+    
+            if (!alreadyInitialized) {
+                this.user_initialised_mermaid = false;
+
+                // If Mermaid.js isn't loaded, load it first
+                if (typeof window.mermaid === "undefined") {
+                    await this.loadMermaidScript();
+                }
+    
+                // Now, initialize it with the correct theme
+                const theme = this.getAttribute("data-theme") || "light";
+                this.initializeMermaidWithTheme(theme);
             }
+            mermaid.init(undefined, mermaidDiv);
+            this.mermaidDiagram = mermaidDiv;
         });
+    }
+
+    async loadMermaidScript() {
+        return new Promise((resolve, reject) => {
+            if (typeof window.mermaid !== "undefined") {
+                resolve();
+                return;
+            }
+    
+            const script = document.createElement("script");
+            script.src = "https://cdn.jsdelivr.net/npm/mermaid@9/dist/mermaid.min.js";
+            script.onload = () => {
+                console.log("Mermaid.js loaded dynamically");
+                resolve();
+            };
+            script.onerror = reject;
+            document.head.appendChild(script);
+        });
+    }
+
+    initializeMermaidWithTheme(theme) {
+        const mermaidDiv = this.querySelector('.mermaid');
+        if (!mermaidDiv || typeof window.mermaid === "undefined") return;
+        const alreadyInitialized = mermaidDiv.querySelector("svg") !== null;
+
+        if (!alreadyInitialized) {
+            console.log("Mermaid initialised dynamically");
+            mermaid.initialize({
+                theme: theme === "dark" ? "dark" : "default",
+                startOnLoad: false,
+                flowchart: { useMaxWidth: false, htmlLabels: true, curve: 'basis' },
+                securityLevel:'loose',  // required for mermaid@9 tooltip functionality
+                maxTextSize: 99999999  // beyond this "Maximum text size in diagram exceeded"
+            });
+        } else {
+            alert("mermaid re-initialisation for dynamic theme change not yet supported");
+        }
     }
 
     setupMermaidClickHandling() {
@@ -308,6 +468,22 @@ class TableStandardFmt extends HTMLElement {
             wrapToggleButton.textContent = this.isWrapped ? '🔄' : '➡️';
         });
     }
+
+    setupTextNewlineDelimToggle() {
+        const delimToggleButton = this.shadowRoot.querySelector('.newline_delim');
+
+        delimToggleButton.addEventListener('click', () => {
+            this.querySelectorAll("tr").forEach(cell => {
+                if (!this.br_hidden) {
+                    cell.innerHTML = cell.innerHTML.replace(/<br\s*\/?>/g, "; <!--<br>-->");
+                } else {
+                    cell.innerHTML = cell.innerHTML.replace(/; <\!--<br>-->/g, "<br>");
+                }
+                delimToggleButton.textContent = this.br_hidden ? '<br>' : ';';
+            });
+            this.br_hidden = !this.br_hidden;
+        });
+    }
 }
 
 // Apply styles globally to ensure they affect the light DOM elements
@@ -341,21 +517,24 @@ style.textContent = `
     }
 
     .highlighted {
-        background: #ffeb3b !important;
+        background: var(--highlight-color) !important;
     }
 
-    tr:nth-child(even) { background: #CCC }
-    tr:nth-child(odd) { background: #FFF }
+    tr:nth-child(even) { background: var(--primary-background) }
+    tr:nth-child(odd) { background: var(--primary-accent) }
 
     td {
         white-space: nowrap;
+    }
+    th {
+        cursor: pointer;
     }
     th, td {
         text-align: left;
         vertical-align: top; /* Top align */
     }
 
-    table thead th { background: #CCC; position: sticky; top: 0; z-index: 1; }
+    table thead th { background: var(--primary-background); position: sticky; top: 0; z-index: 1; }
 
 `;
 document.head.appendChild(style);
