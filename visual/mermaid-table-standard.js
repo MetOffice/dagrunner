@@ -9,6 +9,7 @@ class TableStandardFmt extends HTMLElement {
         this.isDragging = false;
         this.isWrapped = false;
         this.user_initialised_mermaid = true;
+        this.table_ascending = true;
     }
 
     connectedCallback() {
@@ -21,6 +22,7 @@ class TableStandardFmt extends HTMLElement {
         this.setupTextWrapToggle();
         this.setupMermaidClickHandling();
         this.setupThemeToggle();
+        this.setupTableHeaderClickHandling();
     }
 
     render() {
@@ -168,6 +170,52 @@ class TableStandardFmt extends HTMLElement {
         `;
     }
 
+    setupTableHeaderClickHandling() {
+        const slot = this.shadowRoot.querySelector('slot[name="table"]');
+        slot.addEventListener('slotchange', () => {
+            const table = this.querySelector('table');
+            if (table) {
+                table.querySelectorAll('th').forEach(th => {
+                    th.addEventListener('click', () => {
+                        this.sortTable(th.cellIndex);
+                    });
+                });
+            }
+        }
+        );
+    }
+
+    sortTable(columnIndex) {
+        var rows, switching, i, x, y, shouldSwitch;
+        const table = this.querySelector('table');
+        switching = true;
+        while (switching) {
+            switching = false;
+            rows = table.rows;
+            for (i = 1; i < (rows.length - 1); i++) {
+                shouldSwitch = false;
+                x = rows[i].getElementsByTagName("TD")[columnIndex];
+                y = rows[i + 1].getElementsByTagName("TD")[columnIndex];
+                if (this.table_ascending) {
+                    if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                        shouldSwitch = true;
+                        break;
+                    }
+                } else {
+                    if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+                        shouldSwitch = true;
+                        break;
+                    }
+                }
+            }
+            if (shouldSwitch) {
+                rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                switching = true;
+            }
+        }
+        this.table_ascending = !this.table_ascending;
+    }
+
     setupThemeToggle() {
         const themeToggleButton = this.shadowRoot.querySelector("#toggle-theme");
         let theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
@@ -191,11 +239,14 @@ class TableStandardFmt extends HTMLElement {
         slot.addEventListener('slotchange', () => {
             const table = this.querySelector('table');
             if (table) {
-                table.querySelectorAll('tr').forEach(row => {
-                    row.addEventListener('click', () => {
-                        this.highlightRow(row.id);
-                    });
+            const tbody = table.querySelector('tbody');
+            if (tbody) {
+                tbody.querySelectorAll('tr').forEach(row => {
+                row.addEventListener('click', () => {
+                    this.highlightRow(row.id);
                 });
+                });
+            }
             }
         });
     }
@@ -451,6 +502,9 @@ style.textContent = `
 
     td {
         white-space: nowrap;
+    }
+    th {
+        cursor: pointer;
     }
     th, td {
         text-align: left;
