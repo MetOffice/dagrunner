@@ -10,7 +10,7 @@ from unittest import mock
 import networkx as nx
 import pytest
 
-from dagrunner.tests import assert_text_file_equal
+from dagrunner.tests import assert_binary_file_equal, assert_text_file_equal
 from dagrunner.utils.networkx import visualise_graph
 
 
@@ -78,6 +78,28 @@ def graph(tmp_path_factory):
 
 def test_basic(graph):
     assert_visual(graph, "mermaid")
+
+
+@pytest.mark.parametrize("format", ["svg", "jpg", "png", "md"])
+def test_alt_format(graph, format, request):
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        output_filepath = f"{tmpdirname}/graph.{format}"
+        visualise_graph(graph, backend="mermaid", output_filepath=output_filepath)
+
+        assert_op = assert_binary_file_equal
+        if format in ["md", "svg"]:
+            assert_op = assert_text_file_equal
+
+        assert_op(
+            output_filepath, f"{request.module.__name__}.{request.node.name}.{format}"
+        )
+
+
+def test_unsupported_format(graph):
+    with pytest.raises(ValueError, match="Unsupported format"):
+        visualise_graph(
+            graph, backend="mermaid", output_filepath="/some/path/file.dummy"
+        )
 
 
 def test_collapse_properties(graph):

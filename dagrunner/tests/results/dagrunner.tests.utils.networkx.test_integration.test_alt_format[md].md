@@ -1,0 +1,35 @@
+```mermaid
+---
+title: 
+---
+graph TD
+
+0(["0<br>D:a_L:1"])
+click 0 callback "call: ('module.path.a', {'init_arg': 'ia_a'}, {'call_arg': 'ca_a'})<br>prop: 'prop_a'<br>leadtime: 1<br>diagnostic: 'a'"
+1(["1<br>D:b_L:1"])
+click 1 callback "call: ('module.path.b', {'init_arg': 'ia_b'}, {'call_arg': 'ca_b'})<br>prop: 'prop_b'<br>leadtime: 1<br>diagnostic: 'b'"
+2(["2<br>D:c_L:1"])
+click 2 callback "call: ('module.path.c', {'init_arg': 'ia_c'}, {'call_arg': 'ca_c'})<br>prop: 'prop_c'<br>leadtime: 1<br>diagnostic: 'c'"
+3(["3<br>D:d_L:1"])
+click 3 callback "call: ('module.path.d', {'init_arg': 'ia_d'}, {'call_arg': 'ca_d'})<br>prop: 'prop_d'<br>leadtime: 1<br>diagnostic: 'd'"
+4(["4<br>D:e_L:1"])
+click 4 callback "call: ('module.path.e', {'init_arg': 'ia_e'}, {'call_arg': 'ca_e'})<br>prop: 'prop_e'<br>leadtime: 1<br>diagnostic: 'e'"
+5(["5<br>D:a_L:2"])
+click 5 callback "call: ('module.path.a', {'init_arg': 'ia_a'}, {'call_arg': 'ca_a'})<br>prop: 'prop_a'<br>leadtime: 2<br>diagnostic: 'a'"
+6(["6<br>D:b_L:2"])
+click 6 callback "call: ('module.path.b', {'init_arg': 'ia_b'}, {'call_arg': 'ca_b'})<br>prop: 'prop_b'<br>leadtime: 2<br>diagnostic: 'b'"
+7(["7<br>D:c_L:2"])
+click 7 callback "call: ('module.path.c', {'init_arg': 'ia_c'}, {'call_arg': 'ca_c'})<br>prop: 'prop_c'<br>leadtime: 2<br>diagnostic: 'c'"
+8(["8<br>D:d_L:2"])
+click 8 callback "call: ('module.path.d', {'init_arg': 'ia_d'}, {'call_arg': 'ca_d'})<br>prop: 'prop_d'<br>leadtime: 2<br>diagnostic: 'd'"
+9(["9<br>D:e_L:2"])
+click 9 callback "call: ('module.path.e', {'init_arg': 'ia_e'}, {'call_arg': 'ca_e'})<br>prop: 'prop_e'<br>leadtime: 2<br>diagnostic: 'e'"
+0 --> 1
+2 --> 3
+1 --> 4
+3 --> 4
+5 --> 6
+7 --> 8
+6 --> 9
+8 --> 9
+```
