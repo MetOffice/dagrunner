@@ -24,6 +24,9 @@ dependencies = [
 exclude = ["visual"]
 
 [project.optional-dependencies]
+visualisation = [
+  "requests"
+]
 # for testing the project
 tests = [
   "pytest"
