@@ -118,19 +118,29 @@ add_node(self, nodeid, label=None, tooltip=None, url=None)
 add_raw(self, raw)
 ```
 
-### function: `display`
+### function: `base64`
 
 [Source](../dagrunner/utils/visualisation.py#L111)
 
 #### Call Signature:
 
 ```python
-display(self)
+base64(self)
+```
+
+### function: `display`
+
+[Source](../dagrunner/utils/visualisation.py#L129)
+
+#### Call Signature:
+
+```python
+display(self, output_filepath: str = None)
 ```
 
 ## class: `MermaidHTML`
 
-[Source](../dagrunner/utils/visualisation.py#L144)
+[Source](../dagrunner/utils/visualisation.py#L155)
 
 ### Call Signature:
 
@@ -140,7 +150,7 @@ MermaidHTML(mermaid, table=None)
 
 ### function: `__init__`
 
-[Source](../dagrunner/utils/visualisation.py#L167)
+[Source](../dagrunner/utils/visualisation.py#L178)
 
 #### Call Signature:
 
@@ -152,7 +162,7 @@ Initialize self.  See help(type(self)) for accurate signature.
 
 ### function: `__str__`
 
-[Source](../dagrunner/utils/visualisation.py#L170)
+[Source](../dagrunner/utils/visualisation.py#L181)
 
 #### Call Signature:
 
@@ -164,7 +174,7 @@ Return str(self).
 
 ### function: `save`
 
-[Source](../dagrunner/utils/visualisation.py#L177)
+[Source](../dagrunner/utils/visualisation.py#L188)
 
 #### Call Signature:
 
@@ -176,7 +186,7 @@ save(self, output_filepath)
 
 ## function: `visualise_graph_matplotlib`
 
-[Source](../dagrunner/utils/visualisation.py#L185)
+[Source](../dagrunner/utils/visualisation.py#L196)
 
 ### Call Signature:
 
@@ -197,7 +207,7 @@ Args:
 
 ## function: `visualise_graph_mermaid`
 
-[Source](../dagrunner/utils/visualisation.py#L325)
+[Source](../dagrunner/utils/visualisation.py#L336)
 
 ### Call Signature:
 
@@ -211,7 +221,11 @@ Args:
 - `graph`: The graph to visualise.
 - `node_info_lookup`: A dictionary mapping nodes to their information.
 - `title`: The title of the visualisation.
-- `output_filepath`: The output filepath to save the visualisation to.
+- `output_filepath`: The output filepath to save the visualisation to.  Where not
+  provided, write a html file to a temporary location and open it with your default
+  browser.  Otherwise, supported extensions include ".html", ".png", ".jpg",
+  ".jpeg", ".svg" and ".md".  Note that not all formats support the full
+  set of visualisation features, so html is recommended.
 - `group_by`: One or more property to group nodes by (i.e.
   [subgraph](https://mermaid-js.github.io/mermaid/#/subgraph)).
 - `label_by`: One or more property to label visualisation nodes by.
