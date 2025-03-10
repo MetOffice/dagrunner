@@ -10,7 +10,11 @@ from unittest import mock
 import networkx as nx
 import pytest
 
-from dagrunner.tests import assert_binary_file_equal, assert_text_file_equal
+from dagrunner.tests import (
+    assert_binary_file_equal,
+    assert_text_file_equal,
+    is_running_in_github_actions,
+)
 from dagrunner.utils.networkx import visualise_graph
 
 
@@ -80,6 +84,10 @@ def test_basic(graph):
     assert_visual(graph, "mermaid")
 
 
+@pytest.mark.skipif(
+    is_running_in_github_actions(),
+    reason="mermaid.ink requests unreliable from within gh actions.",
+)
 @pytest.mark.parametrize("format", ["svg", "jpg", "png", "md"])
 def test_alt_format(graph, format, request):
     with tempfile.TemporaryDirectory() as tmpdirname:

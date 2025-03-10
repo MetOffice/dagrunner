@@ -10,6 +10,10 @@ import shutil
 _RESULT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results")
 
 
+def is_running_in_github_actions():
+    return os.getenv("GITHUB_ACTIONS") == "true"
+
+
 def expand_results_path(path):
     if "results" not in path:
         path = os.path.join(os.path.dirname(__file__), "results", path)
