@@ -108,37 +108,48 @@ class MermaidGraph:
     def __str__(self):
         return self.MERMAID_TEMPLATE.format(title=self._title, cont=self._cont)
 
-    def display(self):
-        # in jupiter 7.1, we have native markdown support for mermaid
-        import notebook
-        import requests
-        from IPython.display import Image, Markdown, display
+    def base64(self):
+        return base64.b64encode(self.__str__().encode("ascii")).decode("ascii")
 
-        # Mermaid graph definition
+    def _mermaid_ink(self, format="jpeg"):
+        import requests
+
+        # Fetch the rendered image from the Mermaid API
+        if format == "svg":
+            image_url = f"https://mermaid.ink/svg/{self.base64()}"
+        elif format in ["png", "jpg", "jpeg", "pdf"]:
+            image_url = f"https://mermaid.ink/img/{self.base64()}?type={format}"
+        else:
+            raise ValueError(f"Unsupported format: {format}")
+        response = requests.get(image_url)
+        if response.status_code != 200:
+            print(f"Failed to fetch the image. Status code: {response.status_code}")
+        return response
+
+    def display(self, output_filepath: str = None):
         graph = self.__str__()
 
-        notebook_version = tuple(map(int, notebook.__version__.split(".")))
-        if notebook_version >= (7, 1) and False:
-            # Use native Mermaid rendering in Markdown (doesn't support special
-            # characters so disabled for now).
-            display(Markdown(f"```mermaid\n{graph}\n```"))
-        else:
-            # Use the Mermaid API via mermaid.ink to render the graph as an image
+        if output_filepath is None:
+            if in_notebook():
+                # Use the Mermaid API via mermaid.ink to render the graph as an image
+                from IPython.display import Image, display
 
-            # Encode the graph for use in the Mermaid API
-            graphbytes = graph.encode("ascii")
-            base64_bytes = base64.b64encode(graphbytes)
-            base64_string = base64_bytes.decode("ascii")
+                response = self._mermaid_ink()
 
-            # Fetch the rendered image from the Mermaid API
-            image_url = f"https://mermaid.ink/img/{base64_string}"
-            response = requests.get(image_url)
-
-            # Display the image directly in the notebook
-            if response.status_code == 200:
+                # Display the image directly in the notebook
                 display(Image(response.content))
+
+        else:
+            extension = os.path.splitext(output_filepath)[-1]
+            if extension == ".md":
+                open(output_filepath, "w").write(f"```mermaid\n{graph}\n```")
             else:
-                print(f"Failed to fetch the image. Status code: {response.status_code}")
+                response = self._mermaid_ink(format=extension[1:])
+                # if content is binary, save as binary
+                if extension == ".svg":
+                    open(output_filepath, "w").write(response.content.decode("ascii"))
+                else:
+                    open(output_filepath, "wb").write(response.content)
 
 
 class MermaidHTML:
@@ -338,7 +349,11 @@ def visualise_graph_mermaid(
     - `graph`: The graph to visualise.
     - `node_info_lookup`: A dictionary mapping nodes to their information.
     - `title`: The title of the visualisation.
-    - `output_filepath`: The output filepath to save the visualisation to.
+    - `output_filepath`: The output filepath to save the visualisation to.  Where not
+      provided, write a html file to a temporary location and open it with your default
+      browser.  Otherwise, supported extensions include ".html", ".png", ".jpg",
+      ".jpeg", ".svg" and ".md".  Note that not all formats support the full
+      set of visualisation features, so html is recommended.
     - `group_by`: One or more property to group nodes by (i.e.
       [subgraph](https://mermaid-js.github.io/mermaid/#/subgraph)).
     - `label_by`: One or more property to label visualisation nodes by.
@@ -436,14 +451,22 @@ def visualise_graph_mermaid(
         for pred in graph.predecessors(target):
             mermaid.add_connection(node_target_id_map[pred], node_target_id_map[target])
 
+    extension = os.path.splitext(output_filepath)[-1]
+    supported_ext = [".html", ".png", ".jpg", ".jpeg", ".svg", ".md"]
+    if extension and extension not in supported_ext:
+        raise ValueError(
+            f"Unsupported format: {extension}.  Choose from: {supported_ext}"
+        )
     if output_filepath:
-        MermaidHTML(mermaid, table).save(output_filepath)
-    else:
-        if in_notebook():
-            mermaid.display()
+        if extension == ".html":
+            MermaidHTML(mermaid, table).save(output_filepath)
         else:
-            import tempfile
+            mermaid.display(output_filepath=output_filepath)
+    elif in_notebook():
+        mermaid.display()
+    else:
+        import tempfile
 
-            with tempfile.NamedTemporaryFile(suffix=".html", delete=False) as f:
-                MermaidHTML(mermaid, table).save(f.name)
-                webbrowser.open(f.name)
+        with tempfile.NamedTemporaryFile(suffix=".html", delete=False) as f:
+            MermaidHTML(mermaid, table).save(f.name)
+            webbrowser.open(f.name)
