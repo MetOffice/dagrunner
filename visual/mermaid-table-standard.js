@@ -278,7 +278,9 @@ class TableStandardFmt extends HTMLElement {
                 const theme = this.getAttribute("data-theme") || "light";
                 this.initializeMermaidWithTheme(theme);
             }
-            mermaid.init(undefined, mermaidDiv);
+            mermaid.init(undefined, mermaidDiv).then(() => {
+                this.dispatchEvent(new CustomEvent("mermaidRendered", { bubbles: true }));
+            });
             this.mermaidDiagram = mermaidDiv;
         });
     }
@@ -316,7 +318,7 @@ class TableStandardFmt extends HTMLElement {
                 maxTextSize: 99999999  // beyond this "Maximum text size in diagram exceeded"
             });
         } else {
-            alert("mermaid re-initialisation for dynamic theme change not yet supported");
+            console.warn("Mermaid re-initialization for dynamic theme change is not yet supported.");
         }
     }
 
@@ -483,6 +485,8 @@ class TableStandardFmt extends HTMLElement {
             });
             this.br_hidden = !this.br_hidden;
         });
+        // manual button click to set initial state
+        delimToggleButton.click();
     }
 }
 
@@ -540,3 +544,120 @@ style.textContent = `
 document.head.appendChild(style);
 
 customElements.define('mermaid-table-standard', TableStandardFmt);
+
+
+/**
+ * Adds interactive chain link symbols to specified Mermaid nodes in an SVG diagram.
+ * 
+ * This function listens for the "mermaidRendered" event and processes all nodes
+ * matching the given selector. It appends an SVG group containing a clickable 
+ * chain link symbol (🔗) to each node. The symbol allows navigation to a corresponding 
+ * file, either by opening it in a new tab (middle mouse click) or navigating directly 
+ * (left mouse click). The symbol is displayed only when the user hovers over the node.
+ * 
+ * @param {string} selector - A CSS selector to identify the Mermaid nodes to process.
+ * @param {RegExp|null} [pattern=null] - An optional regular expression to extract a portion 
+ *     of the node's text content. If provided, the first capturing group is used as the file name.
+ * @param {string|null} [path_template=null] - An optional template string for generating 
+ *     file paths. Use "{name}" as a placeholder for the extracted or full node text. 
+ *     Defaults to "{nodeText}.html" if not provided.
+ * 
+ * @example
+ * // Add clickable links to subgraph labels
+ * addChainLinksToMermaidNodes("g.cluster-label");
+ * 
+ * @example
+* // Add clickable links to node labels
+ * addChainLinksToMermaidNodes("g.label");
+ * 
+ * @example
+ * // Define a custom filepath pattern
+ * addChainLinksToMermaidNodes("g.label", null, "/docs/{name}.html");
+  * 
+ * @example
+ * // Extract section of node label matching regex (chain: <value>)
+ * addChainLinksToMermaidNodes("g.label", /chain:\s*([\w-]+)/i);
+   * 
+ * @example
+ * // Include only specified names (AA or BB)
+ * addChainLinksToMermaidNodes("g.label", /^(AA|BB)$/i);
+   * 
+ * @example
+* // Include everything except specified names (AA or BB)
+ * addChainLinksToMermaidNodes("g.label", /^(?!AA\b|BB\b)[\w-]+$/i);
+ */
+function addLinksToMermaidNodes(selector, pattern = null, path_template=null) {
+    document.addEventListener("mermaidRendered", () => {
+        document.querySelectorAll(selector).forEach(node => {
+            let nodeText = node.textContent.trim();
+            if (!nodeText) {
+                console.log("excluding " + nodeText);
+                return;
+            }
+
+            console.log("processing " + nodeText);
+
+            if (pattern !== null) {
+                console.log("matching pattern " + pattern);
+                const match = nodeText.match(pattern);
+                if (!match) return; // Skip nodes without a match
+                nodeText = match[1];
+            }
+
+            let newFileName;
+            if (path_template !== null) {
+                newFileName = path_template.replace("{name}", nodeText);
+            } else {
+                newFileName = `${nodeText}.html`;
+            }
+
+            // Create an SVG <g> container to group elements
+            const svgGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            svgGroup.style.display = "none"; // Hidden by default
+
+            // Create background rectangle for visibility
+            const background = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            background.setAttribute("x", "-20");
+            background.setAttribute("y", "-0");
+            background.setAttribute("width", "20");
+            background.setAttribute("height", "20");
+            background.setAttribute("rx", "5"); // Rounded corners
+
+            // Create clickable symbol (🔗)
+            const linkSymbol = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            linkSymbol.setAttribute("x", "-10");
+            linkSymbol.setAttribute("y", "15");
+            linkSymbol.setAttribute("font-size", "14");
+            linkSymbol.setAttribute("cursor", "pointer");
+            linkSymbol.setAttribute("text-anchor", "middle");
+            linkSymbol.textContent = "🔗";
+
+            // Click event to open the corresponding file
+            linkSymbol.addEventListener("mousedown", (event) => {
+                event.stopPropagation();
+
+                if (event.button === 1) { // Middle mouse click
+                    event.preventDefault();
+                    window.open(newFileName, "_blank");
+                } else if (event.button === 0) { // Left mouse click
+                    window.location.href = newFileName;
+                }
+            });
+
+            // Append background and symbol to the group
+            svgGroup.appendChild(background);
+            svgGroup.appendChild(linkSymbol);
+
+            // Append the group to the node
+            node.appendChild(svgGroup);
+
+            // Show/hide on hover
+            node.addEventListener("mouseenter", () => {
+                svgGroup.style.display = "block";
+            });
+            node.addEventListener("mouseleave", () => {
+                svgGroup.style.display = "none";
+            });
+        });
+    });
+}
