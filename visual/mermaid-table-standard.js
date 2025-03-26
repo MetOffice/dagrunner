@@ -107,6 +107,28 @@ class TableStandardFmt extends HTMLElement {
                     gap: 5px;
                 }
 
+                #diag-top-left-controls {
+                    position: absolute;
+                    left: 0px;
+                    top: 0px;
+                    display: flex;
+                    flex-direction: row;
+                    align-items: center;
+                    gap: 5px;
+                    z-index: 1;
+                }
+
+                #diag-top-right-controls {
+                    position: absolute;
+                    right: 10px;
+                    top: 10px;
+                    display: flex;
+                    flex-direction: row;
+                    align-items: center;
+                    gap: 5px;
+                    z-index: 1;
+                }
+
                 button {
                     padding: 5px;
                     font-size: 14px;
@@ -114,16 +136,14 @@ class TableStandardFmt extends HTMLElement {
                     cursor: pointer;
                 }
 
-                #save-diagram {
-                    position: absolute;
-                    top: 10px;
-                    right: 10px;
-                }
-
                 #toggle-theme {
                     background-color: transparent;
                     color: transparent;
                     border-color: transparent;
+                }
+
+                a {
+                    cursor: pointer;
                 }
 
                 #banner {
@@ -138,16 +158,23 @@ class TableStandardFmt extends HTMLElement {
             </style>
 
             <div id="mermaid-container">
-                <button id="toggle-theme" type="button">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16">
-                    <circle r="7" cx="8" cy="8" stroke=var(--primary-color) fill="none" />
-                    <path stroke=var(--primary-color) fill=var(--primary-color) d="M8 15A1 1 0 0 0 8 1" />
-                </svg>
-                </button>
-                <button id="save-diagram">📥</button>
+                <dev id="diag-top-left-controls">
+                    <button id="toggle-theme" title="theme-toggle" type="button">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16">
+                            <circle r="7" cx="8" cy="8" stroke=var(--primary-color) fill="none" />
+                            <path stroke=var(--primary-color) fill=var(--primary-color) d="M8 15A1 1 0 0 0 8 1" />
+                        </svg>
+                    </button>
+                </dev>
+
+                <dev id="diag-top-right-controls">
+                    <button id="save-diagram" title="save svg">📥</button>
+                </dev>
+
                 <div id="diagram-wrapper">
                     <slot name="mermaid"></slot>
                 </div>
+
                 <div id="banner">
                     <a href="https://github.com/MetOffice/dagrunner" target="_blank">
                     <img src="https://raw.githubusercontent.com/MetOffice/dagrunner/refs/heads/main/docs/symbol.svg"/>
@@ -485,6 +512,7 @@ class TableStandardFmt extends HTMLElement {
             });
             this.br_hidden = !this.br_hidden;
         });
+
         // manual button click to set initial state
         delimToggleButton.click();
     }
@@ -518,6 +546,8 @@ style.textContent = `
 
     .mermaid {
         transform-origin: 0 0; /* Set the origin for scaling */
+        position: relative; /* Ensures it's stackable */
+        // z-index: 1; /* Lower than #diag-top-right-controls */
     }
 
     .highlighted {
@@ -546,48 +576,49 @@ document.head.appendChild(style);
 customElements.define('mermaid-table-standard', TableStandardFmt);
 
 
-/**
- * Adds interactive chain link symbols to specified Mermaid nodes in an SVG diagram.
- * 
- * This function listens for the "mermaidRendered" event and processes all nodes
- * matching the given selector. It appends an SVG group containing a clickable 
- * chain link symbol (🔗) to each node. The symbol allows navigation to a corresponding 
- * file, either by opening it in a new tab (middle mouse click) or navigating directly 
- * (left mouse click). The symbol is displayed only when the user hovers over the node.
- * 
- * @param {string} selector - A CSS selector to identify the Mermaid nodes to process.
- * @param {RegExp|null} [pattern=null] - An optional regular expression to extract a portion 
- *     of the node's text content. If provided, the first capturing group is used as the file name.
- * @param {string|null} [path_template=null] - An optional template string for generating 
- *     file paths. Use "{name}" as a placeholder for the extracted or full node text. 
- *     Defaults to "{nodeText}.html" if not provided.
- * 
- * @example
- * // Add clickable links to subgraph labels
- * addChainLinksToMermaidNodes("g.cluster-label");
- * 
- * @example
-* // Add clickable links to node labels
- * addChainLinksToMermaidNodes("g.label");
- * 
- * @example
- * // Define a custom filepath pattern
- * addChainLinksToMermaidNodes("g.label", null, "/docs/{name}.html");
-  * 
- * @example
- * // Extract section of node label matching regex (chain: <value>)
- * addChainLinksToMermaidNodes("g.label", /chain:\s*([\w-]+)/i);
-   * 
- * @example
- * // Include only specified names (AA or BB)
- * addChainLinksToMermaidNodes("g.label", /^(AA|BB)$/i);
-   * 
- * @example
-* // Include everything except specified names (AA or BB)
- * addChainLinksToMermaidNodes("g.label", /^(?!AA\b|BB\b)[\w-]+$/i);
- */
+//  * Adds interactive chain link symbols to specified Mermaid nodes in an SVG diagram.
+//  * 
+//  * This function listens for the "mermaidRendered" event and processes all nodes
+//  * matching the given selector. It appends an SVG group containing a clickable 
+//  * chain link symbol (🔗) to each node. The symbol allows navigation to a corresponding 
+//  * file, either by opening it in a new tab (middle mouse click) or navigating directly 
+//  * (left mouse click). The symbol is displayed only when the user hovers over the node.
+//  * 
+//  * @param {string} selector - A CSS selector to identify the Mermaid nodes to process.
+//  * @param {RegExp|null} [pattern=null] - An optional regular expression to extract a portion 
+//  *     of the node's text content. If provided, the first capturing group is used as the file name.
+//  * @param {string|null} [path_template=null] - An optional template string for generating 
+//  *     file paths. Use "{name}" as a placeholder for the extracted or full node text. 
+//  *     Defaults to "{nodeText}.html" if not provided.
+//  * 
+//  * @example
+//  * // Add clickable links to subgraph labels
+//  * addChainLinksToMermaidNodes("g.cluster-label");
+//  * 
+//  * @example
+// * // Add clickable links to node labels
+//  * addChainLinksToMermaidNodes("g.label");
+//  * 
+//  * @example
+//  * // Define a custom filepath pattern
+//  * addChainLinksToMermaidNodes("g.label", null, "/docs/{name}.html");
+//   * 
+//  * @example
+//  * // Extract section of node label matching regex (chain: <value>)
+//  * addChainLinksToMermaidNodes("g.label", /chain:\s*([\w-]+)/i);
+//    * 
+//  * @example
+//  * // Include only specified names (AA or BB)
+//  * addChainLinksToMermaidNodes("g.label", /^(AA|BB)$/i);
+//  * 
+//  * @example
+//  * // Include everything except specified names (AA or BB)
+//  * addChainLinksToMermaidNodes("g.label", /^(?!AA\b|BB\b)[\w-]+$/i);
 function addLinksToMermaidNodes(selector, pattern = null, path_template=null) {
     document.addEventListener("mermaidRendered", () => {
+        const diagramWrapper = document.querySelector("body > mermaid-table-standard").shadowRoot.querySelector("#diagram-wrapper");
+        const mermaidDiagram = document.querySelector(".mermaid");
+
         document.querySelectorAll(selector).forEach(node => {
             let nodeText = node.textContent.trim();
             if (!nodeText) {
@@ -611,53 +642,71 @@ function addLinksToMermaidNodes(selector, pattern = null, path_template=null) {
                 newFileName = `${nodeText}.html`;
             }
 
-            // Create an SVG <g> container to group elements
-            const svgGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
-            svgGroup.style.display = "none"; // Hidden by default
+            // Create anchor element
+            const anchor = document.createElement("a");
+            anchor.href = newFileName;
+            anchor.textContent = "🔗";
+            anchor.style.display = "none"; // Hidden by default
+            anchor.style.position = "absolute";
+            anchor.style.background = "var(--primary-background)";
+            anchor.style.color = "var(--primary-color)";
+            anchor.style.fontSize = "14px";
+            anchor.style.textDecoration = "none";
+            anchor.style.cursor = "pointer";
+            anchor.style.zIndex = "0";
+            anchor.style.padding = "2px 2px";
+            anchor.style.borderRadius = "10px"; // Rounded corners
+            diagramWrapper.appendChild(anchor);
 
-            // Create background rectangle for visibility
-            const background = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-            background.setAttribute("x", "-20");
-            background.setAttribute("y", "-0");
-            background.setAttribute("width", "20");
-            background.setAttribute("height", "20");
-            background.setAttribute("rx", "5"); // Rounded corners
+             // Show/hide on hover
+             const parent = node.parentElement;
 
-            // Create clickable symbol (🔗)
-            const linkSymbol = document.createElementNS("http://www.w3.org/2000/svg", "text");
-            linkSymbol.setAttribute("x", "-10");
-            linkSymbol.setAttribute("y", "15");
-            linkSymbol.setAttribute("font-size", "14");
-            linkSymbol.setAttribute("cursor", "pointer");
-            linkSymbol.setAttribute("text-anchor", "middle");
-            linkSymbol.textContent = "🔗";
-
-            // Click event to open the corresponding file
-            linkSymbol.addEventListener("mousedown", (event) => {
-                event.stopPropagation();
-
-                if (event.button === 1) { // Middle mouse click
-                    event.preventDefault();
-                    window.open(newFileName, "_blank");
-                } else if (event.button === 0) { // Left mouse click
-                    window.location.href = newFileName;
+             parent.addEventListener("mouseenter", () => {
+                 anchor.style.display = "block";
+                 updatePosition();
+             });
+            const hideAnchorIfOutside = (event) => {
+                const parentRect = parent.getBoundingClientRect();
+                if (
+                    event.clientX < parentRect.left ||
+                    event.clientX > parentRect.right ||
+                    event.clientY < parentRect.top ||
+                    event.clientY > parentRect.bottom
+                ) {
+                    anchor.style.display = "none";
                 }
-            });
+            };
 
-            // Append background and symbol to the group
-            svgGroup.appendChild(background);
-            svgGroup.appendChild(linkSymbol);
+            anchor.addEventListener("mouseleave", hideAnchorIfOutside);
+            parent.addEventListener("mouseleave", hideAnchorIfOutside);
 
-            // Append the group to the node
-            node.appendChild(svgGroup);
+            // Function to update position relative to the node
+            const updatePosition = () => {
+                if (anchor.style.display === "none") return; // Only update if visible
 
-            // Show/hide on hover
-            node.addEventListener("mouseenter", () => {
-                svgGroup.style.display = "block";
-            });
-            node.addEventListener("mouseleave", () => {
-                svgGroup.style.display = "none";
-            });
+                const nodeRect = node.getBoundingClientRect();
+                const wrapperRect = diagramWrapper.getBoundingClientRect();
+                const ctm = node.getScreenCTM();
+                if (!ctm) return;
+                
+                const scale = ctm.a;
+                
+                // Apply the transformation matrix to get the correct position
+                const x = (nodeRect.left - wrapperRect.left);
+                const y = (nodeRect.top - wrapperRect.top);
+                
+                // Offset remains constant regardless of scale
+                const offsetX = -25;
+                anchor.style.left = `${x + offsetX * scale}px`;
+                anchor.style.top = `${y}px`;
+                anchor.style.transform = `scale(${scale})`;
+                anchor.style.transformOrigin = "top left";
+            };
+
+            updatePosition();
+            window.addEventListener("resize", updatePosition);
+            window.addEventListener("scroll", updatePosition);
+            new MutationObserver(updatePosition).observe(mermaidDiagram, { attributes: true, attributeFilter: ["style"] });
         });
     });
 }
