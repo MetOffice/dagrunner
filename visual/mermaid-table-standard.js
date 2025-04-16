@@ -213,6 +213,7 @@ class TableStandardFmt extends HTMLElement {
                     th.addEventListener('click', () => {
                         this.sortTable(th.cellIndex);
                     });
+                    th.innerText += ' [---]';
                 });
             }
         }
@@ -222,6 +223,19 @@ class TableStandardFmt extends HTMLElement {
     sortTable(columnIndex) {
         var rows, switching, i, x, y, shouldSwitch;
         const table = this.querySelector('table');
+
+        var col_num = 0;
+        var slice;
+        table.querySelectorAll('th').forEach(th => {
+            if (col_num === columnIndex){
+                slice = this.table_ascending === true ? "[a-z]" : "[z-a]";
+            } else {
+                slice = '[---]';
+            }
+            th.innerText = th.innerText.slice(0, -5) + slice;
+            col_num++;
+        });
+
         switching = true;
         while (switching) {
             switching = false;
@@ -557,15 +571,13 @@ style.textContent = `
     tr:nth-child(even) { background: var(--primary-background) }
     tr:nth-child(odd) { background: var(--primary-accent) }
 
-    td {
-        white-space: nowrap;
-    }
     th {
         cursor: pointer;
     }
     th, td {
         text-align: left;
         vertical-align: top; /* Top align */
+        white-space: nowrap;
     }
 
     table thead th { background: var(--primary-background); position: sticky; top: 0; z-index: 1; }

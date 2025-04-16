@@ -9,7 +9,7 @@
 <body>
 
 <mermaid-table-standard>
-<div class="mermaid", slot="mermaid">
+<pre class="mermaid", slot="mermaid">
 ---
 title: 
 ---
@@ -45,23 +45,23 @@ click 10 callback "call: ('module.path.z', {'init_arg': 'ia_z'}, {'call_arg': 'c
 7 --> 8
 6 --> 9
 8 --> 9
-</div>
+</pre>
 <table slot="table">
     <thead>
         <tr><th>id</th><th>node</th><th>info</th></tr>
     </thead>
     <tbody>
-        <tr id="row0"><td>0</td><td>D:a_L:1</td><td>{'call': ('&lt;function test_basic.&lt;locals&gt;.&lt;lambda&gt; at 0x7f04ce115048&gt;', {'init_arg': 'ia_a'}, {'call_arg': 'ca_a'}), 'prop': 'prop_a', 'leadtime': 1, 'diagnostic': 'a', 'testparam': 'interpolate'}</td></tr>
-        <tr id="row1"><td>1</td><td>D:b_L:1</td><td>{'call': ('module.path.b', {'init_arg': 'ia_b'}, {'call_arg': 'ca_b'}), 'prop': 'prop_b', 'leadtime': 1, 'diagnostic': 'b'}</td></tr>
-        <tr id="row2"><td>2</td><td>D:c_L:1</td><td>{'call': ('module.path.c', {'init_arg': 'ia_c'}, {'call_arg': 'ca_c'}), 'prop': 'prop_c', 'leadtime': 1, 'diagnostic': 'c'}</td></tr>
-        <tr id="row3"><td>3</td><td>D:d_L:1</td><td>{'call': ('module.path.d', {'init_arg': 'ia_d'}, {'call_arg': 'ca_d'}), 'prop': 'prop_d', 'leadtime': 1, 'diagnostic': 'd'}</td></tr>
-        <tr id="row4"><td>4</td><td>D:e_L:1</td><td>{'call': ('module.path.e', {'init_arg': 'ia_e'}, {'call_arg': 'ca_e'}), 'prop': 'prop_e', 'leadtime': 1, 'diagnostic': 'e'}</td></tr>
-        <tr id="row5"><td>5</td><td>D:a_L:2</td><td>{'call': ('&lt;function test_basic.&lt;locals&gt;.&lt;lambda&gt; at 0x7f04ce115048&gt;', {'init_arg': 'ia_a'}, {'call_arg': 'ca_a'}), 'prop': 'prop_a', 'leadtime': 2, 'diagnostic': 'a', 'testparam': 'interpolate'}</td></tr>
-        <tr id="row6"><td>6</td><td>D:b_L:2</td><td>{'call': ('module.path.b', {'init_arg': 'ia_b'}, {'call_arg': 'ca_b'}), 'prop': 'prop_b', 'leadtime': 2, 'diagnostic': 'b'}</td></tr>
-        <tr id="row7"><td>7</td><td>D:c_L:2</td><td>{'call': ('module.path.c', {'init_arg': 'ia_c'}, {'call_arg': 'ca_c'}), 'prop': 'prop_c', 'leadtime': 2, 'diagnostic': 'c'}</td></tr>
-        <tr id="row8"><td>8</td><td>D:d_L:2</td><td>{'call': ('module.path.d', {'init_arg': 'ia_d'}, {'call_arg': 'ca_d'}), 'prop': 'prop_d', 'leadtime': 2, 'diagnostic': 'd'}</td></tr>
-        <tr id="row9"><td>9</td><td>D:e_L:2</td><td>{'call': ('module.path.e', {'init_arg': 'ia_e'}, {'call_arg': 'ca_e'}), 'prop': 'prop_e', 'leadtime': 2, 'diagnostic': 'e'}</td></tr>
-        <tr id="row10"><td>10</td><td>D:z_L:None</td><td>{'call': ('module.path.z', {'init_arg': 'ia_z'}, {'call_arg': 'ca_z'}), 'prop': 'prop_z', 'leadtime': None, 'diagnostic': 'z'}</td></tr>
+        <tr id="row0"><td>0</td><td>D:a_L:1</td><td>call: ('&lt;function test_basic.&lt;locals&gt;.&lt;lambda&gt; at 0x7f04ce115048&gt;', {'init_arg': 'ia_a'}, {'call_arg': 'ca_a'})<br>prop: prop_a<br>leadtime: 1<br>diagnostic: a<br>testparam: interpolate</td></tr>
+        <tr id="row1"><td>1</td><td>D:b_L:1</td><td>call: ('module.path.b', {'init_arg': 'ia_b'}, {'call_arg': 'ca_b'})<br>prop: prop_b<br>leadtime: 1<br>diagnostic: b</td></tr>
+        <tr id="row2"><td>2</td><td>D:c_L:1</td><td>call: ('module.path.c', {'init_arg': 'ia_c'}, {'call_arg': 'ca_c'})<br>prop: prop_c<br>leadtime: 1<br>diagnostic: c</td></tr>
+        <tr id="row3"><td>3</td><td>D:d_L:1</td><td>call: ('module.path.d', {'init_arg': 'ia_d'}, {'call_arg': 'ca_d'})<br>prop: prop_d<br>leadtime: 1<br>diagnostic: d</td></tr>
+        <tr id="row4"><td>4</td><td>D:e_L:1</td><td>call: ('module.path.e', {'init_arg': 'ia_e'}, {'call_arg': 'ca_e'})<br>prop: prop_e<br>leadtime: 1<br>diagnostic: e</td></tr>
+        <tr id="row5"><td>5</td><td>D:a_L:2</td><td>call: ('&lt;function test_basic.&lt;locals&gt;.&lt;lambda&gt; at 0x7f04ce115048&gt;', {'init_arg': 'ia_a'}, {'call_arg': 'ca_a'})<br>prop: prop_a<br>leadtime: 2<br>diagnostic: a<br>testparam: interpolate</td></tr>
+        <tr id="row6"><td>6</td><td>D:b_L:2</td><td>call: ('module.path.b', {'init_arg': 'ia_b'}, {'call_arg': 'ca_b'})<br>prop: prop_b<br>leadtime: 2<br>diagnostic: b</td></tr>
+        <tr id="row7"><td>7</td><td>D:c_L:2</td><td>call: ('module.path.c', {'init_arg': 'ia_c'}, {'call_arg': 'ca_c'})<br>prop: prop_c<br>leadtime: 2<br>diagnostic: c</td></tr>
+        <tr id="row8"><td>8</td><td>D:d_L:2</td><td>call: ('module.path.d', {'init_arg': 'ia_d'}, {'call_arg': 'ca_d'})<br>prop: prop_d<br>leadtime: 2<br>diagnostic: d</td></tr>
+        <tr id="row9"><td>9</td><td>D:e_L:2</td><td>call: ('module.path.e', {'init_arg': 'ia_e'}, {'call_arg': 'ca_e'})<br>prop: prop_e<br>leadtime: 2<br>diagnostic: e</td></tr>
+        <tr id="row10"><td>10</td><td>D:z_L:None</td><td>call: ('module.path.z', {'init_arg': 'ia_z'}, {'call_arg': 'ca_z'})<br>prop: prop_z<br>leadtime: None<br>diagnostic: z</td></tr>
     </tbody>
 </table>
 

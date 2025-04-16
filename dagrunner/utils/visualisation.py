@@ -166,9 +166,9 @@ class MermaidHTML:
 <body>
 
 <mermaid-table-standard>
-<div class="mermaid", slot="mermaid">
+<pre class="mermaid", slot="mermaid">
 {graph}
-</div>
+</pre>
 {table}
 </mermaid-table-standard>
 
@@ -320,7 +320,11 @@ def _add_node(
         label = _gen_label(node_id, node, label_by)
         tt_data = tooltip_data if tooltip_data is not None else node_data
         tooltip = [f"{key}: {repr(val)}" for key, val in tt_data.items()]
-        info = table_delim.join([repr(val) for val in as_iterable(node_data)])
+        try:
+            # Special treatment for dictionary.
+            info = table_delim.join([f"{key}: {val}" for key, val in node_data.items()])
+        except AttributeError:
+            info = table_delim.join([repr(val) for val in as_iterable(node_data)])
         mermaid.add_node(
             node_id,
             label=label,

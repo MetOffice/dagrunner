@@ -109,7 +109,11 @@ def get_subset_with_dependencies(
     return graph.subgraph(dependencies)
 
 
-def collapse_graph(graph: nx.DiGraph, collapse_properties: Union[str, Iterable[str]]):
+def collapse_graph(
+    graph: nx.DiGraph,
+    collapse_properties: Union[str, Iterable[str]],
+    collapsed_data_summary: bool = False,
+):
     """
     Collapses a directed graph by grouping nodes based on specified properties.
 
@@ -123,16 +127,23 @@ def collapse_graph(graph: nx.DiGraph, collapse_properties: Union[str, Iterable[s
     - `collapse_properties`: A single property or an iterable
         of properties to collapse the graph along. These properties must exist in the
         dataclass definition of the graph nodes.
+    - `collapsed_data_summary`
+        Where False, the collapsed node data lookup returned is a set of all
+        contributing node data dictionaries (excluding any collapse properties).
+        If True, this set of dictionaries is merged into a single dictionary of value
+        sets.  Useful for representing large amounts of data in a more compact form,
+        at the cost of loosing associative relationship between data keys and values.
+
 
     Returns:
         Tuple[nx.DiGraph, Dict[Any, Set[str]], Dict[Any, Dict[str, List[Any]]]]:
             - The collapsed graph as a new `nx.DiGraph` object.
-            - A dictionary mapping each collapsed node to a set of string
-              representations of the data associated with the original nodes
-              that were collapsed.
+            - A dictionary, mapping each collapsed node to a set representing the data
+              across the uncollapsed node set.  See 'collapsed_data_summary' where this
+              may change.
             - A dictionary mapping each collapsed node to a dictionary of the
               collapsed properties and their corresponding sorted values from
-             # the original nodes.
+              the original nodes.
 
     Raises:
         TypeError: If the nodes of the graph are not dataclass instances.
@@ -181,18 +192,31 @@ def collapse_graph(graph: nx.DiGraph, collapse_properties: Union[str, Iterable[s
             except TypeError:
                 continue
 
-        node_data_lookup[node] = set(
-            [
-                str(
-                    {
-                        key: val
-                        for key, val in graph.nodes(data=True)[gnode].items()
-                        if key not in collapse_properties
-                    }
-                )
-                for gnode in filtered_nodes
-            ]
-        )
+        if collapsed_data_summary:
+            merged = {}
+            node_data_lookup[node] = merged
+            for gnode in filtered_nodes:
+                for k, v in graph.nodes(data=True)[gnode].items():
+                    if k in collapse_properties:
+                        continue
+                    if v:
+                        if isinstance(v, Iterable) and not isinstance(v, (str, bytes)):
+                            merged.setdefault(k, set()).update(v)
+                        else:
+                            merged.setdefault(k, set()).add(v)
+        else:
+            node_data_lookup[node] = set(
+                [
+                    str(
+                        {
+                            key: val
+                            for key, val in graph.nodes(data=True)[gnode].items()
+                            if key not in collapse_properties
+                        }
+                    )
+                    for gnode in filtered_nodes
+                ]
+            )
     graph = collapsed_graph
     return graph, node_data_lookup, node_collapsed_lookup
 
