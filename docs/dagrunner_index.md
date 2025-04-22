@@ -57,6 +57,7 @@ version: {module.__version__}
         - [function: main](dagrunner.utils.logger.md#function-main)
         - [function: start_logging_server](dagrunner.utils.logger.md#function-start_logging_server)
       - [module: networkx](dagrunner.utils.networkx.md#module-dagrunnerutilsnetworkx)
+        - [function: collapse_graph](dagrunner.utils.networkx.md#function-collapse_graph)
         - [function: get_subset_with_dependencies](dagrunner.utils.networkx.md#function-get_subset_with_dependencies)
         - [function: visualise_graph](dagrunner.utils.networkx.md#function-visualise_graph)
       - [function: pairwise](dagrunner.utils.md#function-pairwise)
