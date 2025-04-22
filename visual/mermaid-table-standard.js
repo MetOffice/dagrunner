@@ -11,6 +11,65 @@ class TableStandardFmt extends HTMLElement {
         this.user_initialised_mermaid = true;
         this.table_ascending = true;
         this.br_hidden = false;
+
+        this.svg_theme_toggle = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24">
+                <circle r="10" cx="12" cy="12" stroke-width="2" stroke=var(--primary-color) fill="none" />
+                <path stroke-width="0" fill=var(--primary-color) d="M12 22A1 1 0 0 0 12 2" />
+            </svg>
+            `;
+
+        this.svg_download = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-download-icon lucide-download"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+        `;
+
+        this.svg_reset = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-house-icon lucide-house"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+        `;
+
+        this.svg_zoomin = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-zoom-in-icon lucide-zoom-in"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/><line x1="11" x2="11" y1="8" y2="14"/><line x1="8" x2="14" y1="11" y2="11"/></svg>
+        `;
+
+        this.svg_zoomout = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-zoom-out-icon lucide-zoom-out"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/><line x1="8" x2="14" y1="11" y2="11"/></svg>
+        `;
+
+        this.svg_zoom_mouse_rel = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-mouse-icon lucide-mouse"><rect x="5" y="2" width="14" height="20" rx="7"/><path d="M12 6v4"/></svg>
+        `;
+
+        this.svg_zoom_orig_rel = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-compass-icon lucide-compass"><path d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z"/><circle cx="12" cy="12" r="10"/></svg>
+        `;
+
+        this.svg_table_text_wrap = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-wrap-text-icon lucide-wrap-text"><line x1="3" x2="21" y1="6" y2="6"/><path d="M3 12h15a3 3 0 1 1 0 6h-4"/><polyline points="16 16 14 18 16 20"/><line x1="3" x2="10" y1="18" y2="18"/></svg>
+        `;
+
+        this.svg_table_text_nowrap = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-align-justify-icon lucide-align-justify"><path d="M3 12h18"/><path d="M3 18h18"/><path d="M3 6h18"/></svg>
+        `;
+
+        this.svg_delim_br = `
+            <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <g transform="translate(0, -5) scale(1, 1.5)">
+            <text x="12" y="12" font-size="12"  font-family="Arial" fill="currentColor"
+                    text-anchor="middle" dominant-baseline="central">
+                &lt;br&gt;
+            </text>
+            </g>
+            </svg>`;
+
+        this.svg_delim_semicol = `
+            <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <g transform="translate(0, -5) scale(1, 1.5)">
+            <text x="12" y="12" font-size="12"  font-family="Arial" fill="currentColor"
+                    text-anchor="middle" dominant-baseline="central">
+                ;
+            </text>
+            </g>
+            </svg>`;
     }
 
     connectedCallback() {
@@ -39,7 +98,7 @@ class TableStandardFmt extends HTMLElement {
                     --primary-color: light-dark(rgb(43, 43, 43),rgb(233, 233, 233));
                     --primary-background: light-dark(rgb(255, 255, 255),rgb(43, 43, 43));
                     --highlight-color: light-dark(yellow,rgb(173, 114, 54));
-                    --primary-accent: light-dark(rgb(190, 190, 190),rgb(100, 100, 100));
+                    --primary-accent: light-dark(rgb(190, 190, 190),rgb(85, 85, 85));
 
                     color: var(--primary-color);
                     background-color: var(--primary-background);
@@ -159,16 +218,11 @@ class TableStandardFmt extends HTMLElement {
 
             <div id="mermaid-container">
                 <dev id="diag-top-left-controls">
-                    <button id="toggle-theme" title="theme-toggle" type="button">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16">
-                            <circle r="7" cx="8" cy="8" stroke=var(--primary-color) fill="none" />
-                            <path stroke=var(--primary-color) fill=var(--primary-color) d="M8 15A1 1 0 0 0 8 1" />
-                        </svg>
-                    </button>
+                    <button id="toggle-theme" title="theme-toggle" type="button">${this.svg_theme_toggle}</button>
                 </dev>
 
                 <dev id="diag-top-right-controls">
-                    <button id="save-diagram" title="save svg">📥</button>
+                    <button id="save-diagram" title="save svg">${this.svg_download}</button>
                 </dev>
 
                 <div id="diagram-wrapper">
@@ -177,18 +231,18 @@ class TableStandardFmt extends HTMLElement {
 
                 <div id="banner">
                     <a href="https://github.com/MetOffice/dagrunner" target="_blank">
-                    <img src="https://raw.githubusercontent.com/MetOffice/dagrunner/refs/heads/main/docs/symbol.svg"/>
+                    <img src="https://raw.githubusercontent.com/MetOffice/dagrunner/refs/heads/main/docs/logo.svg"/>
                     <text>DAGrunner visualisation</text>
                     </a>
                 </div>
 
                 <div id="zoom-controls">
-                    <button id="zoom-in" title="zoom-in">+</button>
+                    <button id="zoom-in" title="zoom-in">${this.svg_zoomin}</button>
                     <div>
-                        <button id="toggle-zoom" title="make zoom cursor-relative or origin-relative">🖱️</button>
-                        <button id="zoom-reset" title="reset zoom and offset">🏠</button>
+                        <button id="toggle-zoom" title="make zoom cursor-relative or origin-relative">${this.svg_zoom_mouse_rel}</button>
+                        <button id="zoom-reset" title="reset zoom and offset">${this.svg_reset}</button>
                     </div>
-                    <button id="zoom-out" title="zoom-out">-</button>
+                    <button id="zoom-out" title="zoom-out">${this.svg_zoomout}</button>
                 </div>
             </div>
 
@@ -196,8 +250,8 @@ class TableStandardFmt extends HTMLElement {
                 <div class="table_content">
                     <slot name="table"></slot>
                     <div id="table-controls">
-                        <button class="newline_delim" title="newline delimiter toggle">&lt;br&gt;</button>
-                        <button class="wrap-toggle" title="word wrap toggle">➡️</button>
+                        <button class="newline_delim" title="newline delimiter toggle">${this.svg_delim_br}</button>
+                        <button class="wrap-toggle" title="word wrap toggle">${this.svg_table_text_nowrap}</button>
                     </div>
                 </div>
             </div>
@@ -213,6 +267,12 @@ class TableStandardFmt extends HTMLElement {
                     th.addEventListener('click', () => {
                         this.sortTable(th.cellIndex);
                     });
+
+                    // requires this web component to be used as a module
+                    // const svg = document.createElement('img');
+                    // svg.src = new URL('./resources/arrow-down-a-z.svg', import.meta.url);
+                    // svg.alt = "sort";
+                    // th.appendChild(svg);
                     th.innerText += ' [---]';
                 });
             }
@@ -474,7 +534,7 @@ class TableStandardFmt extends HTMLElement {
 
         toggleButton.addEventListener('click', () => {
             this.zoomRelativeToCursor = !this.zoomRelativeToCursor;
-            toggleButton.textContent = this.zoomRelativeToCursor ? '🖱️' : '🧭';
+            toggleButton.innerHTML = this.zoomRelativeToCursor ? this.svg_zoom_mouse_rel : this.svg_zoom_orig_rel;
         });
     }
 
@@ -508,7 +568,7 @@ class TableStandardFmt extends HTMLElement {
             const tds = this.querySelectorAll('td');
             this.isWrapped = !this.isWrapped;
             tds.forEach(td => td.style.whiteSpace = this.isWrapped ? 'normal' : 'nowrap');
-            wrapToggleButton.textContent = this.isWrapped ? '🔄' : '➡️';
+            wrapToggleButton.innerHTML = this.isWrapped ? this.svg_table_text_wrap : this.svg_table_text_nowrap;
         });
     }
 
@@ -522,7 +582,7 @@ class TableStandardFmt extends HTMLElement {
                 } else {
                     cell.innerHTML = cell.innerHTML.replace(/; <\!--<br>-->/g, "<br>");
                 }
-                delimToggleButton.textContent = this.br_hidden ? '<br>' : ';';
+                delimToggleButton.innerHTML = this.br_hidden ? this.svg_delim_br : this.svg_delim_semicol;
             });
             this.br_hidden = !this.br_hidden;
         });

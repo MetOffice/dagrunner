@@ -6,7 +6,7 @@
 ![PR CI status](https://github.com/MetOffice/dagrunner/actions/workflows/tests.yml/badge.svg)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://github.com/pre-commit/pre-commit)
 
-# <img src="docs/symbol.svg" alt="dagrunner_icon" width=200px>![](https://placehold.co/600x200/transparent/929292?text=DAGrunner)
+# <img src="docs/logo.svg" alt="dagrunner_icon" width=200px>![](https://placehold.co/600x200/transparent/929292?text=DAGrunner)
 
 DAGrunner serves as a Directed Acyclic Graph (DAG) runner, primarily designed to ensure a clear distinction between a project's graph definition (typically in native networkx format) and its execution method. In essence, DAGrunner offers various schedulers for executing the graph, but it firmly separates these operational concepts from the scientific configuration or recipe, i.e., the graph itself. Consequently, while DAGrunner currently provides convenient scheduling options, it remains adaptable to future changes or alternative solutions, ensuring that the scientific configuration can persist regardless of the technologies or tools employed, whether DAGrunner is utilized or not.
 
@@ -64,3 +64,14 @@ These range from [dask](https://www.dask.org/), [ray](https://docs.ray.io/en/lat
 
 DAGrunner provides a script `dagrunner-logger` for running a TCP server.  This enables logging to function across the network.  Additionally, it will write logs to an sqlite database to aid in realtime monitoring from external tools.
 See [logger](docs/dagrunner.utils.logger.md) for more information.
+
+## Logo
+
+Colour:
+
+<img src="docs/logo.svg" alt="dagrunner_icon" width=100px>
+
+ B&W:
+
+<img src="docs/logo_bw.svg" alt="dagrunner_icon" width=100px>
+
