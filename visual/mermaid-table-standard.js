@@ -11,6 +11,65 @@ class TableStandardFmt extends HTMLElement {
         this.user_initialised_mermaid = true;
         this.table_ascending = true;
         this.br_hidden = false;
+
+        this.svg_theme_toggle = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24">
+                <circle r="10" cx="12" cy="12" stroke-width="2" stroke=var(--primary-color) fill="none" />
+                <path stroke-width="0" fill=var(--primary-color) d="M12 22A1 1 0 0 0 12 2" />
+            </svg>
+            `;
+
+        this.svg_download = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-download-icon lucide-download"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+        `;
+
+        this.svg_reset = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-house-icon lucide-house"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+        `;
+
+        this.svg_zoomin = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-zoom-in-icon lucide-zoom-in"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/><line x1="11" x2="11" y1="8" y2="14"/><line x1="8" x2="14" y1="11" y2="11"/></svg>
+        `;
+
+        this.svg_zoomout = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-zoom-out-icon lucide-zoom-out"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/><line x1="8" x2="14" y1="11" y2="11"/></svg>
+        `;
+
+        this.svg_zoom_mouse_rel = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-mouse-icon lucide-mouse"><rect x="5" y="2" width="14" height="20" rx="7"/><path d="M12 6v4"/></svg>
+        `;
+
+        this.svg_zoom_orig_rel = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-compass-icon lucide-compass"><path d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z"/><circle cx="12" cy="12" r="10"/></svg>
+        `;
+
+        this.svg_table_text_wrap = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-wrap-text-icon lucide-wrap-text"><line x1="3" x2="21" y1="6" y2="6"/><path d="M3 12h15a3 3 0 1 1 0 6h-4"/><polyline points="16 16 14 18 16 20"/><line x1="3" x2="10" y1="18" y2="18"/></svg>
+        `;
+
+        this.svg_table_text_nowrap = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-align-justify-icon lucide-align-justify"><path d="M3 12h18"/><path d="M3 18h18"/><path d="M3 6h18"/></svg>
+        `;
+
+        this.svg_delim_br = `
+            <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <g transform="translate(0, -5) scale(1, 1.5)">
+            <text x="12" y="12" font-size="12"  font-family="Arial" fill="currentColor"
+                    text-anchor="middle" dominant-baseline="central">
+                &lt;br&gt;
+            </text>
+            </g>
+            </svg>`;
+
+        this.svg_delim_semicol = `
+            <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <g transform="translate(0, -5) scale(1, 1.5)">
+            <text x="12" y="12" font-size="12"  font-family="Arial" fill="currentColor"
+                    text-anchor="middle" dominant-baseline="central">
+                ;
+            </text>
+            </g>
+            </svg>`;
     }
 
     connectedCallback() {
@@ -39,7 +98,7 @@ class TableStandardFmt extends HTMLElement {
                     --primary-color: light-dark(rgb(43, 43, 43),rgb(233, 233, 233));
                     --primary-background: light-dark(rgb(255, 255, 255),rgb(43, 43, 43));
                     --highlight-color: light-dark(yellow,rgb(173, 114, 54));
-                    --primary-accent: light-dark(rgb(190, 190, 190),rgb(100, 100, 100));
+                    --primary-accent: light-dark(rgb(190, 190, 190),rgb(85, 85, 85));
 
                     color: var(--primary-color);
                     background-color: var(--primary-background);
@@ -107,6 +166,28 @@ class TableStandardFmt extends HTMLElement {
                     gap: 5px;
                 }
 
+                #diag-top-left-controls {
+                    position: absolute;
+                    left: 0px;
+                    top: 0px;
+                    display: flex;
+                    flex-direction: row;
+                    align-items: center;
+                    gap: 5px;
+                    z-index: 1;
+                }
+
+                #diag-top-right-controls {
+                    position: absolute;
+                    right: 10px;
+                    top: 10px;
+                    display: flex;
+                    flex-direction: row;
+                    align-items: center;
+                    gap: 5px;
+                    z-index: 1;
+                }
+
                 button {
                     padding: 5px;
                     font-size: 14px;
@@ -114,16 +195,14 @@ class TableStandardFmt extends HTMLElement {
                     cursor: pointer;
                 }
 
-                #save-diagram {
-                    position: absolute;
-                    top: 10px;
-                    right: 10px;
-                }
-
                 #toggle-theme {
                     background-color: transparent;
                     color: transparent;
                     border-color: transparent;
+                }
+
+                a {
+                    cursor: pointer;
                 }
 
                 #banner {
@@ -138,30 +217,32 @@ class TableStandardFmt extends HTMLElement {
             </style>
 
             <div id="mermaid-container">
-                <button id="toggle-theme" type="button">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16">
-                    <circle r="7" cx="8" cy="8" stroke=var(--primary-color) fill="none" />
-                    <path stroke=var(--primary-color) fill=var(--primary-color) d="M8 15A1 1 0 0 0 8 1" />
-                </svg>
-                </button>
-                <button id="save-diagram">📥</button>
+                <dev id="diag-top-left-controls">
+                    <button id="toggle-theme" title="theme-toggle" type="button">${this.svg_theme_toggle}</button>
+                </dev>
+
+                <dev id="diag-top-right-controls">
+                    <button id="save-diagram" title="save svg">${this.svg_download}</button>
+                </dev>
+
                 <div id="diagram-wrapper">
                     <slot name="mermaid"></slot>
                 </div>
+
                 <div id="banner">
                     <a href="https://github.com/MetOffice/dagrunner" target="_blank">
-                    <img src="https://raw.githubusercontent.com/MetOffice/dagrunner/refs/heads/main/docs/symbol.svg"/>
+                    <img src="https://raw.githubusercontent.com/MetOffice/dagrunner/refs/heads/main/docs/logo.svg"/>
                     <text>DAGrunner visualisation</text>
                     </a>
                 </div>
 
                 <div id="zoom-controls">
-                    <button id="zoom-in" title="zoom-in">+</button>
+                    <button id="zoom-in" title="zoom-in">${this.svg_zoomin}</button>
                     <div>
-                        <button id="toggle-zoom" title="make zoom cursor-relative or origin-relative">🖱️</button>
-                        <button id="zoom-reset" title="reset zoom and offset">🏠</button>
+                        <button id="toggle-zoom" title="make zoom cursor-relative or origin-relative">${this.svg_zoom_mouse_rel}</button>
+                        <button id="zoom-reset" title="reset zoom and offset">${this.svg_reset}</button>
                     </div>
-                    <button id="zoom-out" title="zoom-out">-</button>
+                    <button id="zoom-out" title="zoom-out">${this.svg_zoomout}</button>
                 </div>
             </div>
 
@@ -169,8 +250,8 @@ class TableStandardFmt extends HTMLElement {
                 <div class="table_content">
                     <slot name="table"></slot>
                     <div id="table-controls">
-                        <button class="newline_delim" title="newline delimiter toggle">&lt;br&gt;</button>
-                        <button class="wrap-toggle" title="word wrap toggle">➡️</button>
+                        <button class="newline_delim" title="newline delimiter toggle">${this.svg_delim_br}</button>
+                        <button class="wrap-toggle" title="word wrap toggle">${this.svg_table_text_nowrap}</button>
                     </div>
                 </div>
             </div>
@@ -186,6 +267,13 @@ class TableStandardFmt extends HTMLElement {
                     th.addEventListener('click', () => {
                         this.sortTable(th.cellIndex);
                     });
+
+                    // requires this web component to be used as a module
+                    // const svg = document.createElement('img');
+                    // svg.src = new URL('./resources/arrow-down-a-z.svg', import.meta.url);
+                    // svg.alt = "sort";
+                    // th.appendChild(svg);
+                    th.innerText += ' [---]';
                 });
             }
         }
@@ -195,6 +283,19 @@ class TableStandardFmt extends HTMLElement {
     sortTable(columnIndex) {
         var rows, switching, i, x, y, shouldSwitch;
         const table = this.querySelector('table');
+
+        var col_num = 0;
+        var slice;
+        table.querySelectorAll('th').forEach(th => {
+            if (col_num === columnIndex){
+                slice = this.table_ascending === true ? "[a-z]" : "[z-a]";
+            } else {
+                slice = '[---]';
+            }
+            th.innerText = th.innerText.slice(0, -5) + slice;
+            col_num++;
+        });
+
         switching = true;
         while (switching) {
             switching = false;
@@ -278,7 +379,9 @@ class TableStandardFmt extends HTMLElement {
                 const theme = this.getAttribute("data-theme") || "light";
                 this.initializeMermaidWithTheme(theme);
             }
-            mermaid.init(undefined, mermaidDiv);
+            mermaid.init(undefined, mermaidDiv).then(() => {
+                this.dispatchEvent(new CustomEvent("mermaidRendered", { bubbles: true }));
+            });
             this.mermaidDiagram = mermaidDiv;
         });
     }
@@ -316,7 +419,7 @@ class TableStandardFmt extends HTMLElement {
                 maxTextSize: 99999999  // beyond this "Maximum text size in diagram exceeded"
             });
         } else {
-            alert("mermaid re-initialisation for dynamic theme change not yet supported");
+            console.warn("Mermaid re-initialization for dynamic theme change is not yet supported.");
         }
     }
 
@@ -431,7 +534,7 @@ class TableStandardFmt extends HTMLElement {
 
         toggleButton.addEventListener('click', () => {
             this.zoomRelativeToCursor = !this.zoomRelativeToCursor;
-            toggleButton.textContent = this.zoomRelativeToCursor ? '🖱️' : '🧭';
+            toggleButton.innerHTML = this.zoomRelativeToCursor ? this.svg_zoom_mouse_rel : this.svg_zoom_orig_rel;
         });
     }
 
@@ -465,7 +568,7 @@ class TableStandardFmt extends HTMLElement {
             const tds = this.querySelectorAll('td');
             this.isWrapped = !this.isWrapped;
             tds.forEach(td => td.style.whiteSpace = this.isWrapped ? 'normal' : 'nowrap');
-            wrapToggleButton.textContent = this.isWrapped ? '🔄' : '➡️';
+            wrapToggleButton.innerHTML = this.isWrapped ? this.svg_table_text_wrap : this.svg_table_text_nowrap;
         });
     }
 
@@ -479,10 +582,13 @@ class TableStandardFmt extends HTMLElement {
                 } else {
                     cell.innerHTML = cell.innerHTML.replace(/; <\!--<br>-->/g, "<br>");
                 }
-                delimToggleButton.textContent = this.br_hidden ? '<br>' : ';';
+                delimToggleButton.innerHTML = this.br_hidden ? this.svg_delim_br : this.svg_delim_semicol;
             });
             this.br_hidden = !this.br_hidden;
         });
+
+        // manual button click to set initial state
+        delimToggleButton.click();
     }
 }
 
@@ -514,6 +620,8 @@ style.textContent = `
 
     .mermaid {
         transform-origin: 0 0; /* Set the origin for scaling */
+        position: relative; /* Ensures it's stackable */
+        // z-index: 1; /* Lower than #diag-top-right-controls */
     }
 
     .highlighted {
@@ -523,15 +631,13 @@ style.textContent = `
     tr:nth-child(even) { background: var(--primary-background) }
     tr:nth-child(odd) { background: var(--primary-accent) }
 
-    td {
-        white-space: nowrap;
-    }
     th {
         cursor: pointer;
     }
     th, td {
         text-align: left;
         vertical-align: top; /* Top align */
+        white-space: nowrap;
     }
 
     table thead th { background: var(--primary-background); position: sticky; top: 0; z-index: 1; }
@@ -540,3 +646,139 @@ style.textContent = `
 document.head.appendChild(style);
 
 customElements.define('mermaid-table-standard', TableStandardFmt);
+
+
+//  * Adds interactive chain link symbols to specified Mermaid nodes in an SVG diagram.
+//  * 
+//  * This function listens for the "mermaidRendered" event and processes all nodes
+//  * matching the given selector. It appends an SVG group containing a clickable 
+//  * chain link symbol (🔗) to each node. The symbol allows navigation to a corresponding 
+//  * file, either by opening it in a new tab (middle mouse click) or navigating directly 
+//  * (left mouse click). The symbol is displayed only when the user hovers over the node.
+//  * 
+//  * @param {string} selector - A CSS selector to identify the Mermaid nodes to process.
+//  * @param {RegExp|null} [pattern=null] - An optional regular expression to extract a portion 
+//  *     of the node's text content. If provided, the first capturing group is used as the file name.
+//  * @param {string|null} [path_template=null] - An optional template string for generating 
+//  *     file paths. Use "{name}" as a placeholder for the extracted or full node text. 
+//  *     Defaults to "{nodeText}.html" if not provided.
+//  * 
+//  * @example
+//  * // Add clickable links to subgraph labels
+//  * addChainLinksToMermaidNodes("g.cluster-label");
+//  * 
+//  * @example
+// * // Add clickable links to node labels
+//  * addChainLinksToMermaidNodes("g.label");
+//  * 
+//  * @example
+//  * // Define a custom filepath pattern
+//  * addChainLinksToMermaidNodes("g.label", null, "/docs/{name}.html");
+//   * 
+//  * @example
+//  * // Extract section of node label matching regex (chain: <value>)
+//  * addChainLinksToMermaidNodes("g.label", /chain:\s*([\w-]+)/i);
+//    * 
+//  * @example
+//  * // Include only specified names (AA or BB)
+//  * addChainLinksToMermaidNodes("g.label", /^(AA|BB)$/i);
+//  * 
+//  * @example
+//  * // Include everything except specified names (AA or BB)
+//  * addChainLinksToMermaidNodes("g.label", /^(?!AA\b|BB\b)[\w-]+$/i);
+function addLinksToMermaidNodes(selector, pattern = null, path_template=null) {
+    document.addEventListener("mermaidRendered", () => {
+        const diagramWrapper = document.querySelector("body > mermaid-table-standard").shadowRoot.querySelector("#diagram-wrapper");
+        const mermaidDiagram = document.querySelector(".mermaid");
+
+        document.querySelectorAll(selector).forEach(node => {
+            let nodeText = node.textContent.trim();
+            if (!nodeText) {
+                console.log("excluding " + nodeText);
+                return;
+            }
+
+            console.log("processing " + nodeText);
+
+            if (pattern !== null) {
+                console.log("matching pattern " + pattern);
+                const match = nodeText.match(pattern);
+                if (!match) return; // Skip nodes without a match
+                nodeText = match[1];
+            }
+
+            let newFileName;
+            if (path_template !== null) {
+                newFileName = path_template.replace("{name}", nodeText);
+            } else {
+                newFileName = `${nodeText}.html`;
+            }
+
+            // Create anchor element
+            const anchor = document.createElement("a");
+            anchor.href = newFileName;
+            anchor.textContent = "🔗";
+            anchor.style.display = "none"; // Hidden by default
+            anchor.style.position = "absolute";
+            anchor.style.background = "var(--primary-background)";
+            anchor.style.color = "var(--primary-color)";
+            anchor.style.fontSize = "14px";
+            anchor.style.textDecoration = "none";
+            anchor.style.cursor = "pointer";
+            anchor.style.zIndex = "0";
+            anchor.style.padding = "2px 2px";
+            anchor.style.borderRadius = "10px"; // Rounded corners
+            diagramWrapper.appendChild(anchor);
+
+             // Show/hide on hover
+             const parent = node.parentElement;
+
+             parent.addEventListener("mouseenter", () => {
+                 anchor.style.display = "block";
+                 updatePosition();
+             });
+            const hideAnchorIfOutside = (event) => {
+                const parentRect = parent.getBoundingClientRect();
+                if (
+                    event.clientX < parentRect.left ||
+                    event.clientX > parentRect.right ||
+                    event.clientY < parentRect.top ||
+                    event.clientY > parentRect.bottom
+                ) {
+                    anchor.style.display = "none";
+                }
+            };
+
+            anchor.addEventListener("mouseleave", hideAnchorIfOutside);
+            parent.addEventListener("mouseleave", hideAnchorIfOutside);
+
+            // Function to update position relative to the node
+            const updatePosition = () => {
+                if (anchor.style.display === "none") return; // Only update if visible
+
+                const nodeRect = node.getBoundingClientRect();
+                const wrapperRect = diagramWrapper.getBoundingClientRect();
+                const ctm = node.getScreenCTM();
+                if (!ctm) return;
+                
+                const scale = ctm.a;
+                
+                // Apply the transformation matrix to get the correct position
+                const x = (nodeRect.left - wrapperRect.left);
+                const y = (nodeRect.top - wrapperRect.top);
+                
+                // Offset remains constant regardless of scale
+                const offsetX = -25;
+                anchor.style.left = `${x + offsetX * scale}px`;
+                anchor.style.top = `${y}px`;
+                anchor.style.transform = `scale(${scale})`;
+                anchor.style.transformOrigin = "top left";
+            };
+
+            updatePosition();
+            window.addEventListener("resize", updatePosition);
+            window.addEventListener("scroll", updatePosition);
+            new MutationObserver(updatePosition).observe(mermaidDiagram, { attributes: true, attributeFilter: ["style"] });
+        });
+    });
+}

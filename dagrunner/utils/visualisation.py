@@ -21,7 +21,7 @@ from . import as_iterable, in_notebook
 if os.environ.get("PYTEST_VERSION") is not None:
     WEBCOMPONENT_PATH = "../../../visual/mermaid-table-standard.js"
 else:
-    WEBCOMPONENT_PATH = "https://cdn.jsdelivr.net/gh/MetOffice/dagrunner@0.2.2/visual/mermaid-table-standard.js"
+    WEBCOMPONENT_PATH = "https://cdn.jsdelivr.net/gh/MetOffice/dagrunner@0.2.3/visual/mermaid-table-standard.js"
 
 
 MERMAID_SUBGRAPH_COLORS = [
@@ -33,6 +33,7 @@ MERMAID_SUBGRAPH_COLORS = [
     "#BF8163",  # Muted Vermillion)
     "#B58FA4",  # Muted Reddish Purple)
 ]
+MERMAID_SUBGRAPH_COLOR_HIGHLIGHT = "#C3A6E6"
 
 
 def _as_html(msg):
@@ -165,9 +166,9 @@ class MermaidHTML:
 <body>
 
 <mermaid-table-standard>
-<div class="mermaid", slot="mermaid">
+<pre class="mermaid", slot="mermaid">
 {graph}
-</div>
+</pre>
 {table}
 </mermaid-table-standard>
 
@@ -319,7 +320,11 @@ def _add_node(
         label = _gen_label(node_id, node, label_by)
         tt_data = tooltip_data if tooltip_data is not None else node_data
         tooltip = [f"{key}: {repr(val)}" for key, val in tt_data.items()]
-        info = table_delim.join([repr(val) for val in as_iterable(node_data)])
+        try:
+            # Special treatment for dictionary.
+            info = table_delim.join([f"{key}: {val}" for key, val in node_data.items()])
+        except AttributeError:
+            info = table_delim.join([repr(val) for val in as_iterable(node_data)])
         mermaid.add_node(
             node_id,
             label=label,
@@ -420,6 +425,10 @@ def visualise_graph_mermaid(
                     colour = MERMAID_SUBGRAPH_COLORS[
                         colour_index % len(MERMAID_SUBGRAPH_COLORS)
                     ]
+                    if subgraph == title:
+                        # special case where the subgraph is the title (highlight
+                        # it with unique colour)
+                        colour = MERMAID_SUBGRAPH_COLOR_HIGHLIGHT
                     mermaid.add_raw(f"style {subg_id} fill:{colour}")
                 mermaid.add_raw(f"subgraph {subg_id}[{subgraph}]")
             curr_subgraphs = subgraphs
@@ -451,12 +460,13 @@ def visualise_graph_mermaid(
         for pred in graph.predecessors(target):
             mermaid.add_connection(node_target_id_map[pred], node_target_id_map[target])
 
-    extension = os.path.splitext(output_filepath)[-1]
-    supported_ext = [".html", ".png", ".jpg", ".jpeg", ".svg", ".md"]
-    if extension and extension not in supported_ext:
-        raise ValueError(
-            f"Unsupported format: {extension}.  Choose from: {supported_ext}"
-        )
+    if output_filepath:
+        extension = os.path.splitext(output_filepath)[-1]
+        supported_ext = [".html", ".png", ".jpg", ".jpeg", ".svg", ".md"]
+        if extension and extension not in supported_ext:
+            raise ValueError(
+                f"Unsupported format: {extension}.  Choose from: {supported_ext}"
+            )
     if output_filepath:
         if extension == ".html":
             MermaidHTML(mermaid, table).save(output_filepath)
