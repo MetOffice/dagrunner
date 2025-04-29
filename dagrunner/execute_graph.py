@@ -199,6 +199,7 @@ def plugin_executor(
                 msg = (
                     f"Failed to execute {obj_name} with {args}, {callable_kwargs}"
                     f"\nnode_properties: {node_properties}"
+                    f"\nnode_id: {node_id}"
                 )
                 raise RuntimeError(msg) from err
         msg = f"{str(timer)}; {msg}; {mem.max()}"
