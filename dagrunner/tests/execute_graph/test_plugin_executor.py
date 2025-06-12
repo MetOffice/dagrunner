@@ -8,6 +8,7 @@ import pytest
 
 from dagrunner.config import GlobalConfiguration
 from dagrunner.execute_graph import IGNORE_EVENT, SKIP_EVENT, plugin_executor
+from dagrunner.plugin_framework import CallSettings
 
 
 @pytest.fixture(autouse=True)
@@ -46,6 +47,7 @@ class DummyPluginNoNamedParam:
         )
 
 
+@pytest.mark.parametrize("call_obj_type", (tuple, CallSettings))
 @pytest.mark.parametrize(
     "plugin, init_args, call_args, target",
     [
@@ -96,13 +98,16 @@ class DummyPluginNoNamedParam:
         ),
     ],
 )
-def test_pass_class_arg_kwargs(plugin, init_args, call_args, target):
+def test_pass_class_arg_kwargs(plugin, init_args, call_args, target, call_obj_type):
     """
     Test passing named parameters to plugin class initialisation and __call__
     method.
     """
     args = (mock.sentinel.arg1, mock.sentinel.arg2)
-    call = tuple([plugin, init_args, call_args])
+    if call_obj_type is tuple:
+        call = call_obj_type([plugin, init_args, call_args])
+    else:
+        call = call_obj_type(*[plugin, init_args, call_args])
     res = plugin_executor(*args, call=call)
     assert res == target
 
@@ -197,16 +202,16 @@ def test_missing_call_args():
 
 def test_class_plugin_unexpected_tuple_unpack():
     """Expecting inits kwargs and call kwargs but no more."""
-    msg = "expecting 1, 2 or 3 values to unpack.*got 4"
-    with pytest.raises(ValueError, match=msg):
+    msg = r"CallSettings.__init__\(\) takes from 2 to 4 positional arguments but 5 were given"
+    with pytest.raises(TypeError, match=msg):
         plugin_executor(mock.sentinel.arg1, call=(DummyPlugin, {}, {}, {}))
 
 
 def test_callable_plugin_unexpected_tuple_unpack():
     """Expecting call kwargs but no more."""
-    msg = "expecting 1 or 2 values to unpack.*got 3"
+    msg = "Unexpected init_kwargs"
     with pytest.raises(ValueError, match=msg):
-        plugin_executor(mock.sentinel.arg1, call=(DummyPluginNoNamedParam(), {}, {}))
+        plugin_executor(mock.sentinel.arg1, call=(DummyPluginNoNamedParam(), {"unused_init_key": "unused_init_value"}, {}))
 
 
 class BadDummyInitPlugin:

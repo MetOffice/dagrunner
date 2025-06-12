@@ -14,7 +14,7 @@ from dask.base import tokenize
 from dask.utils import apply
 
 from dagrunner.config import CONFIG
-from dagrunner.plugin_framework import IGNORE_EVENT, SKIP_EVENT, NodeAwarePlugin
+from dagrunner.plugin_framework import IGNORE_EVENT, SKIP_EVENT, NodeAwarePlugin, CallSettings
 from dagrunner.runner.schedulers import SCHEDULERS
 from dagrunner.utils import (
     CaptureProcMemory,
@@ -100,8 +100,6 @@ def plugin_executor(
         print(f"args: {args}")
         print(f"call: {call}")
 
-    call = as_iterable(call)
-
     # IGNORE_EVENT event handling
     if set(args) == {IGNORE_EVENT}:
         # all args are IGNORE_EVENT, return IGNORE_EVENT (pass along)
@@ -116,7 +114,14 @@ def plugin_executor(
             print(f"Returning 'SKIP_EVENT' event {call[0]}")
         return SKIP_EVENT
 
-    callable_obj = call[0]
+    if isinstance(call, CallSettings):
+        pass
+    elif isinstance(call, tuple):
+        call = CallSettings(*call)
+    else:
+        raise NotImplementedError(f"call '{call}' not recognised")
+
+    callable_obj = call.plugin
     if isinstance(callable_obj, str):
         # import callable if a string is provided
         module_name, function_name = callable_obj.rsplit(".", 1)
@@ -124,37 +129,6 @@ def plugin_executor(
         if verbose:
             print(f"imported module '{module}', callable '{function_name}'")
         callable_obj = getattr(module, function_name)
-
-    # Handle call tuple unpacking (length 2, no class init kwargs
-    # or length 3 with class init kwargs).
-    if isinstance(callable_obj, type):
-        if len(call) == 3:
-            _, callable_kwargs_init, callable_kwargs = call
-        elif len(call) == 2:
-            _, callable_kwargs_init = call
-            callable_kwargs = {}
-        elif len(call) == 1:
-            callable_kwargs = {}
-            callable_kwargs_init = {}
-        else:
-            raise ValueError(
-                f"expecting 1, 2 or 3 values to unpack for {callable_obj}, "
-                f"got {len(call)}\nnode_properties: {node_properties}"
-            )
-        callable_kwargs_init = (
-            {} if callable_kwargs_init is None else callable_kwargs_init
-        )
-    else:
-        if len(call) == 2:
-            _, callable_kwargs = call
-        elif len(call) == 1:
-            callable_kwargs = {}
-        else:
-            raise ValueError(
-                f"expecting 1 or 2 values to unpack for {callable_obj}, got "
-                f"{len(call)}\nnode_properties: {node_properties}"
-            )
-    callable_kwargs = {} if callable_kwargs is None else callable_kwargs
 
     call_msg = ""
     try:
@@ -164,9 +138,9 @@ def plugin_executor(
 
     if isinstance(callable_obj, type):
         if issubclass(callable_obj, NodeAwarePlugin):
-            callable_kwargs["node_properties"] = node_properties
+            call.call_kwargs["node_properties"] = node_properties
         callable_kwargs_init = (
-            callable_kwargs_init
+            call.init_kwargs
             | _get_common_args_matching_signature(callable_obj, common_kwargs)
         )
         try:
@@ -178,9 +152,11 @@ def plugin_executor(
             )
             raise RuntimeError(msg) from err
         call_msg = f"(**{callable_kwargs_init})"
+    elif call.init_kwargs:
+        raise ValueError(f"Unexpected init_kwargs {call.init_kwargs} for {callable_obj}")
 
-    callable_kwargs = callable_kwargs | _get_common_args_matching_signature(
-        callable_obj, common_kwargs, callable_kwargs.keys()
+    callable_kwargs = call.call_kwargs | _get_common_args_matching_signature(
+        callable_obj, common_kwargs, call.call_kwargs.keys()
     )  # based on overriding arguments
 
     msg = f"{obj_name}{call_msg}(*{args}, **{callable_kwargs})"

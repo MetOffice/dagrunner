@@ -312,3 +312,17 @@ class SavePickle(Input):
         with open(filepath, "wb") as f:
             pickle.dump(args if len(args) > 1 else args[0], f)
         return None
+
+# Define a relevant class for the call settings that has three items, plugin, init_kwargs, and call_kwargs.
+# The class needs a getter that allows it to behave like a tuple, so that it can be used in the same way as the original code.
+class CallSettings():
+    """A class to hold settings for a plugin call.
+    This class allows the plugin, initialization arguments, and call arguments
+    to be stored and accessed in an unambiguous way.
+    """
+
+    def __init__(self, plugin, init_kwargs=None, call_kwargs=None):
+        """Initialize the CallSettings with a plugin, init_kwargs, and call_kwargs."""
+        self.plugin = plugin
+        self.init_kwargs = init_kwargs or {}
+        self.call_kwargs = call_kwargs or {}
