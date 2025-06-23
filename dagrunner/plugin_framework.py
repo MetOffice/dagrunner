@@ -2,6 +2,7 @@
 #
 # This file is part of 'dagrunner' and is released under the BSD 3-Clause license.
 # See LICENSE in the root of the repository for full licensing details.
+import itertools
 import json
 import os
 import pickle
@@ -9,6 +10,7 @@ import string
 import subprocess
 import warnings
 from abc import ABC, abstractmethod
+from glob import glob
 
 from dagrunner.utils import Singleton, data_polling, process_path, stage_to_dir
 
@@ -160,7 +162,7 @@ class Load(Plugin):
                     return SKIP_EVENT
                 raise e
         else:
-            missing_files = [not os.path.exists(arg) for arg in args]
+            missing_files = [not glob(arg) for arg in args]
             if any(missing_files):
                 if self._ignore_missing:
                     warnings.warn("Ignoring missing files.")
@@ -183,7 +185,7 @@ class DataPolling(Plugin):
         self._verbose = verbose
 
     def __call__(self, *args):
-        fpaths_found, fpaths_not_found = data_polling(
+        args = data_polling(
             *args,
             timeout=self._timeout,
             polling=self._polling,
@@ -191,15 +193,6 @@ class DataPolling(Plugin):
             fail_fast=True,
             verbose=self._verbose,
         )
-        if fpaths_not_found:
-            raise FileNotFoundError(
-                f"Timeout waiting for: {'; '.join(sorted(fpaths_not_found))}"
-            )
-        if self._verbose:
-            msg = (
-                f"These files were polled and found: {'; '.join(sorted(fpaths_found))}"
-            )
-            print(msg)
         return
 
 
@@ -242,6 +235,8 @@ class LoadJson(Load):
 
     def load(self, *args):
         res = []
+        # support for glob patterns
+        args = list(itertools.chain.from_iterable(map(glob, args)))
         for arg in args:
             with open(arg, "r") as f:
                 res.append(json.load(f))

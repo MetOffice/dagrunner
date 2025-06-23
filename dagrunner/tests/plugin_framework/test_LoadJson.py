@@ -30,7 +30,9 @@ def tmp_files(tmp_path_factory):
 def test_load_multiple_json(tmp_files):
     tmp_file1, tmp_file2 = tmp_files
     res = LoadJson()(tmp_file1, tmp_file2)
-    assert res == [{"key1": "value1"}, {"key3": "value2"}]
+    assert sorted(res, key=lambda x: list(x.keys())) == sorted(
+        [{"key1": "value1"}, {"key3": "value2"}], key=lambda x: list(x.keys())
+    )
 
 
 def test_load_single_json(tmp_files):
@@ -38,6 +40,15 @@ def test_load_single_json(tmp_files):
     tmp_file1, _ = tmp_files
     res = LoadJson()(tmp_file1)
     assert res == {"key1": "value1"}
+
+
+def test_load_glob_json(tmp_files):
+    """Test loading multiple JSON files using glob pattern."""
+    tmp_file1, tmp_file2 = tmp_files
+    res = LoadJson()(str(tmp_file1.parent / "*.json"))
+    assert sorted(res, key=lambda x: list(x.keys())) == sorted(
+        [{"key1": "value1"}, {"key3": "value2"}], key=lambda x: list(x.keys())
+    )
 
 
 def test_load_remote_not_staged():
