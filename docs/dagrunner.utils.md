@@ -397,6 +397,8 @@ Poll for the availability of files
 
 Poll for data and return when all data is available or otherwise raise an
 exception if the timeout is reached.
+This function will not respect input-output ordering.  If that is important,
+please call this function on each path individually.
 
 Args:
 - *args: Variable length argument list of file patterns to be checked.
@@ -410,6 +412,9 @@ Args:
     expansion (default is >= 1 files per pattern).
 - fail_fast (bool): Stop when a file is not found (default is True).
 - verbose (bool): Print verbose output.
+
+Returns:
+- fpaths_found (set): Set of file paths that were found.
 
 ## function: `docstring_parse`
 
@@ -535,7 +540,7 @@ Returns:
 
 ## function: `stage_to_dir`
 
-[Source](../dagrunner/utils/__init__.py#L672)
+[Source](../dagrunner/utils/__init__.py#L682)
 
 ### Call Signature:
 
