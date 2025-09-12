@@ -492,6 +492,8 @@ def data_polling(
 
     Poll for data and return when all data is available or otherwise raise an
     exception if the timeout is reached.
+    This function will not respect input-output ordering.  If that is important,
+    please call this function on each path individually.
 
     Args:
     - *args: Variable length argument list of file patterns to be checked.
@@ -505,6 +507,10 @@ def data_polling(
         expansion (default is >= 1 files per pattern).
     - fail_fast (bool): Stop when a file is not found (default is True).
     - verbose (bool): Print verbose output.
+
+    Returns:
+    - fpaths_found (set): Set of file paths that were found.
+
     """
 
     # Define a key function
@@ -546,12 +552,9 @@ def data_polling(
             else:
                 expanded_paths = list(itertools.chain.from_iterable(map(glob, paths)))
             if expanded_paths:
-                if host:
-                    fpaths_found = fpaths_found.union(
-                        set([f"{host}:{path}" for path in expanded_paths])
-                    )
-                else:
-                    fpaths_found = fpaths_found.union(expanded_paths)
+                fpaths_found = fpaths_found.union(
+                    set([f"{host_msg}{path}" for path in expanded_paths])
+                )
                 if globular and (not file_count or len(expanded_paths) >= file_count):
                     # globular expansion completed
                     paths = set()
@@ -584,7 +587,14 @@ def data_polling(
             if fail_fast:
                 break
 
-    return fpaths_found, fpaths_not_found
+    if fpaths_not_found:
+        raise FileNotFoundError(
+            f"Timeout waiting for: {'; '.join(sorted(fpaths_not_found))}"
+        )
+    if verbose:
+        msg = f"These files were polled and found: {'; '.join(sorted(fpaths_found))}"
+        print(msg)
+    return fpaths_found
 
 
 class _RemotePathHandler:
