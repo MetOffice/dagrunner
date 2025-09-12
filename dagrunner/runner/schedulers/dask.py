@@ -179,7 +179,6 @@ class SingleMachine:
                 CacheProfiler,
                 Profiler,
                 ResourceProfiler,
-                visualize,
             )
 
             with (
@@ -192,12 +191,6 @@ class SingleMachine:
                     num_workers=self._num_workers,
                     chunksize=1,
                     **self._kwargs,
-                )
-                visualize(
-                    [prof, rprof, cprof],
-                    file_path=self._profiler_output,
-                    show=False,
-                    save=True,
                 )
             if verbose:
                 print(f"{max([res.mem for res in rprof.results])}MB total memory used")
