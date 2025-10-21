@@ -229,3 +229,18 @@ def bad_call_plugin(*args):
 def test_extended_call_plugin_failure_context():
     with pytest.raises(RuntimeError, match="Failed to execute"):
         plugin_executor(mock.sentinel.arg1, call=(bad_call_plugin,))
+
+
+def test_non_hashable_args():
+    """Test that non-hashable args (e.g. lists) are handled correctly."""
+
+    class ListArgPlugin:
+        def __init__(self, **kwargs):
+            pass
+
+        def __call__(self, list_arg):
+            return [x * 2 for x in list_arg]
+
+    call = (ListArgPlugin, {}, {})
+    res = plugin_executor(*([1, 2, 3],), call=call)
+    assert res == [2, 4, 6]
