@@ -48,6 +48,12 @@ class GlobalConfiguration(object, metaclass=Singleton):
         label_by
 
         [dagrunner_runtime]
+        # cache disable/enable: None/False/True.
+        # None implies enabled only if cache_dir is set.
+        cache_enabled
+        # if not specified and cache enabled, uses temp directory 'dagrunner_cache'
+        # in temp folder
+        cache_dir
 
         # Logging
         [dagrunner_logging]
@@ -71,7 +77,7 @@ class GlobalConfiguration(object, metaclass=Singleton):
             "group_by": None,
             "label_by": None,
         },
-        "dagrunner_runtime": {},
+        "dagrunner_runtime": {"cache_enabled": None, "cache_dir": None},
     }
 
     def __init__(self):

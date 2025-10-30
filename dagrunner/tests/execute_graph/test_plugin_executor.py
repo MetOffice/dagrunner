@@ -245,3 +245,50 @@ def test_non_hashable_args():
     call = (ListArgPlugin, {}, {})
     res = plugin_executor(*([1, 2, 3],), call=call)
     assert res == [2, 4, 6]
+
+
+def test_cached_execution_disabled():
+    """Test that execution works without cache interference."""
+    args = (5,)
+
+    mock_callable = mock.Mock(side_effect=lambda x: x + 5)
+    call = tuple([mock_callable])
+    res = plugin_executor(*args, call=call)
+    assert res == 10
+    assert mock_callable.call_count == 1
+
+    res = plugin_executor(*args, call=call)
+
+    assert res == 10
+    assert mock_callable.call_count == 2
+
+
+@pytest.fixture
+def pickle_path(tmp_path):
+    with mock.patch(
+        "dagrunner.execute_graph.CONFIG", new=GlobalConfiguration()
+    ) as patch_config:
+        patch_config._config["dagrunner_runtime"]["cache_dir"] = str(tmp_path)
+    return tmp_path
+
+
+def test_cached_execution_enabled(pickle_path):
+    """Test that execution utilising cache."""
+    args = (5,)
+
+    mock_callable = mock.Mock(side_effect=lambda x: x + 5)
+    call = tuple([mock_callable])
+    with pytest.warns(
+        DeprecationWarning, match="This class is experimental and untested"
+    ):
+        res = plugin_executor(*args, call=call)
+    assert res == 10
+    assert mock_callable.call_count == 1
+
+    with pytest.warns(
+        DeprecationWarning, match="This class is experimental and untested"
+    ):
+        res = plugin_executor(*args, call=call)
+
+    assert res == 10
+    assert mock_callable.call_count == 1

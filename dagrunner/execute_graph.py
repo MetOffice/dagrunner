@@ -23,6 +23,7 @@ from dagrunner.utils import (
     function_to_argparse_parse_args,
     logger,
 )
+from dagrunner.utils._cache import _PickleCache
 from dagrunner.utils.networkx import visualise_graph
 
 from . import events
@@ -87,6 +88,11 @@ def plugin_executor(
     """  # noqa: E501
     if CONFIG["dagrunner_logging"].pop("enabled", False) is True:
         logger.client_attach_socket_handler(CONFIG["dagrunner_logging"])
+
+    pcache = _PickleCache(node_id, verbose=verbose)
+    res = pcache.load()
+    if res is not None:
+        return res
 
     if common_kwargs is None:
         common_kwargs = {}
@@ -214,6 +220,8 @@ def plugin_executor(
         except (TypeError, AttributeError):
             # fallback
             print(f"result: {res}")
+
+    pcache.dump(res)
     return res
 
 
