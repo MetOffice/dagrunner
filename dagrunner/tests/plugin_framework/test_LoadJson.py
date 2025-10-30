@@ -54,7 +54,7 @@ def test_missing_data_unknown():
     with pytest.raises(
         ValueError,
         match="Invalid value for 'on_missing': dummy. Accepted values are 'error',"
-        "'ignore', and 'skip'.",
+        " 'ignore', and 'skip'.",
     ):
         LoadJson(on_missing="dummy")("dummy-file")
 

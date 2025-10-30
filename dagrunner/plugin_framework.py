@@ -128,8 +128,8 @@ class Load(Plugin):
                     *args, staging_dir=self._staging_dir, verbose=self._verbose
                 )
             else:
-                missing_files = [not glob(arg) for arg in args]
-                if any(missing_files):
+                missing_files = list(filter(lambda fpath: not glob(fpath), args))
+                if missing_files:
                     raise FileNotFoundError(
                         f"No such file or directory: {', '.join(missing_files)}"
                     )
