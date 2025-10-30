@@ -12,45 +12,9 @@ import warnings
 from abc import ABC, abstractmethod
 from glob import glob
 
-from dagrunner.utils import Singleton, data_polling, process_path, stage_to_dir
+from dagrunner.utils import data_polling, process_path, stage_to_dir
 
-
-class _EventBase:
-    def __repr__(self):
-        # Ensures easy identification when printing/logging.
-        return self.__class__.__name__.upper()
-
-    def __hash__(self):
-        # Ensures that can be used as keys in dictionaries or stored as sets.
-        return hash(self.__class__.__name__.upper())
-
-    def __reduce__(self):
-        # Ensures that can be serialised and deserialised using pickle.
-        return (self.__class__, ())
-
-
-class _SkipEvent(_EventBase, metaclass=Singleton):
-    """
-    A plugin that returns a 'SKIP_EVENT' will cause `plugin_executor` to skip execution
-    of all descendant node execution.
-    """
-
-    pass
-
-
-SKIP_EVENT = _SkipEvent()
-
-
-class _IgnoreEvent(_EventBase, metaclass=Singleton):
-    """
-    A plugin that returns an 'IGNORE_EVENT' will be filtered out as arguments by
-    `plugin_executor` in descendant node execution.
-    """
-
-    pass
-
-
-IGNORE_EVENT = _IgnoreEvent()
+from . import events
 
 
 class Plugin(ABC):
@@ -102,7 +66,7 @@ class Shell(Plugin):
 
 
 class Load(Plugin):
-    def __init__(self, staging_dir=None, ignore_missing=False, verbose=False):
+    def __init__(self, staging_dir=None, on_missing="error", verbose=False):
         """
         Load data from a file.
 
@@ -110,11 +74,18 @@ class Load(Plugin):
 
         Args:
         - staging_dir: Directory to stage files in.
+        - on_missing: Action to take when files are missing. Accepted values: 'error',
+          'ignore' and 'skip'.
         - verbose: Print verbose output.
         """
         self._staging_dir = staging_dir
         self._verbose = verbose
-        self._ignore_missing = ignore_missing
+        self._on_missing = on_missing
+        if self._on_missing not in ["error", "ignore", "skip"]:
+            raise ValueError(
+                f"Invalid value for 'on_missing': {self._on_missing}. "
+                "Accepted values are 'error', 'ignore', and 'skip'."
+            )
 
     @abstractmethod
     def load(self, *args, **kwargs):
@@ -151,26 +122,31 @@ class Load(Plugin):
                 "Staging directory must be specified for loading remote files."
             )
 
-        if self._staging_dir and args:
-            try:
+        try:
+            if self._staging_dir and args:
                 args = stage_to_dir(
                     *args, staging_dir=self._staging_dir, verbose=self._verbose
                 )
-            except FileNotFoundError as e:
-                if self._ignore_missing:
-                    warnings.warn(str(e))
-                    return SKIP_EVENT
-                raise e
-        else:
-            missing_files = [not glob(arg) for arg in args]
-            if any(missing_files):
-                if self._ignore_missing:
-                    warnings.warn("Ignoring missing files.")
-                    return SKIP_EVENT
-                else:
+            else:
+                missing_files = [not glob(arg) for arg in args]
+                if any(missing_files):
                     raise FileNotFoundError(
-                        f"Missing files: {', '.join(missing_files)}"
+                        f"No such file or directory: {', '.join(missing_files)}"
                     )
+        except FileNotFoundError as e:
+            if self._on_missing == "error":
+                raise e
+            elif self._on_missing == "ignore":
+                warnings.warn(str(e))
+                return events.IGNORE_EVENT
+            elif self._on_missing == "skip":
+                warnings.warn(str(e))
+                return events.SKIP_EVENT
+            else:
+                raise ValueError(
+                    f"Invalid value for 'on_missing': {self._on_missing}. "
+                    "Accepted values are 'error', 'ignore', and 'skip'."
+                )
 
         return self.load(*args, **kwargs)
 

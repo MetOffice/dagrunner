@@ -14,7 +14,7 @@ from dask.base import tokenize
 from dask.utils import apply
 
 from dagrunner.config import CONFIG
-from dagrunner.plugin_framework import IGNORE_EVENT, SKIP_EVENT, NodeAwarePlugin
+from dagrunner.plugin_framework import NodeAwarePlugin
 from dagrunner.runner.schedulers import SCHEDULERS
 from dagrunner.utils import (
     CaptureProcMemory,
@@ -24,6 +24,8 @@ from dagrunner.utils import (
     logger,
 )
 from dagrunner.utils.networkx import visualise_graph
+
+from . import events
 
 
 def _get_common_args_matching_signature(callable_obj, common_kwargs, keys=None):
@@ -103,18 +105,18 @@ def plugin_executor(
     call = as_iterable(call)
 
     # IGNORE_EVENT event handling
-    if len(args) > 1 and all((map(lambda x: x is IGNORE_EVENT, args))):
+    if len(args) > 1 and all((map(lambda x: x is events.IGNORE_EVENT, args))):
         # all args are IGNORE_EVENT, return IGNORE_EVENT (pass along)
         if verbose:
             print(f"Retuning 'IGNORE_EVENT' event {call[0]}")
-        return IGNORE_EVENT
-    args = list(filter(lambda x: x is not IGNORE_EVENT, args))
+        return events.IGNORE_EVENT
+    args = list(filter(lambda x: x is not events.IGNORE_EVENT, args))
 
     # ignore execution if any SKIP_EVENT in args (pass along).
-    if SKIP_EVENT in args:
+    if events.SKIP_EVENT in args:
         if verbose:
             print(f"Returning 'SKIP_EVENT' event {call[0]}")
-        return SKIP_EVENT
+        return events.SKIP_EVENT
 
     callable_obj = call[0]
     if isinstance(callable_obj, str):
@@ -199,6 +201,7 @@ def plugin_executor(
                 msg = (
                     f"Failed to execute {obj_name} with {args}, {callable_kwargs}"
                     f"\nnode_properties: {node_properties}"
+                    f"\nnode_id: {node_id}"
                 )
                 raise RuntimeError(msg) from err
         msg = f"{str(timer)}; {msg}; {mem.max()}"
