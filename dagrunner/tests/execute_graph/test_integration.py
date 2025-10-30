@@ -9,7 +9,8 @@ from dataclasses import dataclass
 
 import pytest
 
-from dagrunner.execute_graph import SKIP_EVENT, ExecuteGraph
+from dagrunner.events import SKIP_EVENT
+from dagrunner.execute_graph import ExecuteGraph
 from dagrunner.plugin_framework import Input, Plugin, SaveJson
 
 HOUR = 3600

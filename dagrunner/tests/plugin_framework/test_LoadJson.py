@@ -10,6 +10,7 @@ from unittest.mock import patch
 
 import pytest
 
+from dagrunner.events import IGNORE_EVENT, SKIP_EVENT
 from dagrunner.plugin_framework import LoadJson
 
 
@@ -25,6 +26,48 @@ def tmp_files(tmp_path_factory):
     with open(tmp_file2, "w") as f:
         json.dump({"key3": "value2"}, f)
     return tmp_file1, tmp_file2
+
+
+def test_missing_data_default():
+    with pytest.raises(
+        FileNotFoundError, match="No such file or directory: dummy-file"
+    ):
+        LoadJson()("dummy-file")
+
+
+def test_missing_data_error():
+    with pytest.raises(
+        FileNotFoundError, match="No such file or directory: dummy-file"
+    ):
+        LoadJson(on_missing="error")("dummy-file")
+
+
+def test_missing_data_ignore():
+    assert LoadJson(on_missing="ignore")("dummy-file") == IGNORE_EVENT
+
+
+def test_missing_data_skip():
+    assert LoadJson(on_missing="skip")("dummy-file") == SKIP_EVENT
+
+
+def test_missing_data_unknown():
+    with pytest.raises(
+        ValueError,
+        match="Invalid value for 'on_missing': dummy. Accepted values are 'error',"
+        " 'ignore', and 'skip'.",
+    ):
+        LoadJson(on_missing="dummy")("dummy-file")
+
+
+def test_staged_data_missing_data_error():
+    fpath = f"{socket.gethostname()}:dummy-file"
+    with patch(
+        "dagrunner.utils.socket.gethostname", return_value="dummy_host.dummy_domain"
+    ):
+        with pytest.raises(
+            FileNotFoundError, match=f"No such file or directory: {fpath}"
+        ):
+            LoadJson(staging_dir=staged_directory)(fpath)
 
 
 def test_load_multiple_json(tmp_files):

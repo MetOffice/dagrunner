@@ -689,12 +689,11 @@ def stage_to_dir(*args, staging_dir, verbose=False):
     Staged files are named: `<modification-time>_<file-size>_<filename>` to avoid
     collision with identically names files.
     """
-    os.makedirs(staging_dir, exist_ok=True)
     args = list(args)
     for ind, arg in enumerate(args):
         fpath = _RemotePathHandler(arg)
         if not fpath.exists():
-            raise FileNotFoundError(f"File '{fpath}' not found.")
+            raise FileNotFoundError(f"No such file or directory: {fpath}")
 
         source_mtime_size = fpath.get_identity()
 
@@ -702,6 +701,7 @@ def stage_to_dir(*args, staging_dir, verbose=False):
             staging_dir, f"{source_mtime_size}_{os.path.basename(str(fpath))}"
         )
         if not os.path.exists(target):
+            os.makedirs(staging_dir, exist_ok=True)
             if verbose:
                 print(f"Staged '{arg}' to '{target}'")
             fpath.copy(target)

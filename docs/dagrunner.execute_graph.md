@@ -6,15 +6,13 @@ see [GlobalConfiguration: dagrunner.config.CONFIG](dagrunner.config.md#globalcon
 
 see [class: dagrunner.utils.CaptureProcMemory](dagrunner.utils.md#class-captureprocmemory)
 
-see [_IgnoreEvent: dagrunner.plugin_framework.IGNORE_EVENT](dagrunner.plugin_framework.md#_ignoreevent-ignore_event)
-
 see [class: dagrunner.plugin_framework.NodeAwarePlugin](dagrunner.plugin_framework.md#class-nodeawareplugin)
-
-see [_SkipEvent: dagrunner.plugin_framework.SKIP_EVENT](dagrunner.plugin_framework.md#_skipevent-skip_event)
 
 see [class: dagrunner.utils.TimeIt](dagrunner.utils.md#class-timeit)
 
 see [function: dagrunner.utils.as_iterable](dagrunner.utils.md#function-as_iterable)
+
+see [module: dagrunner.events](dagrunner.events.md#module-dagrunnerevents)
 
 see [function: dagrunner.utils.function_to_argparse_parse_args](dagrunner.utils.md#function-function_to_argparse_parse_args)
 
@@ -24,7 +22,7 @@ see [function: dagrunner.utils.networkx.visualise_graph](dagrunner.utils.network
 
 ## class: `ExecuteGraph`
 
-[Source](../dagrunner/execute_graph.py#L260)
+[Source](../dagrunner/execute_graph.py#L263)
 
 ### Call Signature:
 
@@ -34,7 +32,7 @@ ExecuteGraph(networkx_graph: str, networkx_graph_kwargs: dict = None, <function 
 
 ### function: `__call__`
 
-[Source](../dagrunner/execute_graph.py#L383)
+[Source](../dagrunner/execute_graph.py#L386)
 
 #### Call Signature:
 
@@ -46,7 +44,7 @@ Call self as a function.
 
 ### function: `__init__`
 
-[Source](../dagrunner/execute_graph.py#L261)
+[Source](../dagrunner/execute_graph.py#L264)
 
 #### Call Signature:
 
@@ -103,7 +101,7 @@ Args:
 
 ### function: `visualise`
 
-[Source](../dagrunner/execute_graph.py#L380)
+[Source](../dagrunner/execute_graph.py#L383)
 
 #### Call Signature:
 
@@ -115,7 +113,7 @@ visualise(self, **kwargs)
 
 ## function: `main`
 
-[Source](../dagrunner/execute_graph.py#L394)
+[Source](../dagrunner/execute_graph.py#L397)
 
 ### Call Signature:
 
@@ -128,7 +126,7 @@ Parses command line arguments and executes the graph using the ExecuteGraph clas
 
 ## function: `plugin_executor`
 
-[Source](../dagrunner/execute_graph.py#L43)
+[Source](../dagrunner/execute_graph.py#L45)
 
 ### Call Signature:
 
