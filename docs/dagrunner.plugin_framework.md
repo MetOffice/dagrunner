@@ -2,9 +2,9 @@
 
 [Source](../dagrunner/plugin_framework.py#L0)
 
-see [class: dagrunner.utils.Singleton](dagrunner.utils.md#class-singleton)
-
 see [function: dagrunner.utils.data_polling](dagrunner.utils.md#function-data_polling)
+
+see [module: dagrunner.events](dagrunner.events.md#module-dagrunnerevents)
 
 see [function: dagrunner.utils.process_path](dagrunner.utils.md#function-process_path)
 
@@ -12,7 +12,7 @@ see [function: dagrunner.utils.stage_to_dir](dagrunner.utils.md#function-stage_t
 
 ## class: `DataPolling`
 
-[Source](../dagrunner/plugin_framework.py#L178)
+[Source](../dagrunner/plugin_framework.py#L154)
 
 ### Call Signature:
 
@@ -24,7 +24,7 @@ A trigger plugin that completes when data is successfully polled.
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L187)
+[Source](../dagrunner/plugin_framework.py#L163)
 
 #### Call Signature:
 
@@ -46,7 +46,7 @@ Returns:
 
 ### function: `__init__`
 
-[Source](../dagrunner/plugin_framework.py#L181)
+[Source](../dagrunner/plugin_framework.py#L157)
 
 #### Call Signature:
 
@@ -56,11 +56,9 @@ __init__(self, timeout=120, polling=1, file_count=None, verbose=False)
 
 Initialize self.  See help(type(self)) for accurate signature.
 
-## _IgnoreEvent: `IGNORE_EVENT`
-
 ## class: `Input`
 
-[Source](../dagrunner/plugin_framework.py#L199)
+[Source](../dagrunner/plugin_framework.py#L175)
 
 ### Call Signature:
 
@@ -74,7 +72,7 @@ that are 'node aware'.
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L200)
+[Source](../dagrunner/plugin_framework.py#L176)
 
 #### Call Signature:
 
@@ -101,19 +99,19 @@ Raises:
 
 ## class: `Load`
 
-[Source](../dagrunner/plugin_framework.py#L104)
+[Source](../dagrunner/plugin_framework.py#L68)
 
 ### Call Signature:
 
 ```python
-Load(staging_dir=None, ignore_missing=False, verbose=False)
+Load(staging_dir=None, on_missing='error', verbose=False)
 ```
 
 Abstract base class to define our plugin UI
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L136)
+[Source](../dagrunner/plugin_framework.py#L107)
 
 #### Call Signature:
 
@@ -130,12 +128,12 @@ Args:
 
 ### function: `__init__`
 
-[Source](../dagrunner/plugin_framework.py#L105)
+[Source](../dagrunner/plugin_framework.py#L69)
 
 #### Call Signature:
 
 ```python
-__init__(self, staging_dir=None, ignore_missing=False, verbose=False)
+__init__(self, staging_dir=None, on_missing='error', verbose=False)
 ```
 
 Load data from a file.
@@ -144,11 +142,13 @@ The `load` method must be implemented by the subclass.
 
 Args:
 - staging_dir: Directory to stage files in.
+- on_missing: Action to take when files are missing. Accepted values: 'error',
+  'ignore' and 'skip'.
 - verbose: Print verbose output.
 
 ### function: `load`
 
-[Source](../dagrunner/plugin_framework.py#L119)
+[Source](../dagrunner/plugin_framework.py#L90)
 
 #### Call Signature:
 
@@ -170,19 +170,19 @@ Raises:
 
 ## class: `LoadJson`
 
-[Source](../dagrunner/plugin_framework.py#L233)
+[Source](../dagrunner/plugin_framework.py#L209)
 
 ### Call Signature:
 
 ```python
-LoadJson(staging_dir=None, ignore_missing=False, verbose=False)
+LoadJson(staging_dir=None, on_missing='error', verbose=False)
 ```
 
 Load json file.
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L136)
+[Source](../dagrunner/plugin_framework.py#L107)
 
 #### Call Signature:
 
@@ -199,12 +199,12 @@ Args:
 
 ### function: `__init__`
 
-[Source](../dagrunner/plugin_framework.py#L105)
+[Source](../dagrunner/plugin_framework.py#L69)
 
 #### Call Signature:
 
 ```python
-__init__(self, staging_dir=None, ignore_missing=False, verbose=False)
+__init__(self, staging_dir=None, on_missing='error', verbose=False)
 ```
 
 Load data from a file.
@@ -213,11 +213,13 @@ The `load` method must be implemented by the subclass.
 
 Args:
 - staging_dir: Directory to stage files in.
+- on_missing: Action to take when files are missing. Accepted values: 'error',
+  'ignore' and 'skip'.
 - verbose: Print verbose output.
 
 ### function: `load`
 
-[Source](../dagrunner/plugin_framework.py#L236)
+[Source](../dagrunner/plugin_framework.py#L212)
 
 #### Call Signature:
 
@@ -239,19 +241,19 @@ Raises:
 
 ## class: `LoadPickle`
 
-[Source](../dagrunner/plugin_framework.py#L274)
+[Source](../dagrunner/plugin_framework.py#L250)
 
 ### Call Signature:
 
 ```python
-LoadPickle(staging_dir=None, ignore_missing=False, verbose=False)
+LoadPickle(staging_dir=None, on_missing='error', verbose=False)
 ```
 
 Load pickle file.
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L136)
+[Source](../dagrunner/plugin_framework.py#L107)
 
 #### Call Signature:
 
@@ -268,12 +270,12 @@ Args:
 
 ### function: `__init__`
 
-[Source](../dagrunner/plugin_framework.py#L105)
+[Source](../dagrunner/plugin_framework.py#L69)
 
 #### Call Signature:
 
 ```python
-__init__(self, staging_dir=None, ignore_missing=False, verbose=False)
+__init__(self, staging_dir=None, on_missing='error', verbose=False)
 ```
 
 Load data from a file.
@@ -282,11 +284,13 @@ The `load` method must be implemented by the subclass.
 
 Args:
 - staging_dir: Directory to stage files in.
+- on_missing: Action to take when files are missing. Accepted values: 'error',
+  'ignore' and 'skip'.
 - verbose: Print verbose output.
 
 ### function: `load`
 
-[Source](../dagrunner/plugin_framework.py#L277)
+[Source](../dagrunner/plugin_framework.py#L253)
 
 #### Call Signature:
 
@@ -308,7 +312,7 @@ Raises:
 
 ## class: `NodeAwarePlugin`
 
-[Source](../dagrunner/plugin_framework.py#L78)
+[Source](../dagrunner/plugin_framework.py#L42)
 
 ### Call Signature:
 
@@ -322,7 +326,7 @@ that are 'node aware'.
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L59)
+[Source](../dagrunner/plugin_framework.py#L23)
 
 #### Call Signature:
 
@@ -344,7 +348,7 @@ Returns:
 
 ## class: `Plugin`
 
-[Source](../dagrunner/plugin_framework.py#L56)
+[Source](../dagrunner/plugin_framework.py#L20)
 
 ### Call Signature:
 
@@ -356,7 +360,7 @@ Abstract base class to define our plugin UI
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L59)
+[Source](../dagrunner/plugin_framework.py#L23)
 
 #### Call Signature:
 
@@ -376,11 +380,9 @@ Args:
 Returns:
 - Any: The output of the plugin.
 
-## _SkipEvent: `SKIP_EVENT`
-
 ## class: `SaveJson`
 
-[Source](../dagrunner/plugin_framework.py#L246)
+[Source](../dagrunner/plugin_framework.py#L222)
 
 ### Call Signature:
 
@@ -394,7 +396,7 @@ that are 'node aware'.
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L247)
+[Source](../dagrunner/plugin_framework.py#L223)
 
 #### Call Signature:
 
@@ -419,7 +421,7 @@ Returns:
 
 ## class: `SavePickle`
 
-[Source](../dagrunner/plugin_framework.py#L285)
+[Source](../dagrunner/plugin_framework.py#L261)
 
 ### Call Signature:
 
@@ -433,7 +435,7 @@ that are 'node aware'.
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L286)
+[Source](../dagrunner/plugin_framework.py#L262)
 
 #### Call Signature:
 
@@ -458,7 +460,7 @@ Returns:
 
 ## class: `Shell`
 
-[Source](../dagrunner/plugin_framework.py#L86)
+[Source](../dagrunner/plugin_framework.py#L50)
 
 ### Call Signature:
 
@@ -470,7 +472,7 @@ Abstract base class to define our plugin UI
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L87)
+[Source](../dagrunner/plugin_framework.py#L51)
 
 #### Call Signature:
 
