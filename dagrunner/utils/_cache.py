@@ -15,11 +15,11 @@ class _PickleCache:
     def __init__(self, node_id, verbose=False):
         self._node_id = node_id
         self._verbose = verbose
+        self._enabled = bool(CONFIG["dagrunner_runtime"].get("cache_enabled", False))
         self._pickle_filepath = CONFIG["dagrunner_runtime"].get("cache_dir", None)
-        enabled = bool(CONFIG["dagrunner_runtime"].get("cache_enabled", False))
-        if not self._pickle_filepath and enabled:
-            self._pickle_filepath = Path(tempfile.gettempdir()) / "dagrunner_cache"
-        if self._pickle_filepath is not None:
+        if self._enabled:
+            if not self._pickle_filepath:
+                self._pickle_filepath = Path(tempfile.gettempdir()) / "dagrunner_cache"
             self._pickle_filepath = Path(self._pickle_filepath) / f"{node_id}.pickle"
             warnings.warn(
                 "This class is experimental and untested.  "
@@ -27,15 +27,35 @@ class _PickleCache:
                 DeprecationWarning,
             )
 
+    @property
+    def cache_available(self):
+        return (
+            self._enabled
+            and self._pickle_filepath
+            and os.path.exists(self._pickle_filepath)
+        )
+
+    @property
+    def cache_filepath(self):
+        return self._pickle_filepath
+
+    @property
+    def cache_enabled(self):
+        return self._enabled
+
     def load(self):
-        if self._pickle_filepath is not None and os.path.exists(self._pickle_filepath):
+        if (
+            self._enabled
+            and self._pickle_filepath
+            and os.path.exists(self._pickle_filepath)
+        ):
             if self._verbose:
                 print(f"loading pickle for {self._node_id}")
             with open(self._pickle_filepath, "rb") as f:
                 return pickle.load(f)
 
     def dump(self, res):
-        if self._pickle_filepath is None:
+        if not self._enabled or not self._pickle_filepath:
             return
         self._pickle_filepath.parent.mkdir(parents=True, exist_ok=True)
         if self._verbose:

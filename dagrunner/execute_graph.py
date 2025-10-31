@@ -15,6 +15,7 @@ from dask.utils import apply
 
 from dagrunner.config import CONFIG
 from dagrunner.plugin_framework import NodeAwarePlugin
+from dagrunner.runner import _handle_clobber
 from dagrunner.runner.schedulers import SCHEDULERS
 from dagrunner.utils import (
     CaptureProcMemory,
@@ -90,9 +91,8 @@ def plugin_executor(
         logger.client_attach_socket_handler(CONFIG["dagrunner_logging"])
 
     pcache = _PickleCache(node_id, verbose=verbose)
-    res = pcache.load()
-    if res is not None:
-        return res
+    if pcache.cache_available:
+        return pcache.load()
 
     if common_kwargs is None:
         common_kwargs = {}
@@ -363,9 +363,10 @@ class ExecuteGraph:
         TODO: Potentially support 'clobber' i.e. partial graph execution from a graph
           failure recovery.
         """
+        verbose = self._kwargs.pop("verbose")
         executor = partial(
             self._plugin_executor,
-            verbose=self._kwargs.pop("verbose"),
+            verbose=verbose,
             dry_run=self._kwargs.pop("dry_run"),
             common_kwargs=self._kwargs,
         )
@@ -385,7 +386,8 @@ class ExecuteGraph:
             args = [tokenize(arg) for arg in self._nxgraph.predecessors(node_id)]
             exec_graph[key] = (apply, executor, args, properties | {"node_id": node_id})
 
-        # handle_clobber(graph, workflow, no_clobber, verbose)
+        if bool(CONFIG["dagrunner_runtime"].get("cache_enabled", False)):
+            _handle_clobber(exec_graph, verbose=verbose)
         return exec_graph
 
     def visualise(self, **kwargs):

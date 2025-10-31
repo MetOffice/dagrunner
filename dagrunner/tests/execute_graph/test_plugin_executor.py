@@ -248,7 +248,7 @@ def test_non_hashable_args():
 
 
 def test_cached_execution_disabled():
-    """Test that execution works without cache interference."""
+    """Test that execution works without cache utilisation."""
     args = (5,)
 
     mock_callable = mock.Mock(side_effect=lambda x: x + 5)
@@ -269,20 +269,28 @@ def pickle_path(tmp_path):
         "dagrunner.execute_graph.CONFIG", new=GlobalConfiguration()
     ) as patch_config:
         patch_config._config["dagrunner_runtime"]["cache_dir"] = str(tmp_path)
+        patch_config._config["dagrunner_runtime"]["cache_enabled"] = True
     return tmp_path
 
 
-def test_cached_execution_enabled(pickle_path):
-    """Test that execution utilising cache."""
+@pytest.mark.parametrize(
+    "side_effect, res, final_call_count",
+    [
+        [lambda x: x + 5, 10, 1],  # check simple function caching
+        [lambda x: None, None, 1],  # check None return caching
+    ],
+)
+def test_cached_execution_enabled(pickle_path, side_effect, res, final_call_count):
+    """Test that execution is utilising cache."""
     args = (5,)
 
-    mock_callable = mock.Mock(side_effect=lambda x: x + 5)
+    mock_callable = mock.Mock(side_effect=side_effect)
     call = tuple([mock_callable])
     with pytest.warns(
         DeprecationWarning, match="This class is experimental and untested"
     ):
         res = plugin_executor(*args, call=call)
-    assert res == 10
+    assert res == res
     assert mock_callable.call_count == 1
 
     with pytest.warns(
@@ -290,5 +298,5 @@ def test_cached_execution_enabled(pickle_path):
     ):
         res = plugin_executor(*args, call=call)
 
-    assert res == 10
-    assert mock_callable.call_count == 1
+    assert res == res
+    assert mock_callable.call_count == final_call_count

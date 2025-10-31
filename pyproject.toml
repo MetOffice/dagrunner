@@ -56,3 +56,6 @@ extend-select = ["E", "F", "W", "I"]
 [tool.ruff.format]
 # Enable reformatting of code snippets in docstrings.
 docstring-code-format = true
+
+[tool.ruff.lint.extend-per-file-ignores]
+"dagrunner/tests/*" = ["E731"]
