@@ -214,7 +214,7 @@ Args:
 ### Call Signature:
 
 ```python
-visualise_graph_mermaid(graph: networkx.classes.digraph.DiGraph, node_data_lookup: dict = None, node_tooltip_lookup: dict = None, title: str = None, output_filepath: str = None, group_by: Union[str, Iterable[str]] = None, label_by: Union[str, Iterable[str]] = None)
+visualise_graph_mermaid(graph: networkx.classes.digraph.DiGraph, node_data_lookup: dict = None, node_tooltip_lookup: dict = None, title: str = None, output_filepath: str = None, group_by: str | Iterable[str] = None, label_by: str | Iterable[str] = None)
 ```
 
 Visualise a networkx graph using mermaid.

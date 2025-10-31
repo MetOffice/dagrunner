@@ -22,7 +22,7 @@ see [function: dagrunner.utils.networkx.visualise_graph](dagrunner.utils.network
 
 ## class: `ExecuteGraph`
 
-[Source](../dagrunner/execute_graph.py#L263)
+[Source](../dagrunner/execute_graph.py#L274)
 
 ### Call Signature:
 
@@ -32,7 +32,7 @@ ExecuteGraph(networkx_graph: str, networkx_graph_kwargs: dict = None, <function 
 
 ### function: `__call__`
 
-[Source](../dagrunner/execute_graph.py#L386)
+[Source](../dagrunner/execute_graph.py#L399)
 
 #### Call Signature:
 
@@ -44,7 +44,7 @@ Call self as a function.
 
 ### function: `__init__`
 
-[Source](../dagrunner/execute_graph.py#L264)
+[Source](../dagrunner/execute_graph.py#L275)
 
 #### Call Signature:
 
@@ -101,7 +101,7 @@ Args:
 
 ### function: `visualise`
 
-[Source](../dagrunner/execute_graph.py#L383)
+[Source](../dagrunner/execute_graph.py#L396)
 
 #### Call Signature:
 
@@ -113,7 +113,7 @@ visualise(self, **kwargs)
 
 ## function: `main`
 
-[Source](../dagrunner/execute_graph.py#L397)
+[Source](../dagrunner/execute_graph.py#L410)
 
 ### Call Signature:
 
@@ -126,7 +126,7 @@ Parses command line arguments and executes the graph using the ExecuteGraph clas
 
 ## function: `plugin_executor`
 
-[Source](../dagrunner/execute_graph.py#L45)
+[Source](../dagrunner/execute_graph.py#L47)
 
 ### Call Signature:
 
