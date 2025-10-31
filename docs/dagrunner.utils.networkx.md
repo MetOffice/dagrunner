@@ -15,7 +15,7 @@ see [module: dagrunner.utils.visualisation](dagrunner.utils.visualisation.md#mod
 ### Call Signature:
 
 ```python
-collapse_graph(graph: networkx.classes.digraph.DiGraph, collapse_properties: Union[str, Iterable[str]], collapsed_data_summary: bool = False)
+collapse_graph(graph: networkx.classes.digraph.DiGraph, collapse_properties: str | Iterable[str], collapsed_data_summary: bool = False)
 ```
 
 Collapses a directed graph by grouping nodes based on specified properties.
@@ -64,7 +64,7 @@ Notes:
 ### Call Signature:
 
 ```python
-get_subset_with_dependencies(graph: networkx.classes.digraph.DiGraph, filter_list: Union[dict, Iterable[dict]])
+get_subset_with_dependencies(graph: networkx.classes.digraph.DiGraph, filter_list: dict | Iterable[dict])
 ```
 
 Helper function to easily filter networkx graphs.
@@ -85,7 +85,7 @@ Args:
 ### Call Signature:
 
 ```python
-visualise_graph(graph: networkx.classes.digraph.DiGraph, backend: str = 'mermaid', collapse_properties: Union[str, Iterable[str]] = None, title: str = None, output_filepath: str = None, **kwargs)
+visualise_graph(graph: networkx.classes.digraph.DiGraph, backend: str = 'mermaid', collapse_properties: str | Iterable[str] = None, title: str = None, output_filepath: str = None, **kwargs)
 ```
 
 Visualise a networkx graph.

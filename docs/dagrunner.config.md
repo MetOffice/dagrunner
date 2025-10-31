@@ -48,6 +48,12 @@ options::
     label_by
 
     [dagrunner_runtime]
+    # cache disable/enable: None/False/True.
+    # None implies enabled only if cache_dir is set.
+    cache_enabled
+    # if not specified and cache enabled, uses temp directory 'dagrunner_cache'
+    # in temp folder
+    cache_dir
 
     # Logging
     [dagrunner_logging]
@@ -57,7 +63,7 @@ options::
 
 ### function: `__getitem__`
 
-[Source](../dagrunner/config.py#L166)
+[Source](../dagrunner/config.py#L172)
 
 #### Call Signature:
 
@@ -67,7 +73,7 @@ __getitem__(self, key)
 
 ### function: `__init__`
 
-[Source](../dagrunner/config.py#L77)
+[Source](../dagrunner/config.py#L83)
 
 #### Call Signature:
 
@@ -79,7 +85,7 @@ Initialize self.  See help(type(self)) for accurate signature.
 
 ### function: `__repr__`
 
-[Source](../dagrunner/config.py#L84)
+[Source](../dagrunner/config.py#L90)
 
 #### Call Signature:
 
@@ -91,7 +97,7 @@ Return repr(self).
 
 ### function: `__setitem__`
 
-[Source](../dagrunner/config.py#L169)
+[Source](../dagrunner/config.py#L175)
 
 #### Call Signature:
 
@@ -101,7 +107,7 @@ __setitem__(self, key, value)
 
 ### function: `__str__`
 
-[Source](../dagrunner/config.py#L81)
+[Source](../dagrunner/config.py#L87)
 
 #### Call Signature:
 
@@ -113,7 +119,7 @@ Return str(self).
 
 ### function: `parse_configuration`
 
-[Source](../dagrunner/config.py#L140)
+[Source](../dagrunner/config.py#L146)
 
 #### Call Signature:
 
