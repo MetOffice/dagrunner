@@ -90,9 +90,11 @@ def plugin_executor(
     if CONFIG["dagrunner_logging"].pop("enabled", False) is True:
         logger.client_attach_socket_handler(CONFIG["dagrunner_logging"])
 
-    pcache = _PickleCache(node_id, verbose=verbose)
-    if pcache.cache_available:
-        return pcache.load()
+    pcache = bool(CONFIG["dagrunner_runtime"].get("cache_enabled", False))
+    if pcache:
+        pcache = _PickleCache(node_id, verbose=verbose)
+        if pcache.cache_available:
+            return pcache.load()
 
     if common_kwargs is None:
         common_kwargs = {}
@@ -221,7 +223,8 @@ def plugin_executor(
             # fallback
             print(f"result: {res}")
 
-    pcache.dump(res)
+    if pcache:
+        pcache.dump(res)
     return res
 
 

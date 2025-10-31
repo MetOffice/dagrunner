@@ -227,13 +227,16 @@ def test_override_node_property_with_setting(graph_input, capsys):
 
 
 @pytest.fixture
-def pickle_path():
-    with mock.patch(
-        "dagrunner.execute_graph.CONFIG", new=GlobalConfiguration()
-    ) as patch_config:
-        patch_config._config["dagrunner_runtime"]["cache_dir"] = "/dummy_path"
-        patch_config._config["dagrunner_runtime"]["cache_enabled"] = True
-    return
+def mock_config():
+    DummyConfig = GlobalConfiguration._INI_PARAMETERS.copy()
+    DummyConfig.update(
+        {"dagrunner_runtime": {"cache_enabled": True, "cache_dir": "/dummy_path"}}
+    )
+    patch_config1 = mock.patch("dagrunner.execute_graph.CONFIG", new=DummyConfig)
+    patch_config2 = mock.patch("dagrunner.utils._cache.CONFIG", new=DummyConfig)
+
+    with patch_config1 as p1, patch_config2 as p2:
+        yield (p1, p2)
 
 
 @pytest.mark.parametrize(
@@ -306,7 +309,7 @@ def pickle_path():
         ],
     ],
 )
-def test_cache_uitilisation_all(pickle_path, edges, exists, mtime, expected_run_nodes):
+def test_cache_uitilisation_all(mock_config, edges, exists, mtime, expected_run_nodes):
     """
     Cache utilisation
 
@@ -337,6 +340,7 @@ def test_cache_uitilisation_all(pickle_path, edges, exists, mtime, expected_run_
     else:
         # skip if file exists (i.e. timestamp doesn't matter)
         getmtime_patch = mock.patch("dagrunner.runner.os.path.getmtime", return_value=0)
+
     with isfile_patch, getmtime_patch:
         graph = ExecuteGraph(nxgraph, scheduler="single-threaded", verbose=True)
     # expecting the following nodes to still run

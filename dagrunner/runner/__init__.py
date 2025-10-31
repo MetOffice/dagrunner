@@ -13,7 +13,7 @@ def _handle_clobber(dask_graph, verbose=False):
     """
     Skip commands (nodes) in the graph.
 
-    This function is **loosely** described by the following pseudo-code::
+    This function is described by the following pseudo-code::
 
         for branch in graph:
           # Iterate over nodes in our branch from the starting node to
@@ -26,9 +26,6 @@ def _handle_clobber(dask_graph, verbose=False):
                 do not skip
                 Mark all node successor dependencies as 'do not skip'
                 break
-
-    This pseudo-code only loosely describes the approach since it assumes linear
-    dependencies within branches, which may not be the case.
 
     """
 

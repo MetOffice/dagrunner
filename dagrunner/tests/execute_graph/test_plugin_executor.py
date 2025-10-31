@@ -13,8 +13,9 @@ from dagrunner.execute_graph import plugin_executor
 
 @pytest.fixture(autouse=True)
 def patch_config():
+    DummyConfig = GlobalConfiguration._INI_PARAMETERS.copy()
     """Stop picking up any configuration from the environment."""
-    with mock.patch("dagrunner.execute_graph.CONFIG", new=GlobalConfiguration()):
+    with mock.patch("dagrunner.execute_graph.CONFIG", new=DummyConfig):
         yield
 
 
@@ -264,13 +265,16 @@ def test_cached_execution_disabled():
 
 
 @pytest.fixture
-def pickle_path(tmp_path):
-    with mock.patch(
-        "dagrunner.execute_graph.CONFIG", new=GlobalConfiguration()
-    ) as patch_config:
-        patch_config._config["dagrunner_runtime"]["cache_dir"] = str(tmp_path)
-        patch_config._config["dagrunner_runtime"]["cache_enabled"] = True
-    return tmp_path
+def mock_config(tmp_path):
+    DummyConfig = GlobalConfiguration._INI_PARAMETERS.copy()
+    DummyConfig.update(
+        {"dagrunner_runtime": {"cache_enabled": True, "cache_dir": str(tmp_path)}}
+    )
+    patch_config1 = mock.patch("dagrunner.execute_graph.CONFIG", new=DummyConfig)
+    patch_config2 = mock.patch("dagrunner.utils._cache.CONFIG", new=DummyConfig)
+
+    with patch_config1 as p1, patch_config2 as p2:
+        yield (p1, p2)
 
 
 @pytest.mark.parametrize(
@@ -280,7 +284,7 @@ def pickle_path(tmp_path):
         [lambda x: None, None, 1],  # check None return caching
     ],
 )
-def test_cached_execution_enabled(pickle_path, side_effect, res, final_call_count):
+def test_cached_execution_enabled(mock_config, side_effect, res, final_call_count):
     """Test that execution is utilising cache."""
     args = (5,)
 
