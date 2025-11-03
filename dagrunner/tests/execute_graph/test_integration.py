@@ -6,12 +6,16 @@ import json
 import os
 import time
 from dataclasses import dataclass
+from unittest import mock
 
+import networkx as nx
 import pytest
 
+from dagrunner.config import GlobalConfiguration
 from dagrunner.events import SKIP_EVENT
 from dagrunner.execute_graph import ExecuteGraph
 from dagrunner.plugin_framework import Input, Plugin, SaveJson
+from dagrunner.utils._cache import _PickleCache
 
 HOUR = 3600
 MINUTE = 60
@@ -220,3 +224,129 @@ def test_override_node_property_with_setting(graph_input, capsys):
     )()
     output = capsys.readouterr()
     assert f"result: {new_step}_1" in output.out
+
+
+@pytest.fixture
+def mock_config():
+    DummyConfig = GlobalConfiguration._INI_PARAMETERS.copy()
+    DummyConfig.update(
+        {"dagrunner_runtime": {"cache_enabled": True, "cache_dir": "/dummy_path"}}
+    )
+    patch_config1 = mock.patch("dagrunner.execute_graph.CONFIG", new=DummyConfig)
+    patch_config2 = mock.patch("dagrunner.utils._cache.CONFIG", new=DummyConfig)
+
+    with patch_config1 as p1, patch_config2 as p2:
+        yield (p1, p2)
+
+
+@pytest.mark.parametrize(
+    "edges, exists, mtime, expected_run_nodes",
+    [
+        # Cache utilisation from a multiple depth graph.
+        #
+        # s                 skip status
+        # src1->a->b->c->d
+        # e                 exist status
+        #
+        #    s     s   s
+        # (((src2->g)->h) & c)->e->f
+        #    e     e   e
+        [
+            [
+                ["src1", "a"],
+                ["a", "b"],
+                ["b", "c"],
+                ["c", "d"],
+                ["src2", "g"],
+                ["g", "h"],
+                ["c", "e"],
+                ["e", "f"],
+                ["h", "e"],
+            ],
+            ["src1", "src2", "g", "h"],  # files that exist
+            None,  # timestamp of files that exist (None==timestamp doesn't matter)
+            ["a", "b", "c", "d", "e", "f"],  # target graph nodes (filtered)
+        ],
+        # Cache utilisation from basic graph with timestamp.
+        #
+        #    s     s  s  s  skip status
+        #    src1->a->b->c
+        #    e     e  e  e  exist status
+        #
+        #    s     s
+        #    src1->aa->bb->c
+        #    e     e   e   e
+        #
+        #    s      s
+        #    src2->(b & bb)
+        #    e      e   e
+        #
+        #    s   s
+        #    c->(f & g)
+        #    e   e
+        #
+        #    s
+        #    src1->d->e
+        #    e        e
+        [
+            [
+                ["b", "c"],
+                ["bb", "c"],
+                ["src2", "bb"],
+                ["aa", "bb"],  # bb exists and src2 is newer (don't skip)
+                ["src1", "aa"],  # aa exists and src1 is older (skip)
+                ["src2", "b"],
+                ["aa", "b"],  # b exists and src2 is older (skip)
+                ["src1", "a"],  # a exists and src1 is older (skip)
+                ["d", "e"],  # e exist but comes after d which doesn't (don't skip)
+                ["src1", "d"],  # d doesn't exist (don't skip)
+                ["c", "f"],  # f exists (don't skip)
+                ["c", "g"],  # g doesn't exist (don't skip)
+            ],  # edges
+            ["c", "bb", "src2", "aa", "src1", "b", "a", "e", "f"],  # files that exist
+            [103, 100, 101, 98, 97, 102, 99, 90, 104],  # file modified time
+            ["bb", "c", "d", "e", "f", "g"],  # target graph nodes (filtered)
+        ],
+    ],
+)
+def test_cache_uitilisation_all(mock_config, edges, exists, mtime, expected_run_nodes):
+    """
+    Cache utilisation
+
+    Demonstrating that nodes are correctly skipped when their output cache files exist
+    and whether their inputs timestamps are older.
+    """
+
+    nodes = [
+        (node, {"call": lambda x=None, y=None: node}) for edge in edges for node in edge
+    ]
+
+    nxgraph = nx.DiGraph()
+    nxgraph.add_edges_from(edges)
+    nxgraph.add_nodes_from(nodes)
+
+    # files that exist
+    exists = [_PickleCache(node_id).cache_filepath for node_id in exists]
+    isfile = lambda x: x in exists
+
+    isfile_patch = mock.patch("dagrunner.runner.os.path.isfile", side_effect=isfile)
+
+    if mtime:
+        # apply timestamp
+        getmtime = lambda x: {fpath: ftime for fpath, ftime in zip(exists, mtime)}[x]
+        getmtime_patch = mock.patch(
+            "dagrunner.runner.os.path.getmtime", side_effect=getmtime
+        )
+    else:
+        # skip if file exists (i.e. timestamp doesn't matter)
+        getmtime_patch = mock.patch("dagrunner.runner.os.path.getmtime", return_value=0)
+
+    with isfile_patch, getmtime_patch:
+        graph = ExecuteGraph(nxgraph, scheduler="single-threaded", verbose=True)
+    # expecting the following nodes to still run
+    assert (
+        sorted(
+            [graph._exec_graph[node][3]["node_id"] for node in graph._exec_graph.keys()]
+        )
+        == expected_run_nodes
+    )

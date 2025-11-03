@@ -13,8 +13,9 @@ from dagrunner.execute_graph import plugin_executor
 
 @pytest.fixture(autouse=True)
 def patch_config():
+    DummyConfig = GlobalConfiguration._INI_PARAMETERS.copy()
     """Stop picking up any configuration from the environment."""
-    with mock.patch("dagrunner.execute_graph.CONFIG", new=GlobalConfiguration()):
+    with mock.patch("dagrunner.execute_graph.CONFIG", new=DummyConfig):
         yield
 
 
@@ -245,3 +246,61 @@ def test_non_hashable_args():
     call = (ListArgPlugin, {}, {})
     res = plugin_executor(*([1, 2, 3],), call=call)
     assert res == [2, 4, 6]
+
+
+def test_cached_execution_disabled():
+    """Test that execution works without cache utilisation."""
+    args = (5,)
+
+    mock_callable = mock.Mock(side_effect=lambda x: x + 5)
+    call = tuple([mock_callable])
+    res = plugin_executor(*args, call=call)
+    assert res == 10
+    assert mock_callable.call_count == 1
+
+    res = plugin_executor(*args, call=call)
+
+    assert res == 10
+    assert mock_callable.call_count == 2
+
+
+@pytest.fixture
+def mock_config(tmp_path):
+    DummyConfig = GlobalConfiguration._INI_PARAMETERS.copy()
+    DummyConfig.update(
+        {"dagrunner_runtime": {"cache_enabled": True, "cache_dir": str(tmp_path)}}
+    )
+    patch_config1 = mock.patch("dagrunner.execute_graph.CONFIG", new=DummyConfig)
+    patch_config2 = mock.patch("dagrunner.utils._cache.CONFIG", new=DummyConfig)
+
+    with patch_config1 as p1, patch_config2 as p2:
+        yield (p1, p2)
+
+
+@pytest.mark.parametrize(
+    "side_effect, res, final_call_count",
+    [
+        [lambda x: x + 5, 10, 1],  # check simple function caching
+        [lambda x: None, None, 1],  # check None return caching
+    ],
+)
+def test_cached_execution_enabled(mock_config, side_effect, res, final_call_count):
+    """Test that execution is utilising cache."""
+    args = (5,)
+
+    mock_callable = mock.Mock(side_effect=side_effect)
+    call = tuple([mock_callable])
+    with pytest.warns(
+        DeprecationWarning, match="This class is experimental and untested"
+    ):
+        res = plugin_executor(*args, call=call)
+    assert res == res
+    assert mock_callable.call_count == 1
+
+    with pytest.warns(
+        DeprecationWarning, match="This class is experimental and untested"
+    ):
+        res = plugin_executor(*args, call=call)
+
+    assert res == res
+    assert mock_callable.call_count == final_call_count

@@ -15,6 +15,7 @@ from dask.utils import apply
 
 from dagrunner.config import CONFIG
 from dagrunner.plugin_framework import NodeAwarePlugin
+from dagrunner.runner import _handle_clobber
 from dagrunner.runner.schedulers import SCHEDULERS
 from dagrunner.utils import (
     CaptureProcMemory,
@@ -23,6 +24,7 @@ from dagrunner.utils import (
     function_to_argparse_parse_args,
     logger,
 )
+from dagrunner.utils._cache import _PickleCache
 from dagrunner.utils.networkx import visualise_graph
 
 from . import events
@@ -87,6 +89,12 @@ def plugin_executor(
     """  # noqa: E501
     if CONFIG["dagrunner_logging"].pop("enabled", False) is True:
         logger.client_attach_socket_handler(CONFIG["dagrunner_logging"])
+
+    pcache = bool(CONFIG["dagrunner_runtime"].get("cache_enabled", False))
+    if pcache:
+        pcache = _PickleCache(node_id, verbose=verbose)
+        if pcache.cache_available:
+            return pcache.load()
 
     if common_kwargs is None:
         common_kwargs = {}
@@ -214,6 +222,9 @@ def plugin_executor(
         except (TypeError, AttributeError):
             # fallback
             print(f"result: {res}")
+
+    if pcache:
+        pcache.dump(res)
     return res
 
 
@@ -355,9 +366,10 @@ class ExecuteGraph:
         TODO: Potentially support 'clobber' i.e. partial graph execution from a graph
           failure recovery.
         """
+        verbose = self._kwargs.pop("verbose")
         executor = partial(
             self._plugin_executor,
-            verbose=self._kwargs.pop("verbose"),
+            verbose=verbose,
             dry_run=self._kwargs.pop("dry_run"),
             common_kwargs=self._kwargs,
         )
@@ -377,7 +389,8 @@ class ExecuteGraph:
             args = [tokenize(arg) for arg in self._nxgraph.predecessors(node_id)]
             exec_graph[key] = (apply, executor, args, properties | {"node_id": node_id})
 
-        # handle_clobber(graph, workflow, no_clobber, verbose)
+        if bool(CONFIG["dagrunner_runtime"].get("cache_enabled", False)):
+            _handle_clobber(exec_graph, verbose=verbose)
         return exec_graph
 
     def visualise(self, **kwargs):
