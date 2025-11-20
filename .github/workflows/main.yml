@@ -1,0 +1,65 @@
+name: Main changes
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  changed-files:
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.9
+          cache: 'pip'
+
+      - name: Installation
+        run: |
+          pip install .[tests,visualisation,dev,minver]
+
+      - name: Set up SSH for localhost
+        run: |
+          ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa
+          cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+          ssh-keyscan -H $(hostname) >> ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/authorized_keys
+
+      - name: Run tests with coverage
+        run: |
+          pytest --cov=dagrunner --cov-report=term --cov-report=html | tee coverage_output.txt; test ${PIPESTATUS[0]} -eq 0
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: main-coverage-report
+          path: coverage_output.txt
+
+      # DOCUMENTATION
+      ############################
+      - name: Build documentation
+        run: |
+          ./docs/gen_docs dagrunner ./docs
+
+      - name: Check if documentation has changed
+        id: check-docs
+        run: |
+          echo "changed=$(git diff --quiet --exit-code || echo true)" | tee -a $GITHUB_OUTPUT
+
+      # https://github.com/orgs/community/discussions/26560#discussioncomment-3531273
+      # This must be our very final step to ensure that it runs only on condition of
+      # success of all previous steps.  A pushed commit will not trigger the re-running
+      # of this workflow.
+      - name: Commit and push documentation changes
+        if: steps.check-docs.outputs.changed == 'true'
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add docs/.
+          git commit -am "Automated reference documentation update for PR ${{ github.event.number }} [skip ci]"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
