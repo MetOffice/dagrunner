@@ -66,16 +66,28 @@ class Shell(Plugin):
 
 
 class Load(Plugin):
+    """
+    Abstract data loader.
+
+    The `load` method must be implemented by the subclass.
+    This abstract class handles staging of files from remote hosts
+    and handling missing files according to the `on_missing` parameter as well
+    as globbing of file paths (local or remote).
+    """
+
     def __init__(self, staging_dir=None, on_missing="error", verbose=False):
         """
         Load data from a file.
 
-        The `load` method must be implemented by the subclass.
-
         Args:
-        - staging_dir: Directory to stage files in.
+        - staging_dir: Local directory to stage files in.
+          Staging of remote files where filepaths are of `<hostname>:<path>` syntax.
+          A staging directory must be specified when loading remote files.
         - on_missing: Action to take when files are missing. Accepted values: 'error',
           'ignore' and 'skip'.
+          'ignore' and 'skip' will return `events.IGNORE` and `events.SKIP`
+          respectively, whilst 'error' will raise a `FileNotFoundError`.
+          See [dagrunner.events](dagrunner.events.md)
         - verbose: Print verbose output.
         """
         self._staging_dir = staging_dir
@@ -112,6 +124,16 @@ class Load(Plugin):
         - *args: List of filepaths to load. `<hostname>:<path>` syntax supported
           for loading files from a remote host.
         - **kwargs: Keyword arguments to pass to.
+
+        Returns:
+        - Any: User overrode 'load' abstractmethod return value, or
+          `events.IGNORE` or `events.SKIP` if files are missing and
+          `on_missing` is set to 'ignore' or 'skip' respectively.
+
+        Raises:
+        - FileNotFoundError: If any of the files do not exist and `on_missing` is set
+          to 'error'.
+
         """
         args = list(map(process_path, args))
         if (
@@ -152,15 +174,40 @@ class Load(Plugin):
 
 
 class DataPolling(Plugin):
-    """A trigger plugin that completes when data is successfully polled."""
+    """
+    A trigger plugin that completes only when data is successfully polled.
+
+    Remote file paths using `<hostname>:<path>` syntax are supported as well as
+    local and remote glob patterns.
+    """
 
     def __init__(self, timeout=60 * 2, polling=1, file_count=None, verbose=False):
+        """
+        Initialize the DataPolling plugin.
+
+        Args:
+        - timeout (int): Maximum time to wait for data in seconds.
+        - polling (int): Polling interval in seconds.
+        - file_count (int or None): Expected number of files.
+          If None, any number greater than 1 per input/glob pattern is not considered
+          missing.
+        - verbose (bool): Whether to print verbose output.
+        """
         self._timeout = timeout
         self._polling = polling
         self._file_count = file_count
         self._verbose = verbose
 
     def __call__(self, *args):
+        """
+        Poll for data until available or timeout is reached.
+
+        Args:
+        - *args: File paths or glob patterns to poll for.
+
+        Returns:
+        - None
+        """
         args = data_polling(
             *args,
             timeout=self._timeout,
@@ -173,13 +220,18 @@ class DataPolling(Plugin):
 
 
 class Input(NodeAwarePlugin):
+    """
+    A plugin to expand filepaths using keyword arguments and environment variables.
+    """
+
     def __call__(self, filepath, node_properties=None, **kwargs):
         """
-        Given a string, expand it and return this expanded string.
+        Expand a filepath.
 
         Expand the provided string (typically representing a filepath) using the
         keyword arguments and environment variables.  Note that this plugin is
-        'node aware' since it is derived from the `NodeAwarePlugin`.
+        'node aware' since it is derived from the
+        [NodeAwarePlugin](dagrunner.plugin_framework.md#class-nodeawareplugin).
 
         Args:
         - `filepath` (str): The filepath to be expanded.
@@ -207,7 +259,7 @@ class Input(NodeAwarePlugin):
 
 
 class LoadJson(Load):
-    """Load json file."""
+    """json file loader."""
 
     def load(self, *args):
         res = []
@@ -220,13 +272,16 @@ class LoadJson(Load):
 
 
 class SaveJson(Input):
+    """Save data to a JSON file."""
+
     def __call__(self, *args, filepath, node_properties=None, **kwargs):
         """
         Save data to a JSON file
 
         Save the provided data to a JSON file at the specified filepath.  The filepath
         is expanded using the keyword arguments and environment variables.  Note that
-        this plugin is 'node aware' since it is derived from the `NodeAwarePlugin`.
+        this plugin is 'node aware' since it is derived from the
+        [NodeAwarePlugin](dagrunner.plugin_framework.md#class-nodeawareplugin).
 
         Args:
         - `*args`: Positional arguments (data) to be saved.
@@ -248,7 +303,7 @@ class SaveJson(Input):
 
 
 class LoadPickle(Load):
-    """Load pickle file."""
+    """pickle file loader."""
 
     def load(self, *args):
         res = []
@@ -259,13 +314,16 @@ class LoadPickle(Load):
 
 
 class SavePickle(Input):
+    """Save data to a Pickle file."""
+
     def __call__(self, *args, filepath, node_properties=None, **kwargs):
         """
         Save data to a Pickle file
 
         Save the provided data to a pickle file at the specified filepath.  The filepath
         is expanded using the keyword arguments and environment variables.  Note that
-        this plugin is 'node aware' since it is derived from the `NodeAwarePlugin`.
+        this plugin is 'node aware' since it is derived from the
+        [NodeAwarePlugin](dagrunner.plugin_framework.md#class-nodeawareplugin).
 
         Args:
         - `*args`: Positional arguments (data) to be saved.
