@@ -7,6 +7,10 @@ jobs:
   lower-bound-packages:
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        pipconf: ["", "minver"]
 
     steps:
       # SETUP
@@ -23,14 +27,10 @@ jobs:
           python-version: 3.9
           cache: 'pip'
 
-      - name: Add checkout directory to PYTHONPATH
-        run: echo "PYTHONPATH=$(pwd):$PYTHONPATH" >> $GITHUB_ENV
-
       - name: Install dependencies
         id: install-dependencies
         run: |
-          pip install .[tests,visualisation,minver]
-          pip uninstall dagrunner -y
+          pip install .[tests,visualisation,dev,${{ matrix.pipconf }}]
 
       - name: Set up SSH for localhost
         run: |
@@ -39,77 +39,48 @@ jobs:
           ssh-keyscan -H $(hostname) >> ~/.ssh/known_hosts
           chmod 600 ~/.ssh/authorized_keys
 
-      # TESTS
-      ############################
-      - name: Run pytest
-        run: pytest .
-
-
-  unpinned-packages:
-    if: "!contains(github.event.head_commit.message, '[skip ci]')"
-    runs-on: ubuntu-latest
-
-    steps:
-      # SETUP
-      ############################
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref }}  # Ensure branch is checked out, not detached state (so we can push a commit later)
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: 3.x
-          cache: 'pip'
-
-      - name: Add checkout directory to PYTHONPATH
-        run: echo "PYTHONPATH=$(pwd):$PYTHONPATH" >> $GITHUB_ENV
-
-      - name: Install dependencies
-        id: install-dependencies
-        run: |
-          pip install .[tests,visualisation,dev]
-          pip uninstall dagrunner -y
-
-      - name: Set up SSH for localhost
-        run: |
-          ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa
-          cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
-          ssh-keyscan -H $(hostname) >> ~/.ssh/known_hosts
-          chmod 600 ~/.ssh/authorized_keys
-
-      # TESTS (inc. test coverage)
-      ############################
       - name: Run pytest + coverage report gen
-        run: pytest --cov=dagrunner --cov-report=term --cov-report=html | tee coverage_output.txt; test ${PIPESTATUS[0]} -eq 0
-
-      # TESTS ('main' branch)
-      ############################
-      - name: Cache ref branch coverage report
-        id: cache-ref-coverage
-        uses: actions/cache@v4
-        with:
-          path: ref/coverage_output.txt
-          key: ref-${{ github.event.pull_request.base.sha }}
-
-      - name: Checkout ref branch
-        if: steps.cache-ref-coverage.outputs.cache-hit != 'true'
-        uses: actions/checkout@v4
-        with:
-          path: ref
-          ref: ${{ github.base_ref }}
-
-      - name: Run tests with coverage for ref branch
-        if: steps.cache-ref-coverage.outputs.cache-hit != 'true'
         run: |
-          cd ref
-          pytest --maxfail=0 --continue-on-collection-errors --cov=dagrunner --cov-report=term --cov-report=html | tee coverage_output.txt || true
+          if [ "${{ matrix.pipconf }}" == "minver" ]; then
+            pytest --cov=dagrunner --cov-report=term --cov-report=html | tee coverage_output.txt; test ${PIPESTATUS[0]} -eq 0
+          else
+            pytest .
 
-      # TESTS (compare coverage)
+      # PRE-COMMIT
       ############################
+      - name: Python interpreter version sha (PYSHA)
+        if: ${{ matrix.pipconf == 'minver' }}
+        run: echo "PYSHA=$(python -VV | sha256sum | cut -d' ' -f1)" >> $GITHUB_ENV
+
+      - name: Cache pre-commit
+        if: ${{ matrix.pipconf == 'minver' }}
+        uses: actions/cache@v3
+        id: pre-commit-cache
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit|${{ env.PYSHA }}|${{ hashFiles('.pre-commit-config.yaml') }}
+
+      - name: pre-commit install
+        if: ${{ matrix.pipconf == 'minver' }}
+        run: |
+          pre-commit install
+
+      - name: pre-commit run
+        if: ${{ matrix.pipconf == 'minver' }}
+        run: |
+          pre-commit run --all-files
+
+      # Compare coverage reports
+      ############################
+      - name: Download main branch coverage report
+        if: ${{ matrix.pipconf == 'minver' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: main-coverage-report
+          path: ref
+
       - name: Compare coverage
+        if: ${{ matrix.pipconf == 'minver' }}
         id: comp-coverage
         run: |
             pr_coverage_total=$(grep TOTAL coverage_output.txt | awk '{print $NF}' | awk '{print substr($0, 1, length($0)-1)}')
@@ -123,7 +94,7 @@ jobs:
             fi
 
       - name: Comment coverage report
-        if: steps.comp-coverage.outputs.coverage_decreased == 'true'
+        if: ${{ matrix.pipconf == 'minver' && steps.comp-coverage.outputs.coverage_decreased == 'true' }}
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -140,56 +111,10 @@ jobs:
             });
 
       - name: Upload coverage report
-        if: steps.comp-coverage.outputs.coverage_decreased == 'true'
+        if: ${{ matrix.pipconf == 'minver' && steps.comp-coverage.outputs.coverage_decreased == 'true' }}
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report-pr
           path: |
             coverage_output.txt
             htmlcov/
-
-      # PRE-COMMIT
-      ############################
-      - name: Python interpreter version sha (PYSHA)
-        run: echo "PYSHA=$(python -VV | sha256sum | cut -d' ' -f1)" >> $GITHUB_ENV
-
-      - name: Cache pre-commit
-        uses: actions/cache@v3
-        id: pre-commit-cache
-        with:
-          path: ~/.cache/pre-commit
-          key: pre-commit|${{ env.PYSHA }}|${{ hashFiles('.pre-commit-config.yaml') }}
-
-      - name: pre-commit install
-        run: |
-          pre-commit install
-
-      - name: pre-commit run
-        run: |
-          pre-commit run --all-files
-
-      # DOCUMENTATION
-      ############################
-      - name: Build documentation
-        run: |
-          ./docs/gen_docs dagrunner ./docs
-
-      - name: Check if documentation has changed
-        id: check-docs
-        run: |
-          echo "changed=$(git diff --quiet --exit-code || echo true)" | tee -a $GITHUB_OUTPUT
-
-      # https://github.com/orgs/community/discussions/26560#discussioncomment-3531273
-      # This must be our very final step to ensure that it runs only on condition of
-      # success of all previous steps.  A pushed commit will not trigger the re-running
-      # of this workflow.
-      - name: Commit and push documentation changes
-        if: steps.check-docs.outputs.changed == 'true'
-        run: |
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add docs/.
-          git commit -am "Automated reference documentation update for PR ${{ github.event.number }} [skip ci]"
-          git push
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
