@@ -6,6 +6,7 @@
 import importlib
 import inspect
 import logging
+import warnings
 from functools import partial
 
 import dask
@@ -193,7 +194,15 @@ def plugin_executor(
         callable_obj, common_kwargs, callable_kwargs.keys()
     )  # based on overriding arguments
 
-    msg = f"{obj_name}{call_msg}(*{args}, **{callable_kwargs})"
+    obj_path = get_object_path(callable_obj)
+    with warnings.catch_warnings(record=True) as caught_warnings:
+        msg = f"{obj_name}{call_msg}(*{args}, **{callable_kwargs})"
+    for warning in caught_warnings:
+        warnings.warn(
+            message=f"[Plugin: {obj_path}] | {warning.message}",
+            category=warning.category,
+        )
+
     if verbose:
         print(msg)
     res = None
@@ -269,6 +278,20 @@ def _get_networkx(networkx_graph):
                 "Not recognised 'networkx_graph' parameter, see ExecuteGraph docstring."
             )
     return nxgraph
+
+
+def get_object_path(obj):
+    """Attempt to retrieve the path for the given object."""
+    obj_path = "unknown"
+    if isinstance(obj, str):
+        obj_path = obj
+    elif inspect.isclass(obj):
+        obj_path = inspect.getfile(obj)
+    elif inspect.isfunction(obj):
+        obj_path = inspect.getfile(obj)
+    elif hasattr(obj, "__class__") and not inspect.isclass(obj):
+        obj_path = inspect.getfile(obj.__class__)
+    return obj_path
 
 
 class ExecuteGraph:
