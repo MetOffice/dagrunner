@@ -1,6 +1,10 @@
 name: Pull Request Tests
 
-on: [pull_request]
+on:
+  push:
+    branches:
+      - main  # Triggers when commits are pushed or merged into main
+# on: [pull_request]
 
 
 jobs:
@@ -55,7 +59,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.head_ref }}  # Ensure branch is checked out, not detached state (so we can push a commit later)
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python
@@ -87,25 +90,11 @@ jobs:
 
       # TESTS ('main' branch)
       ############################
-      - name: Cache ref branch coverage report
+      - name: Get coverage report for main
         id: cache-ref-coverage
         uses: actions/cache@v4
         with:
           path: ref/coverage_output.txt
-          key: ref-${{ github.event.pull_request.base.sha }}
-
-      - name: Checkout ref branch
-        if: steps.cache-ref-coverage.outputs.cache-hit != 'true'
-        uses: actions/checkout@v4
-        with:
-          path: ref
-          ref: ${{ github.base_ref }}
-
-      - name: Run tests with coverage for ref branch
-        if: steps.cache-ref-coverage.outputs.cache-hit != 'true'
-        run: |
-          cd ref
-          pytest --maxfail=0 --continue-on-collection-errors --cov=dagrunner --cov-report=term --cov-report=html | tee coverage_output.txt || true
 
       # TESTS (compare coverage)
       ############################
