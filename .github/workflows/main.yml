@@ -1,0 +1,151 @@
+name: Main Update
+
+on:
+  push:
+    branches:
+      - main  # Triggers when commits are pushed or merged into main
+    tags:
+      - '[0-9]*'  # Triggers when a tag starting with number is pushed
+  pull_request:  # uncomment for testing purposes
+
+jobs:
+  coverage_report_doc_update:
+    runs-on: ubuntu-latest
+    env:
+      FORCE_UPDATE_DOCS: true  # Set env var to force docs update (for testing purposes)
+      FORCE_UPDATE_COVERAGE: true  # Set env var to force coverage report update (for testing purposes)
+
+    steps:
+      # SETUP
+      ############################
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get reference name (branch or tag)
+        id: get-ref-name
+        run: |
+          echo "ref_name=main" | tee -a $GITHUB_ENV
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.x
+          cache: 'pip'
+
+      - name: Add checkout directory to PYTHONPATH
+        run: echo "PYTHONPATH=$(pwd):$PYTHONPATH" | tee -a $GITHUB_ENV
+
+      - name: Check if tests need running (coverage report cache hit)
+        uses: actions/cache/restore@v5
+        id: report-cache-restore
+        with:
+          path: |
+            coverage_output.txt
+          key: coverage_report_${{ hashFiles('pyproject.toml', 'dagrunner/**/*.py') }}
+
+      - name: Check if docs need building (docs cache hit)
+        uses: actions/cache/restore@v5
+        id: docs-cache-restore
+        with:
+          lookup-only: true
+          path: |
+            docs/
+          key: docs_cache_${{ hashFiles('pyproject.toml', 'dagrunner/**/*.py', 'docs/**') }}
+
+      - name: Install dependencies
+        if: steps.report-cache-restore.outputs.cache-hit != 'true' || steps.docs-cache-restore.outputs.cache-hit != 'true'
+        id: install-dependencies
+        run: |
+          pip install .[tests,visualisation,dev]
+          pip uninstall dagrunner -y
+
+      - name: Set up SSH for localhost
+        if: steps.report-cache-restore.outputs.cache-hit != 'true'
+        run: |
+          ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa
+          cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+          ssh-keyscan -H $(hostname) >> ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/authorized_keys
+
+      # TESTS (inc. generate and publish coverage report)
+      ############################
+      - name: Run pytest + generate coverage report
+        if: steps.report-cache-restore.outputs.cache-hit != 'true'
+        run: pytest --cov=dagrunner --cov-report=term --cov-report=html | tee coverage_output.txt; test ${PIPESTATUS[0]} -eq 0
+
+      - name: Save cached coverage report
+        uses: actions/cache/save@v5
+        id: report-cache-save
+        with:
+          path: |
+            coverage_output.txt
+          key: ${{ steps.report-cache-restore.outputs.cache-primary-key }}
+
+      - name: Checkout reference coverage report
+        if: steps.report-cache-restore.outputs.cache-hit != 'true'
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          path: covref
+          ref: coverage-reference
+
+      - name: Commit and push coverage report
+        if: steps.report-cache-restore.outputs.cache-hit != 'true'
+        run: |
+          cd covref
+          ref_name=${{ steps.get-ref-name.outputs.ref_name }}
+
+          git config user.name github-actions[bot]
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          rm -rf ${ref_name}
+          mkdir ${ref_name}
+
+          cp ../coverage_output.txt ${ref_name}/.
+          cp -r ../htmlcov/ ${ref_name}/.
+          git add -f ${ref_name}/
+
+          echo "=== git status after add ==="
+          git status -s
+
+          git commit -a --amend --no-edit || echo "No changes to commit"
+          git push origin -f coverage-reference
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # DOCUMENTATION
+      ############################
+      - name: Build documentation
+        if: steps.docs-cache-restore.outputs.cache-hit != 'true'
+        run: |
+          ./docs/gen_docs dagrunner ./docs
+
+      - name: Checkout gh-pages branch
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          path: gh-pages
+          ref: gh-pages
+
+      - name: Update gh-pages branch with new documentation
+        if: steps.docs-cache-restore.outputs.cache-hit != 'true'
+        run: |
+          cd gh-pages/
+          ref_name=${{ steps.get-ref-name.outputs.ref_name }}
+
+          git config user.name github-actions[bot]
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          rm -rf ${ref_name}
+          mkdir ${ref_name}
+
+          cp -r ../docs/ ${ref_name}/.
+          git add -f ${ref_name}/
+
+          echo "=== git status after add ==="
+          git status -s
+
+          git commit -a --amend --no-edit || echo "No changes to commit"
+          git push origin -f gh-pages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
