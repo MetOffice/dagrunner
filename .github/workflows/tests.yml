@@ -4,6 +4,52 @@ on: [pull_request]
 
 
 jobs:
+  pre-commit:
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    runs-on: ubuntu-latest
+
+    steps:
+      # SETUP
+      ############################
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.x
+          cache: 'pip'
+
+      - name: Add checkout directory to PYTHONPATH
+        run: echo "PYTHONPATH=$(pwd):$PYTHONPATH" >> $GITHUB_ENV
+
+      - name: Install dependencies
+        id: install-dependencies
+        run: |
+          pip install .[tests,visualisation,dev]
+          pip uninstall dagrunner -y
+
+      # PRE-COMMIT
+      ############################
+      - name: Python interpreter version sha (PYSHA)
+        run: echo "PYSHA=$(python -VV | sha256sum | cut -d' ' -f1)" >> $GITHUB_ENV
+
+      - name: Cache pre-commit
+        uses: actions/cache@v3
+        id: pre-commit-cache
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit|${{ env.PYSHA }}|${{ hashFiles('.pre-commit-config.yaml') }}
+
+      - name: pre-commit install
+        run: |
+          pre-commit install
+
+      - name: pre-commit run
+        run: |
+          pre-commit run --all-files
+
+
   lower-bound-packages:
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
     runs-on: ubuntu-latest
@@ -41,8 +87,19 @@ jobs:
       - name: Run pytest
         run: pytest .
 
+      # DOCUMENTATION
+      ############################
+      - name: Build documentation
+        run: |
+          ./docs/gen_docs dagrunner ./docs
 
-  unpinned-packages:
+      - name: Check if documentation has changed
+        id: check-docs
+        run: |
+          echo "changed=$(git diff --quiet --exit-code || echo true)" | tee -a $GITHUB_OUTPUT
+
+
+  unpinned-packages-test-coverage:
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
     runs-on: ubuntu-latest
 
@@ -142,34 +199,3 @@ jobs:
           path: |
             coverage_output.txt
             htmlcov/
-
-      # PRE-COMMIT
-      ############################
-      - name: Python interpreter version sha (PYSHA)
-        run: echo "PYSHA=$(python -VV | sha256sum | cut -d' ' -f1)" >> $GITHUB_ENV
-
-      - name: Cache pre-commit
-        uses: actions/cache@v3
-        id: pre-commit-cache
-        with:
-          path: ~/.cache/pre-commit
-          key: pre-commit|${{ env.PYSHA }}|${{ hashFiles('.pre-commit-config.yaml') }}
-
-      - name: pre-commit install
-        run: |
-          pre-commit install
-
-      - name: pre-commit run
-        run: |
-          pre-commit run --all-files
-
-      # DOCUMENTATION
-      ############################
-      - name: Build documentation
-        run: |
-          ./docs/gen_docs dagrunner ./docs
-
-      - name: Check if documentation has changed
-        id: check-docs
-        run: |
-          echo "changed=$(git diff --quiet --exit-code || echo true)" | tee -a $GITHUB_OUTPUT
