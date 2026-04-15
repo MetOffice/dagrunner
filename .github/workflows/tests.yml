@@ -242,7 +242,7 @@ jobs:
               if (( CHECK_PERC_TOL == 1 )) && (( $(bc <<< "$perc_diff > $perc_tol") )); then
                   trigger=1
               fi
-              trigger=1  # debug: force trigger
+
               if (( trigger == 1 )); then
                   echo "coverage_decreased=true" | tee -a $GITHUB_OUTPUT
               else
@@ -270,4 +270,5 @@ jobs:
             | column -t -s $'\t'
             echo "-----------------------------------------------"
             echo "Report uploaded as artifact 'coverage-report-pr'"
+            echo "Test coverage failure is non-blocking, but please consider improving test coverage before merging."
             exit 1
