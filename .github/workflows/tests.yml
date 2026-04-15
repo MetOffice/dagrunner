@@ -163,33 +163,54 @@ jobs:
       - name: Compare coverage
         id: comp-coverage
         run: |
-            pr_coverage_total=$(grep TOTAL coverage_output.txt | awk '{print $NF}' | awk '{print substr($0, 1, length($0)-1)}')
-            echo "pr_coverage_total=$pr_coverage_total" | tee -a $GITHUB_OUTPUT
-            ref_coverage_total=$(grep TOTAL ref/coverage_output.txt | awk '{print $NF}' | awk '{print substr($0, 1, length($0)-1)}')
-            echo "ref_coverage_total=$ref_coverage_total" | tee -a $GITHUB_OUTPUT
-            # if (( (( ref_coverage_total - pr_coverage_total )) > 1 )); then
-            #     echo "coverage_decreased=true" | tee -a $GITHUB_OUTPUT
-            # else
-            #     echo "coverage_decreased=false" | tee -a $GITHUB_OUTPUT
-            # fi
-            echo "coverage_decreased=true" | tee -a $GITHUB_OUTPUT
+          set -e
+          # ----- USER SETTINGS -------------------------------------------------
+          CHECK_MISS_TOL=1      # 1 = evaluate the miss‑count difference, 0 = ignore it
+          CHECK_PERC_TOL=0      # 1 = evaluate the percentage difference, 0 = ignore it
 
-      - name: Comment coverage report
-        if: steps.comp-coverage.outputs.coverage_decreased == 'true'
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            let comment = String();
-            comment = "The test coverage has decreased from ${{ steps.comp-coverage.outputs.ref_coverage_total }}% to ${{ steps.comp-coverage.outputs.pr_coverage_total }}% (commit SHA: ${{ github.event.pull_request.head.sha }})."
-            comment += "\nPlease review test coverage.  Report uploaded as artifact.";
-            console.log(comment)
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: comment
-            });
+          # Tolerances
+          miss_tol=0          # miss integer tolerance
+          perc_tol=0.0        # percentage float tolerance
+          # --------------------------------------------------------------------
+
+          read pr_tot_stmts pr_tot_miss <<< $(awk '/^[[:space:]]*TOTAL/ {print $2, $3}' coverage_output.txt)
+          pr_perc_total=$(echo "scale=4; ($pr_tot_stmts-$pr_tot_miss)/$pr_tot_stmts"'*100' | bc)
+          echo "pr_perc_total=$pr_perc_total" | tee -a $GITHUB_OUTPUT
+          echo "pr_tot_stmts=$pr_tot_stmts" | tee -a $GITHUB_OUTPUT
+          echo "pr_tot_miss=$pr_tot_miss" | tee -a $GITHUB_OUTPUT
+
+          if [ ! -f ref/coverage_output.txt ]; then
+              echo "Warning: ref/coverage_output.txt does not exist, reporting coverage."
+              echo "coverage_decreased=true" | tee -a $GITHUB_OUTPUT
+              echo "ref_perc_total=--" | tee -a $GITHUB_OUTPUT
+              echo "ref_tot_stmts=--" | tee -a $GITHUB_OUTPUT
+              echo "ref_tot_miss=--" | tee -a $GITHUB_OUTPUT
+              exit 0
+          else
+              read ref_tot_stmts ref_tot_miss <<< $(awk '/^[[:space:]]*TOTAL/ {print $2, $3}' ref/coverage_output.txt)
+              ref_perc_total=$(echo "scale=4; ($ref_tot_stmts-$ref_tot_miss)/$ref_tot_stmts"'*100' | bc)
+              echo "ref_perc_total=$ref_perc_total" | tee -a $GITHUB_OUTPUT
+              echo "ref_tot_stmts=$ref_tot_stmts" | tee -a $GITHUB_OUTPUT
+              echo "ref_tot_miss=$ref_tot_miss" | tee -a $GITHUB_OUTPUT
+
+              trigger=0
+
+              miss_diff=$(( ref_tot_miss_b - pr_tot_miss_a ))               # integer diff
+              perc_diff=$(bc <<< "scale=4; $ref_perc_total - $pr_perc_total")       # float diff
+
+              if (( CHECK_MISS_TOL == 1 )) && (( miss_diff > miss_tol )); then
+                  trigger=1
+              fi
+              if (( CHECK_PERC_TOL == 1 )) && (( $(bc <<< "$perc_diff > $perc_tol") )); then
+                  trigger=1
+              fi
+              trigger=1  # debug: force trigger
+              if (( trigger == 1 )); then
+                  echo "coverage_decreased=true" | tee -a $GITHUB_OUTPUT
+              else
+                  echo "coverage_decreased=false" | tee -a $GITHUB_OUTPUT
+              fi
+          fi
 
       - name: Upload coverage report
         if: steps.comp-coverage.outputs.coverage_decreased == 'true'
@@ -199,3 +220,16 @@ jobs:
           path: |
             coverage_output.txt
             htmlcov/
+
+      - name: Reduced coverage failure
+        if: steps.comp-coverage.outputs.coverage_decreased == 'true'
+        run:  |
+            echo "Code coverage has decreased"
+            echo "-----------------------------------------------"
+            echo -e "Coverage totals\tstatements\tmissed\n\
+            PR\t${{ steps.comp-coverage.outputs.pr_tot_stmts }}\t${{ steps.comp-coverage.outputs.pr_tot_miss }}\t${{ steps.comp-coverage.outputs.pr_perc_total }}%\n\
+            Reference\t${{ steps.comp-coverage.outputs.ref_tot_stmts }}\t${{ steps.comp-coverage.outputs.ref_tot_miss }}\t${{ steps.comp-coverage.outputs.ref_perc_total }}%" \
+            | column -t -s $'\t'
+            echo "-----------------------------------------------"
+            echo "Report uploaded as artifact 'coverage-report-pr'"
+            exit 1
