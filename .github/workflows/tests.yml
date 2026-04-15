@@ -87,6 +87,44 @@ jobs:
       - name: Run pytest
         run: pytest .
 
+
+  upper-bound-packages:
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    runs-on: ubuntu-latest
+
+    steps:
+      # SETUP
+      ############################
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.9
+          cache: 'pip'
+
+      - name: Add checkout directory to PYTHONPATH
+        run: echo "PYTHONPATH=$(pwd):$PYTHONPATH" >> $GITHUB_ENV
+
+      - name: Install dependencies
+        id: install-dependencies
+        run: |
+          pip install .[tests,visualisation]
+          pip uninstall dagrunner -y
+
+      - name: Set up SSH for localhost
+        run: |
+          ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa
+          cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+          ssh-keyscan -H $(hostname) >> ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/authorized_keys
+
+      # TESTS
+      ############################
+      - name: Run pytest
+        run: pytest .
+
       # DOCUMENTATION
       ############################
       - name: Build documentation
@@ -99,7 +137,7 @@ jobs:
           echo "changed=$(git diff --quiet --exit-code || echo true)" | tee -a $GITHUB_OUTPUT
 
 
-  unpinned-packages-test-coverage:
+  test-coverage:
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
     runs-on: ubuntu-latest
 
