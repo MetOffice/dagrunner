@@ -219,11 +219,6 @@ class BadDummyInitPlugin:
         pass
 
 
-def test_extended_init_failure_context():
-    with pytest.raises(RuntimeError, match="Failed to initialise"):
-        plugin_executor(mock.sentinel.arg1, call=(BadDummyInitPlugin,))
-
-
 def bad_call_plugin(*args):
     raise ValueError("some error")
 
@@ -304,3 +299,38 @@ def test_cached_execution_enabled(mock_config, side_effect, res, final_call_coun
 
     assert res == res
     assert mock_callable.call_count == final_call_count
+
+
+def test_extended_init_failure_context():
+    with pytest.raises(RuntimeError, match="Failed to initialise"):
+        plugin_executor(mock.sentinel.arg1, call=(BadDummyInitPlugin,))
+
+
+def test_warning_during_init():
+    with pytest.warns(
+        UserWarning,
+        match="dagrunner.tests.plugin_framework._dummy_applications."
+        "DummyWarningApplication during initialisation: Warning raised "
+        "during initialisation",
+    ):
+        plugin_executor(
+            mock.sentinel.arg1,
+            call=(
+                "dagrunner.tests.plugin_framework._dummy_applications."
+                "DummyWarningApplication",
+            ),
+        )
+
+
+def test_warning_during_exec():
+    with pytest.warns(
+        UserWarning,
+        match="dagrunner.tests.plugin_framework._dummy_applications."
+        "DummyWarningApplication during execution: Warning raised during execution",
+    ):
+        plugin_executor(
+            mock.sentinel.arg1,
+            call=(
+                "dagrunner.tests.plugin_framework._dummy_applications.DummyWarningApplication",
+            ),
+        )
