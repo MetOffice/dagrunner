@@ -47,7 +47,21 @@ def _get_common_args_matching_signature(callable_obj, common_kwargs, keys=None):
 
 
 class _ExtendWarningMessage:
-    def __init__(self, message_extension):
+    """
+    Context manager that extends warning messages with a custom prefix.
+
+    This class temporarily replaces the default warning handler to prepend a custom
+    message extension to all warnings raised within its context. Upon exiting the
+    context, the original warning handler is restored.
+    """
+
+    def __init__(self, message_extension: str):
+        """
+        Initialize the context manager with a message extension.
+
+        Args:
+        - `message_extension`: The prefix text to prepend to all warning messages.
+        """
         self.message_extension = message_extension
 
     def __enter__(self):
