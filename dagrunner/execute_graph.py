@@ -6,7 +6,8 @@
 import importlib
 import inspect
 import logging
-from functools import partial
+import warnings
+from functools import partial, wraps
 
 import dask
 import networkx as nx
@@ -22,6 +23,7 @@ from dagrunner.utils import (
     TimeIt,
     as_iterable,
     function_to_argparse_parse_args,
+    get_object_dot_module_path,
     logger,
 )
 from dagrunner.utils._cache import _PickleCache
@@ -42,6 +44,40 @@ def _get_common_args_matching_signature(callable_obj, common_kwargs, keys=None):
         for key, value in common_kwargs.items()
         if key in inspect.signature(callable_obj).parameters or key in keys
     }
+
+
+class _ExtendWarningMessage:
+    """
+    Context manager that extends warning messages with a custom prefix.
+
+    This class temporarily replaces the default warning handler to prepend a custom
+    message extension to all warnings raised within its context. Upon exiting the
+    context, the original warning handler is restored.
+    """
+
+    def __init__(self, message_extension: str):
+        """
+        Initialize the context manager with a message extension.
+
+        Args:
+        - `message_extension`: The prefix text to prepend to all warning messages.
+        """
+        self.message_extension = message_extension
+
+    def __enter__(self):
+        self._original_showwarning = warnings.showwarning
+
+        @wraps(self._original_showwarning)
+        def _showwarning(message, category, filename, lineno, file=None, line=None):
+            extended_message = f"{self.message_extension} {message}"
+            self._original_showwarning(
+                extended_message, category, filename, lineno, file=file, line=line
+            )
+
+        warnings.showwarning = _showwarning
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        warnings.showwarning = self._original_showwarning
 
 
 def plugin_executor(
@@ -100,7 +136,7 @@ def plugin_executor(
         common_kwargs = {}
     common_kwargs.update({"verbose": verbose, "dry_run": dry_run})
 
-    # support plugins that have no return value
+    # support applications that have no return value
     args = list(filter(lambda x: x is not None, args))
     if call is None:
         raise ValueError(
@@ -127,6 +163,8 @@ def plugin_executor(
         return events.SKIP_EVENT
 
     callable_obj = call[0]
+    callable_obj_dot_path = get_object_dot_module_path(callable_obj)
+
     if isinstance(callable_obj, str):
         # import callable if a string is provided
         module_name, function_name = callable_obj.rsplit(".", 1)
@@ -180,7 +218,11 @@ def plugin_executor(
             | _get_common_args_matching_signature(callable_obj, common_kwargs)
         )
         try:
-            callable_obj = callable_obj(**callable_kwargs_init)
+            with _ExtendWarningMessage(
+                f"{callable_obj_dot_path} during initialisation:"
+            ):
+                callable_obj = callable_obj(**callable_kwargs_init)
+
         except Exception as err:
             msg = (
                 f"Failed to initialise {obj_name} with {callable_kwargs_init}"
@@ -193,26 +235,28 @@ def plugin_executor(
         callable_obj, common_kwargs, callable_kwargs.keys()
     )  # based on overriding arguments
 
-    msg = f"{obj_name}{call_msg}(*{args}, **{callable_kwargs})"
-    if verbose:
-        print(msg)
-    res = None
-    if not dry_run:
-        with (
-            TimeIt() as timer,
-            dask.config.set(scheduler="single-threaded"),
-            CaptureProcMemory() as mem,
-        ):
-            try:
-                res = callable_obj(*args, **callable_kwargs)
-            except Exception as err:
-                msg = (
-                    f"Failed to execute {obj_name} with {args}, {callable_kwargs}"
-                    f"\nnode_properties: {node_properties}"
-                    f"\nnode_id: {node_id}"
-                )
-                raise RuntimeError(msg) from err
-        msg = f"{str(timer)}; {msg}; {mem.max()}"
+    with _ExtendWarningMessage(f"{callable_obj_dot_path} during execution:"):
+        msg = f"{obj_name}{call_msg}(*{args}, **{callable_kwargs})"
+
+        if verbose:
+            print(msg)
+        res = None
+        if not dry_run:
+            with (
+                TimeIt() as timer,
+                dask.config.set(scheduler="single-threaded"),
+                CaptureProcMemory() as mem,
+            ):
+                try:
+                    res = callable_obj(*args, **callable_kwargs)
+                except Exception as err:
+                    msg = (
+                        f"Failed to execute {obj_name} with {args}, {callable_kwargs}"
+                        f"\nnode_properties: {node_properties}"
+                        f"\nnode_id: {node_id}"
+                    )
+                    raise RuntimeError(msg) from err
+            msg = f"{str(timer)}; {msg}; {mem.max()}"
     logging.info(msg)
 
     if verbose:

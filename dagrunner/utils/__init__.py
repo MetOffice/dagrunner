@@ -22,6 +22,23 @@ from typing import Iterable
 import dagrunner.utils._doc_styles as doc_styles
 
 
+def get_object_dot_module_path(obj):
+    if isinstance(obj, str):
+        res = obj
+    elif isinstance(obj, type):
+        res = f"{obj.__module__}.{obj.__name__}"
+    elif (
+        hasattr(obj, "__module__")
+        and hasattr(obj, "__name__")
+        and ".<locals>." not in getattr(obj, "__qualname__", "")
+    ):
+        # Module-level functions (not nested/local functions)
+        res = f"{obj.__module__}.{obj.__name__}"
+    else:
+        res = f"{type(obj).__module__}.{type(obj).__name__}"
+    return res
+
+
 def subset_equality(obj_a, obj_b):
     """
     Return whether obj_a is a subset of obj_b.
