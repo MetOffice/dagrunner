@@ -201,6 +201,21 @@ def collapse_graph(
                         continue
                     if v:
                         if isinstance(v, Iterable) and not isinstance(v, (str, bytes)):
+                            # recursively turn objects into hashable form by converting dictionaries into tuples etc.
+                            def freeze(v):
+                                if isinstance(v, dict):
+                                    return tuple(
+                                        (kk, freeze(vv)) for kk, vv in sorted(v.items())
+                                    )
+                                elif isinstance(v, Iterable) and not isinstance(
+                                    v, (str, bytes)
+                                ):
+                                    return tuple(freeze(i) for i in v)
+                                else:
+                                    return v
+
+                            v = freeze(v)
+
                             merged.setdefault(k, set()).update(v)
                         else:
                             merged.setdefault(k, set()).add(v)

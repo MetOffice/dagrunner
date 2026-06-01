@@ -11,6 +11,7 @@ class TableStandardFmt extends HTMLElement {
         this.user_initialised_mermaid = true;
         this.table_ascending = true;
         this.br_hidden = false;
+        this.lastClickedMermaidNode = null;
 
         this.svg_theme_toggle = `
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24">
@@ -74,6 +75,7 @@ class TableStandardFmt extends HTMLElement {
 
     connectedCallback() {
         this.render();
+        this.registerMermaidClickCallback();
         this.setupRowClickHandling();
         this.setupMermaid();
         this.setupPanning();
@@ -84,6 +86,27 @@ class TableStandardFmt extends HTMLElement {
         this.setupThemeToggle();
         this.setupTableHeaderClickHandling();
         this.setupTextNewlineDelimToggle();
+    }
+
+    registerMermaidClickCallback() {
+        // Mermaid `click <id> callback` expects a global function named `callback`.
+        // Provide a default implementation if one does not already exist.
+        if (typeof window.callback !== 'function') {
+            window.callback = (nodeId) => {
+                document.querySelectorAll('mermaid-table-standard').forEach(component => {
+                    if (typeof component.handleMermaidNodeCallback === 'function') {
+                        component.handleMermaidNodeCallback(nodeId);
+                    }
+                });
+            };
+        }
+    }
+
+    handleMermaidNodeCallback(nodeId) {
+        if (nodeId === null || nodeId === undefined) {
+            return;
+        }
+        this.highlightRow(`row${String(nodeId)}`);
     }
 
     render() {
@@ -328,17 +351,17 @@ class TableStandardFmt extends HTMLElement {
         const themeToggleButton = this.shadowRoot.querySelector("#toggle-theme");
         let theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
         this.setAttribute("data-theme", theme);
-    
+
         const updateTheme = () => {
             theme = theme === "light" ? "dark" : "light";
             this.setAttribute("data-theme", theme);
-    
+
             // Only update Mermaid theme if we were the ones who initialized it
             const mermaidDiv = this.querySelector('.mermaid');
             const alreadyInitialized = mermaidDiv?.querySelector("svg") !== null;
             this.initializeMermaidWithTheme(theme);
         };
-    
+
         themeToggleButton.addEventListener("click", updateTheme);
     }
 
@@ -364,9 +387,9 @@ class TableStandardFmt extends HTMLElement {
         slot.addEventListener('slotchange', async () => {
             const mermaidDiv = this.querySelector('.mermaid');
             if (!mermaidDiv) return;
-    
+
             const alreadyInitialized = mermaidDiv.querySelector("svg") !== null;
-    
+
             if (!alreadyInitialized) {
                 this.user_initialised_mermaid = false;
 
@@ -374,7 +397,7 @@ class TableStandardFmt extends HTMLElement {
                 if (typeof window.mermaid === "undefined") {
                     await this.loadMermaidScript();
                 }
-    
+
                 // Now, initialize it with the correct theme
                 const theme = this.getAttribute("data-theme") || "light";
                 this.initializeMermaidWithTheme(theme);
@@ -392,7 +415,7 @@ class TableStandardFmt extends HTMLElement {
                 resolve();
                 return;
             }
-    
+
             const script = document.createElement("script");
             script.src = "https://cdn.jsdelivr.net/npm/mermaid@9/dist/mermaid.min.js";
             script.onload = () => {
@@ -425,11 +448,13 @@ class TableStandardFmt extends HTMLElement {
 
     setupMermaidClickHandling() {
         const container = this.shadowRoot.querySelector("#diagram-wrapper");
-    
+
         container.addEventListener("click", (event) => {
             const node = event.target.closest(".node"); // Find the nearest .node element
             if (!node) return;
-    
+
+            this.lastClickedMermaidNode = node;
+
             const match = node.textContent.match(/^\d+/); // Extract the leading number (row ID)
             if (match) {
                 const rowID = "row" + match[0]; // Assuming row IDs are formatted as 'row<number>'
@@ -646,139 +671,3 @@ style.textContent = `
 document.head.appendChild(style);
 
 customElements.define('mermaid-table-standard', TableStandardFmt);
-
-
-//  * Adds interactive chain link symbols to specified Mermaid nodes in an SVG diagram.
-//  * 
-//  * This function listens for the "mermaidRendered" event and processes all nodes
-//  * matching the given selector. It appends an SVG group containing a clickable 
-//  * chain link symbol (🔗) to each node. The symbol allows navigation to a corresponding 
-//  * file, either by opening it in a new tab (middle mouse click) or navigating directly 
-//  * (left mouse click). The symbol is displayed only when the user hovers over the node.
-//  * 
-//  * @param {string} selector - A CSS selector to identify the Mermaid nodes to process.
-//  * @param {RegExp|null} [pattern=null] - An optional regular expression to extract a portion 
-//  *     of the node's text content. If provided, the first capturing group is used as the file name.
-//  * @param {string|null} [path_template=null] - An optional template string for generating 
-//  *     file paths. Use "{name}" as a placeholder for the extracted or full node text. 
-//  *     Defaults to "{nodeText}.html" if not provided.
-//  * 
-//  * @example
-//  * // Add clickable links to subgraph labels
-//  * addChainLinksToMermaidNodes("g.cluster-label");
-//  * 
-//  * @example
-// * // Add clickable links to node labels
-//  * addChainLinksToMermaidNodes("g.label");
-//  * 
-//  * @example
-//  * // Define a custom filepath pattern
-//  * addChainLinksToMermaidNodes("g.label", null, "/docs/{name}.html");
-//   * 
-//  * @example
-//  * // Extract section of node label matching regex (chain: <value>)
-//  * addChainLinksToMermaidNodes("g.label", /chain:\s*([\w-]+)/i);
-//    * 
-//  * @example
-//  * // Include only specified names (AA or BB)
-//  * addChainLinksToMermaidNodes("g.label", /^(AA|BB)$/i);
-//  * 
-//  * @example
-//  * // Include everything except specified names (AA or BB)
-//  * addChainLinksToMermaidNodes("g.label", /^(?!AA\b|BB\b)[\w-]+$/i);
-function addLinksToMermaidNodes(selector, pattern = null, path_template=null) {
-    document.addEventListener("mermaidRendered", () => {
-        const diagramWrapper = document.querySelector("body > mermaid-table-standard").shadowRoot.querySelector("#diagram-wrapper");
-        const mermaidDiagram = document.querySelector(".mermaid");
-
-        document.querySelectorAll(selector).forEach(node => {
-            let nodeText = node.textContent.trim();
-            if (!nodeText) {
-                console.log("excluding " + nodeText);
-                return;
-            }
-
-            console.log("processing " + nodeText);
-
-            if (pattern !== null) {
-                console.log("matching pattern " + pattern);
-                const match = nodeText.match(pattern);
-                if (!match) return; // Skip nodes without a match
-                nodeText = match[1];
-            }
-
-            let newFileName;
-            if (path_template !== null) {
-                newFileName = path_template.replace("{name}", nodeText);
-            } else {
-                newFileName = `${nodeText}.html`;
-            }
-
-            // Create anchor element
-            const anchor = document.createElement("a");
-            anchor.href = newFileName;
-            anchor.textContent = "🔗";
-            anchor.style.display = "none"; // Hidden by default
-            anchor.style.position = "absolute";
-            anchor.style.background = "var(--primary-background)";
-            anchor.style.color = "var(--primary-color)";
-            anchor.style.fontSize = "14px";
-            anchor.style.textDecoration = "none";
-            anchor.style.cursor = "pointer";
-            anchor.style.zIndex = "0";
-            anchor.style.padding = "2px 2px";
-            anchor.style.borderRadius = "10px"; // Rounded corners
-            diagramWrapper.appendChild(anchor);
-
-             // Show/hide on hover
-             const parent = node.parentElement;
-
-             parent.addEventListener("mouseenter", () => {
-                 anchor.style.display = "block";
-                 updatePosition();
-             });
-            const hideAnchorIfOutside = (event) => {
-                const parentRect = parent.getBoundingClientRect();
-                if (
-                    event.clientX < parentRect.left ||
-                    event.clientX > parentRect.right ||
-                    event.clientY < parentRect.top ||
-                    event.clientY > parentRect.bottom
-                ) {
-                    anchor.style.display = "none";
-                }
-            };
-
-            anchor.addEventListener("mouseleave", hideAnchorIfOutside);
-            parent.addEventListener("mouseleave", hideAnchorIfOutside);
-
-            // Function to update position relative to the node
-            const updatePosition = () => {
-                if (anchor.style.display === "none") return; // Only update if visible
-
-                const nodeRect = node.getBoundingClientRect();
-                const wrapperRect = diagramWrapper.getBoundingClientRect();
-                const ctm = node.getScreenCTM();
-                if (!ctm) return;
-                
-                const scale = ctm.a;
-                
-                // Apply the transformation matrix to get the correct position
-                const x = (nodeRect.left - wrapperRect.left);
-                const y = (nodeRect.top - wrapperRect.top);
-                
-                // Offset remains constant regardless of scale
-                const offsetX = -25;
-                anchor.style.left = `${x + offsetX * scale}px`;
-                anchor.style.top = `${y}px`;
-                anchor.style.transform = `scale(${scale})`;
-                anchor.style.transformOrigin = "top left";
-            };
-
-            updatePosition();
-            window.addEventListener("resize", updatePosition);
-            window.addEventListener("scroll", updatePosition);
-            new MutationObserver(updatePosition).observe(mermaidDiagram, { attributes: true, attributeFilter: ["style"] });
-        });
-    });
-}
