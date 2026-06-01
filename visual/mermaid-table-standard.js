@@ -109,6 +109,40 @@ class TableStandardFmt extends HTMLElement {
         this.highlightRow(`row${String(nodeId)}`);
     }
 
+    getTopLeftControlsContainer() {
+        return this.shadowRoot ? this.shadowRoot.querySelector('#diag-top-left-controls') : null;
+    }
+
+    upsertTopLeftLink({ id, href, textContent, target } = {}) {
+        if (!id) {
+            throw new Error('upsertTopLeftLink requires a non-empty id');
+        }
+
+        const controls = this.getTopLeftControlsContainer();
+        if (!controls) {
+            return null;
+        }
+
+        let link = this.shadowRoot.getElementById(id);
+        if (!link || link.tagName !== 'A') {
+            link = document.createElement('a');
+            link.id = id;
+            controls.appendChild(link);
+        }
+
+        if (href !== undefined) {
+            link.href = href;
+        }
+        if (textContent !== undefined) {
+            link.textContent = textContent;
+        }
+        if (target !== undefined) {
+            link.target = target;
+        }
+
+        return link;
+    }
+
     render() {
         this.shadowRoot.innerHTML = `
             <style>
@@ -671,3 +705,25 @@ style.textContent = `
 document.head.appendChild(style);
 
 customElements.define('mermaid-table-standard', TableStandardFmt);
+
+
+function bindPatternExtractorOnMermaidClick(pattern, onMatch) {
+    const previousCallback = typeof window.callback === "function" ? window.callback : null;
+
+    window.callback = function(nodeId) {
+        if (previousCallback) {
+            previousCallback(nodeId);
+        }
+
+        const row = document.querySelector(`#row${nodeId} td:nth-child(2)`);
+        const nodeText = row ? row.textContent.trim() : "";
+        const match = nodeText.match(pattern);
+        const matchedText = match ? (match[1] || match[0]) : null;
+
+        if (matchedText !== null && typeof onMatch === "function") {
+            onMatch(matchedText, { nodeId, nodeText, match });
+        }
+
+        return matchedText;
+    };
+}
