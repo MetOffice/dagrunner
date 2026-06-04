@@ -214,9 +214,11 @@ def collapse_graph(
                                 else:
                                     return v
 
-                            v = freeze(v)
-
-                            merged.setdefault(k, set()).update(v)
+                            # v = freeze(v)
+                            try:
+                                merged.setdefault(k, set()).update(v)
+                            except TypeError:
+                                merged.setdefault(k, set()).add(str(v))
                         else:
                             merged.setdefault(k, set()).add(v)
         else:
@@ -232,6 +234,10 @@ def collapse_graph(
                     for gnode in filtered_nodes
                 ]
             )
+        collapsed_graph.nodes[
+            node
+        ].clear()  # remove node data as this is now stored in the lookup
+
     graph = collapsed_graph
     return graph, node_data_lookup, node_collapsed_lookup
 
