@@ -13,6 +13,8 @@ class TableStandardFmt extends HTMLElement {
         this.table_ascending = true;
         this.br_hidden = false;
         this.lastClickedMermaidNode = null;
+        this.mermaidDefinition = null;
+        this.mermaidRenderNonce = 0;
 
         this.svg_theme_toggle = `
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24">
@@ -412,18 +414,37 @@ class TableStandardFmt extends HTMLElement {
     }
 
     setupThemeToggle() {
+        const storageKey = 'mermaid-table-standard-theme';
         const themeToggleButton = this.shadowRoot.querySelector("#toggle-theme");
-        let theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+
+        const getStoredTheme = () => {
+            try {
+                const stored = window.localStorage.getItem(storageKey);
+                if (stored === 'light' || stored === 'dark') {
+                    return stored;
+                }
+            } catch (error) {
+                // Ignore storage access issues (privacy mode / restricted env).
+            }
+            return null;
+        };
+
+        const setStoredTheme = (value) => {
+            try {
+                window.localStorage.setItem(storageKey, value);
+            } catch (error) {
+                // Ignore storage write issues.
+            }
+        };
+
+        let theme = getStoredTheme() || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
         this.setAttribute("data-theme", theme);
 
-        const updateTheme = () => {
+        const updateTheme = async () => {
             theme = theme === "light" ? "dark" : "light";
             this.setAttribute("data-theme", theme);
-
-            // Only update Mermaid theme if we were the ones who initialized it
-            const mermaidDiv = this.querySelector('.mermaid');
-            const alreadyInitialized = mermaidDiv?.querySelector("svg") !== null;
-            this.initializeMermaidWithTheme(theme);
+            setStoredTheme(theme);
+            await this.renderMermaidDiagram(theme, { force: true });
         };
 
         themeToggleButton.addEventListener("click", updateTheme);
@@ -452,24 +473,17 @@ class TableStandardFmt extends HTMLElement {
             const mermaidDiv = this.querySelector('.mermaid');
             if (!mermaidDiv) return;
 
-            const alreadyInitialized = mermaidDiv.querySelector("svg") !== null;
-
-            if (!alreadyInitialized) {
-                this.user_initialised_mermaid = false;
-
-                // If Mermaid.js isn't loaded, load it first
-                if (typeof window.mermaid === "undefined") {
-                    await this.loadMermaidScript();
-                }
-
-                // Now, initialize it with the correct theme
-                const theme = this.getAttribute("data-theme") || "light";
-                this.initializeMermaidWithTheme(theme);
+            if (!this.mermaidDefinition && mermaidDiv.textContent) {
+                this.mermaidDefinition = mermaidDiv.textContent.trim();
             }
-            mermaid.init(undefined, mermaidDiv).then(() => {
-                this.dispatchEvent(new CustomEvent("mermaidRendered", { bubbles: true }));
-            });
-            this.mermaidDiagram = mermaidDiv;
+
+            this.user_initialised_mermaid = false;
+            if (typeof window.mermaid === "undefined") {
+                await this.loadMermaidScript();
+            }
+
+            const theme = this.getAttribute("data-theme") || "light";
+            await this.renderMermaidDiagram(theme, { force: false });
         });
     }
 
@@ -494,20 +508,44 @@ class TableStandardFmt extends HTMLElement {
     initializeMermaidWithTheme(theme) {
         const mermaidDiv = this.querySelector('.mermaid');
         if (!mermaidDiv || typeof window.mermaid === "undefined") return;
-        const alreadyInitialized = mermaidDiv.querySelector("svg") !== null;
 
-        if (!alreadyInitialized) {
-            console.log("Mermaid initialised dynamically");
-            mermaid.initialize({
-                theme: theme === "dark" ? "dark" : "default",
-                startOnLoad: false,
-                flowchart: { useMaxWidth: false, htmlLabels: true, curve: 'basis' },
-                securityLevel:'loose',  // required for mermaid@9 tooltip functionality
-                maxTextSize: 99999999  // beyond this "Maximum text size in diagram exceeded"
-            });
-        } else {
-            console.warn("Mermaid re-initialization for dynamic theme change is not yet supported.");
+        mermaid.initialize({
+            theme: theme === "dark" ? "dark" : "default",
+            startOnLoad: false,
+            flowchart: { useMaxWidth: false, htmlLabels: true, curve: 'basis' },
+            securityLevel:'loose',  // required for mermaid@9 tooltip functionality
+            maxTextSize: 99999999  // beyond this "Maximum text size in diagram exceeded"
+        });
+    }
+
+    async renderMermaidDiagram(theme, { force = false } = {}) {
+        const mermaidDiv = this.querySelector('.mermaid');
+        if (!mermaidDiv || typeof window.mermaid === "undefined") {
+            return;
         }
+
+        if (!this.mermaidDefinition && mermaidDiv.textContent) {
+            this.mermaidDefinition = mermaidDiv.textContent.trim();
+        }
+
+        if (force) {
+            mermaidDiv.removeAttribute('data-processed');
+            if (this.mermaidDefinition) {
+                mermaidDiv.textContent = this.mermaidDefinition;
+            }
+        }
+
+        this.initializeMermaidWithTheme(theme);
+
+        const currentNonce = ++this.mermaidRenderNonce;
+        await mermaid.init(undefined, mermaidDiv);
+        if (currentNonce !== this.mermaidRenderNonce) {
+            return;
+        }
+
+        this.mermaidDiagram = mermaidDiv;
+        this.mermaidDiagram.style.transform = `translate(${this.offsetX}px, ${this.offsetY}px) scale(${this.scale})`;
+        this.dispatchEvent(new CustomEvent("mermaidRendered", { bubbles: true }));
     }
 
     setupMermaidClickHandling() {
@@ -852,8 +890,12 @@ function bindSubgraphClicks(callback, pattern = null, options = {}) {
         || document.querySelector('body > mermaid-table-standard')
         || document.querySelector('mermaid-table-standard');
 
+    if (!component) {
+        return;
+    }
+
     const bindNow = () => {
-        const labels = document.querySelectorAll('.nodeLabel');
+        const labels = component.querySelectorAll('.nodeLabel');
         let boundCount = 0;
 
         labels.forEach((label) => {
@@ -872,7 +914,7 @@ function bindSubgraphClicks(callback, pattern = null, options = {}) {
             if (pattern !== null) {
                 const match = text.match(pattern);
                 if (!match) return; // Skip nodes without a match
-                text = match[1];
+                text = match[1] ?? match[0];
             }
 
             if (node.dataset.subgraphClickBound === 'true') {
@@ -893,18 +935,17 @@ function bindSubgraphClicks(callback, pattern = null, options = {}) {
         return boundCount;
     };
 
-    if (bindNow() > 0) {
-        return;
-    }
-
-    if (!component) {
-        return;
-    }
-
     const renderHandler = () => {
         bindNow();
     };
 
-    // Defer until Mermaid finishes rendering if labels are not available yet.
-    component.addEventListener('mermaidRendered', renderHandler, { once: true });
+    // Rebind after every Mermaid render (eg. theme toggles recreate SVG nodes).
+    if (component.__subgraphClickRenderHandler) {
+        component.removeEventListener('mermaidRendered', component.__subgraphClickRenderHandler);
+    }
+    component.__subgraphClickRenderHandler = renderHandler;
+    component.addEventListener('mermaidRendered', renderHandler);
+
+    // Bind immediately if labels already exist.
+    bindNow();
 }
