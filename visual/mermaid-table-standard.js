@@ -438,7 +438,7 @@ class TableStandardFmt extends HTMLElement {
             if (tbody) {
                 tbody.querySelectorAll('tr').forEach(row => {
                 row.addEventListener('click', () => {
-                    this.highlightRow(row.id);
+                    this.highlightRow(row.id, true);
                 });
                 });
             }
@@ -522,12 +522,12 @@ class TableStandardFmt extends HTMLElement {
             const match = node.textContent.match(/^\d+/); // Extract the leading number (row ID)
             if (match) {
                 const rowID = "row" + match[0]; // Assuming row IDs are formatted as 'row<number>'
-                this.highlightRow(rowID);
+                this.highlightRow(rowID); // Highlight the corresponding table row without centering the node
             }
         });
     }
 
-    highlightRow(rowID) {
+    highlightRow(rowID, centrerNode = false) {
         const row = this.querySelector(`#${rowID}`);
         if (row) {
             if (this.lastHighlightedRow) {
@@ -536,6 +536,28 @@ class TableStandardFmt extends HTMLElement {
             row.classList.add('highlighted');
             row.scrollIntoView({ behavior: 'smooth', block: 'center' });
             this.lastHighlightedRow = row;
+
+            // get mermaid node with nodeid position and offset mermaid diagram to center it in the container
+            // get element whos id matches flowchart-ID-*
+            if (centrerNode) {
+                const nodeid = rowID.replace('row', '');
+                var node = this.mermaidDiagram.querySelector(`[id^="flowchart-${nodeid}"]`);
+                if (this.mermaidDiagram && node) {
+                    const containerRect = this.shadowRoot.querySelector("#diagram-wrapper").getBoundingClientRect();
+                    const nodeRect = node.getBoundingClientRect();
+
+                    const nodeCenterX = nodeRect.left + nodeRect.width / 2;
+                    const nodeCenterY = nodeRect.top + nodeRect.height / 2;
+
+                    const offsetX = containerRect.width / 2 - nodeCenterX;
+                    const offsetY = containerRect.height / 2 - nodeCenterY;
+
+                    this.offsetX += offsetX;
+                    this.offsetY += offsetY;
+
+                    this.mermaidDiagram.style.transform = `translate(${this.offsetX}px, ${this.offsetY}px) scale(${this.scale})`;
+                }
+            }
         }
     }
 
