@@ -7,6 +7,7 @@ class TableStandardFmt extends HTMLElement {
         this.scale = 1;
         this.zoomRelativeToCursor = true;
         this.isDragging = false;
+        this.activePointerId = null;
         this.isWrapped = false;
         this.user_initialised_mermaid = true;
         this.table_ascending = true;
@@ -206,11 +207,40 @@ class TableStandardFmt extends HTMLElement {
                 }
 
                 #diagram-wrapper {
+                    position: absolute;
+                    inset: 0;
+                    overflow: hidden;
+                    z-index: 0;
                     cursor: grab;
+                    user-select: none;
+                    -webkit-user-select: none;
+                    touch-action: none;
                 }
 
                 #diagram-wrapper:active {
                     cursor: grabbing;
+                }
+
+                #diagram-wrapper * {
+                    cursor: grab;
+                    user-select: none;
+                    -webkit-user-select: none;
+                }
+
+                #diagram-wrapper ::slotted(*) {
+                    cursor: grab;
+                    user-select: none;
+                    -webkit-user-select: none;
+                    -webkit-user-drag: none;
+                }
+
+                #diagram-wrapper.dragging,
+                #diagram-wrapper.dragging * {
+                    cursor: grabbing !important;
+                }
+
+                #diagram-wrapper.dragging ::slotted(*) {
+                    cursor: grabbing !important;
                 }
 
                 #zoom-controls {
@@ -230,7 +260,7 @@ class TableStandardFmt extends HTMLElement {
                     display: flex;
                     flex-direction: row;
                     align-items: center;
-                    gap: 5px;
+                    gap: 20px;
                     z-index: 1;
                 }
 
@@ -511,6 +541,7 @@ class TableStandardFmt extends HTMLElement {
 
     setupPanning() {
         const wrapper = this.shadowRoot.querySelector('#diagram-wrapper');
+        const controls = '#zoom-controls, #diag-top-left-controls, #diag-top-right-controls, #banner, #banner *';
 
         const updateTransform = () => {
             if (this.mermaidDiagram) {
@@ -518,16 +549,54 @@ class TableStandardFmt extends HTMLElement {
             }
         };
 
-        let startX, startY;
+        let startX = 0;
+        let startY = 0;
 
-        wrapper.addEventListener('mousedown', (event) => {
+        const stopDragging = (event) => {
+            if (event && event.pointerId !== undefined && this.activePointerId !== null && event.pointerId !== this.activePointerId) {
+                return;
+            }
+            this.isDragging = false;
+            this.activePointerId = null;
+            this.classList.remove('dragging');
+            wrapper.classList.remove('dragging');
+            if (this.mermaidDiagram) {
+                this.mermaidDiagram.classList.remove('dragging');
+            }
+            document.body.style.cursor = '';
+        };
+
+        const startDragging = (event, pointerId = null) => {
+            if (event.target && event.target.closest && event.target.closest(controls)) {
+                return;
+            }
+
             this.isDragging = true;
+            this.activePointerId = pointerId;
             startX = event.clientX;
             startY = event.clientY;
-        });
+            this.classList.add('dragging');
+            wrapper.classList.add('dragging');
+            if (this.mermaidDiagram) {
+                this.mermaidDiagram.classList.add('dragging');
+            }
+            document.body.style.cursor = 'grabbing';
+            event.preventDefault();
+        };
 
-        wrapper.addEventListener('mousemove', (event) => {
-            if (this.isDragging) {
+        if (window.PointerEvent) {
+            wrapper.addEventListener('pointerdown', (event) => {
+                if (event.button !== 0) {
+                    return;
+                }
+                startDragging(event, event.pointerId);
+            });
+
+            window.addEventListener('pointermove', (event) => {
+                if (!this.isDragging || event.pointerId !== this.activePointerId) {
+                    return;
+                }
+
                 const deltaX = event.clientX - startX;
                 const deltaY = event.clientY - startY;
                 this.offsetX += deltaX;
@@ -535,11 +604,40 @@ class TableStandardFmt extends HTMLElement {
                 startX = event.clientX;
                 startY = event.clientY;
                 updateTransform();
+            });
+
+            window.addEventListener('pointerup', stopDragging);
+            window.addEventListener('pointercancel', stopDragging);
+        } else {
+            wrapper.addEventListener('mousedown', (event) => {
+                if (event.button !== 0) {
+                    return;
+                }
+                startDragging(event, null);
+            });
+
+            window.addEventListener('mousemove', (event) => {
+                if (!this.isDragging) {
+                    return;
+                }
+
+                const deltaX = event.clientX - startX;
+                const deltaY = event.clientY - startY;
+                this.offsetX += deltaX;
+                this.offsetY += deltaY;
+                startX = event.clientX;
+                startY = event.clientY;
+                updateTransform();
+            });
+
+            window.addEventListener('mouseup', stopDragging);
+        }
+
+        window.addEventListener('blur', () => {
+            if (this.isDragging) {
+                stopDragging();
             }
         });
-
-        wrapper.addEventListener('mouseup', () => { this.isDragging = false; });
-        wrapper.addEventListener('mouseleave', () => { this.isDragging = false; });
     }
 
     setupZooming() {
@@ -683,6 +781,26 @@ style.textContent = `
         // z-index: 1; /* Lower than #diag-top-right-controls */
     }
 
+    mermaid-table-standard .mermaid,
+    mermaid-table-standard .mermaid * {
+        cursor: grab;
+        user-select: none;
+        -webkit-user-select: none;
+    }
+
+    mermaid-table-standard .mermaid .node,
+    mermaid-table-standard .mermaid .node *,
+    mermaid-table-standard .mermaid .cluster,
+    mermaid-table-standard .mermaid .cluster *,
+    mermaid-table-standard .mermaid .nodeLabel {
+        cursor: pointer;
+    }
+
+    mermaid-table-standard.dragging .mermaid,
+    mermaid-table-standard.dragging .mermaid * {
+        cursor: grabbing !important;
+    }
+
     .highlighted {
         background: var(--highlight-color) !important;
     }
@@ -707,23 +825,64 @@ document.head.appendChild(style);
 customElements.define('mermaid-table-standard', TableStandardFmt);
 
 
-function bindPatternExtractorOnMermaidClick(pattern, onMatch) {
-    const previousCallback = typeof window.callback === "function" ? window.callback : null;
+function bindSubgraphClicks(callback, pattern = null, options = {}) {
+    const component = options.component
+        || document.querySelector('body > mermaid-table-standard')
+        || document.querySelector('mermaid-table-standard');
 
-    window.callback = function(nodeId) {
-        if (previousCallback) {
-            previousCallback(nodeId);
-        }
+    const bindNow = () => {
+        const labels = document.querySelectorAll('.nodeLabel');
+        let boundCount = 0;
 
-        const row = document.querySelector(`#row${nodeId} td:nth-child(2)`);
-        const nodeText = row ? row.textContent.trim() : "";
-        const match = nodeText.match(pattern);
-        const matchedText = match ? (match[1] || match[0]) : null;
+        labels.forEach((label) => {
+            // get class node if label within it's hierarchy or otherwise get class cluster
+            const node = label.closest('.node') || label.closest('.cluster');
+            if (!node) {
+                return; // skip if no node or cluster found
+            }
+            var text = label.textContent.trim() || '';
 
-        if (matchedText !== null && typeof onMatch === "function") {
-            onMatch(matchedText, { nodeId, nodeText, match });
-        }
+            if (!text) {
+                return;
+            }
 
-        return matchedText;
+            // Check if pattern matches (if pattern is provided)
+            if (pattern !== null) {
+                const match = text.match(pattern);
+                if (!match) return; // Skip nodes without a match
+                text = match[1];
+            }
+
+            if (node.dataset.subgraphClickBound === 'true') {
+                return;
+            }
+
+            node.dataset.subgraphClickBound = 'true';
+            node.style.cursor = 'pointer';
+            node.addEventListener('click', () => {
+                if (typeof callback === 'function') {
+                    console.log(`Subgraph clicked: ${text}`);
+                    callback(text);
+                }
+            });
+            boundCount += 1;
+        });
+
+        return boundCount;
     };
+
+    if (bindNow() > 0) {
+        return;
+    }
+
+    if (!component) {
+        return;
+    }
+
+    const renderHandler = () => {
+        bindNow();
+    };
+
+    // Defer until Mermaid finishes rendering if labels are not available yet.
+    component.addEventListener('mermaidRendered', renderHandler, { once: true });
 }
