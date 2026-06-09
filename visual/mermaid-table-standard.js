@@ -473,8 +473,8 @@ class TableStandardFmt extends HTMLElement {
             const mermaidDiv = this.querySelector('.mermaid');
             if (!mermaidDiv) return;
 
-            if (!this.mermaidDefinition && mermaidDiv.textContent) {
-                this.mermaidDefinition = mermaidDiv.textContent.trim();
+            if (!this.mermaidDefinition && mermaidDiv.innerHTML) {
+                this.mermaidDefinition = mermaidDiv.innerHTML;
             }
 
             this.user_initialised_mermaid = false;
@@ -524,14 +524,14 @@ class TableStandardFmt extends HTMLElement {
             return;
         }
 
-        if (!this.mermaidDefinition && mermaidDiv.textContent) {
-            this.mermaidDefinition = mermaidDiv.textContent.trim();
+        if (!this.mermaidDefinition && mermaidDiv.innerHTML) {
+            this.mermaidDefinition = mermaidDiv.innerHTML;
         }
 
         if (force) {
             mermaidDiv.removeAttribute('data-processed');
             if (this.mermaidDefinition) {
-                mermaidDiv.textContent = this.mermaidDefinition;
+                mermaidDiv.innerHTML = this.mermaidDefinition;
             }
         }
 
