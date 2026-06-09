@@ -524,6 +524,10 @@ class TableStandardFmt extends HTMLElement {
             return;
         }
 
+        const currentOffsetX = this.offsetX;
+        const currentOffsetY = this.offsetY;
+        const currentScale = this.scale;
+
         if (!this.mermaidDefinition && mermaidDiv.innerHTML) {
             this.mermaidDefinition = mermaidDiv.innerHTML;
         }
@@ -535,6 +539,10 @@ class TableStandardFmt extends HTMLElement {
             }
         }
 
+        // Render Mermaid at identity transform so text/label layout calculations
+        // are not affected by any existing pan/zoom transform.
+        mermaidDiv.style.transform = 'translate(0px, 0px) scale(1)';
+
         this.initializeMermaidWithTheme(theme);
 
         const currentNonce = ++this.mermaidRenderNonce;
@@ -544,6 +552,9 @@ class TableStandardFmt extends HTMLElement {
         }
 
         this.mermaidDiagram = mermaidDiv;
+        this.offsetX = currentOffsetX;
+        this.offsetY = currentOffsetY;
+        this.scale = currentScale;
         this.mermaidDiagram.style.transform = `translate(${this.offsetX}px, ${this.offsetY}px) scale(${this.scale})`;
         this.dispatchEvent(new CustomEvent("mermaidRendered", { bubbles: true }));
     }
