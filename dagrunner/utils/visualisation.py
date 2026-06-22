@@ -21,10 +21,8 @@ from . import as_iterable, in_notebook
 if os.environ.get("PYTEST_VERSION") is not None:
     WEBCOMPONENT_PATH = "../../../visual/mermaid-table-standard.js"
 else:
-    WEBCOMPONENT_PATH = (
-        "/home/users/carwyn.pelley/git/dagrunner/visual/mermaid-table-standard.js"
-    )
-    # WEBCOMPONENT_PATH = "https://cdn.jsdelivr.net/gh/MetOffice/dagrunner@0.2.3/visual/mermaid-table-standard.js"
+    _version = "0.3.1"
+    WEBCOMPONENT_PATH = f"https://cdn.jsdelivr.net/gh/MetOffice/dagrunner@{_version}/visual/mermaid-table-standard.js"
 
 
 MERMAID_SUBGRAPH_COLORS = [
