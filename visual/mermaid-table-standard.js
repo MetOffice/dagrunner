@@ -78,6 +78,7 @@ class TableStandardFmt extends HTMLElement {
 
     connectedCallback() {
         this.render();
+        this.setupMermaidTooltipLineBreakFix();
         this.registerMermaidClickCallback();
         this.setupRowClickHandling();
         this.setupMermaid();
@@ -89,6 +90,69 @@ class TableStandardFmt extends HTMLElement {
         this.setupThemeToggle();
         this.setupTableHeaderClickHandling();
         this.setupTextNewlineDelimToggle();
+    }
+
+    setupMermaidTooltipLineBreakFix() {
+        // Mermaid tooltips are rendered in light DOM (outside shadow root).
+        // Normalize common escaped/newline forms to real <br> tags.
+        if (window.__mermaidTooltipLineBreakFixInstalled) {
+            return;
+        }
+
+        const normalizeTooltip = (tooltip) => {
+            if (!tooltip) {
+                return;
+            }
+
+            const original = tooltip.innerHTML;
+            const normalized = original
+                .replace(/&lt;\s*\/\s*br\s*&gt;/gi, '<br>')
+                .replace(/&lt;\s*br\s*\/?\s*&gt;/gi, '<br>')
+                .replace(/<\s*\/\s*br\s*>/gi, '<br>')
+                .replace(/\\n/g, '<br>')
+                .replace(/\r\n|\r|\n/g, '<br>');
+
+            if (normalized !== original) {
+                tooltip.innerHTML = normalized;
+            }
+        };
+
+        const observeTooltip = (tooltip) => {
+            if (!tooltip || tooltip.__lineBreakObserverInstalled) {
+                return;
+            }
+
+            tooltip.__lineBreakObserverInstalled = true;
+            normalizeTooltip(tooltip);
+
+            const tooltipObserver = new MutationObserver(() => {
+                normalizeTooltip(tooltip);
+            });
+
+            tooltipObserver.observe(tooltip, {
+                childList: true,
+                subtree: true,
+                characterData: true
+            });
+        };
+
+        const scanForTooltips = () => {
+            document.querySelectorAll('div.mermaidTooltip').forEach(observeTooltip);
+        };
+
+        const bodyObserver = new MutationObserver(() => {
+            scanForTooltips();
+        });
+
+        if (document.body) {
+            bodyObserver.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+        }
+
+        scanForTooltips();
+        window.__mermaidTooltipLineBreakFixInstalled = true;
     }
 
     registerMermaidClickCallback() {
