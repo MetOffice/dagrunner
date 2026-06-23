@@ -7,10 +7,14 @@ class TableStandardFmt extends HTMLElement {
         this.scale = 1;
         this.zoomRelativeToCursor = true;
         this.isDragging = false;
+        this.activePointerId = null;
         this.isWrapped = false;
         this.user_initialised_mermaid = true;
         this.table_ascending = true;
         this.br_hidden = false;
+        this.lastClickedMermaidNode = null;
+        this.mermaidDefinition = null;
+        this.mermaidRenderNonce = 0;
 
         this.svg_theme_toggle = `
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24">
@@ -74,6 +78,7 @@ class TableStandardFmt extends HTMLElement {
 
     connectedCallback() {
         this.render();
+        this.registerMermaidClickCallback();
         this.setupRowClickHandling();
         this.setupMermaid();
         this.setupPanning();
@@ -84,6 +89,61 @@ class TableStandardFmt extends HTMLElement {
         this.setupThemeToggle();
         this.setupTableHeaderClickHandling();
         this.setupTextNewlineDelimToggle();
+    }
+
+    registerMermaidClickCallback() {
+        // Mermaid `click <id> callback` expects a global function named `callback`.
+        // Provide a default implementation if one does not already exist.
+        if (typeof window.callback !== 'function') {
+            window.callback = (nodeId) => {
+                document.querySelectorAll('mermaid-table-standard').forEach(component => {
+                    if (typeof component.handleMermaidNodeCallback === 'function') {
+                        component.handleMermaidNodeCallback(nodeId);
+                    }
+                });
+            };
+        }
+    }
+
+    handleMermaidNodeCallback(nodeId) {
+        if (nodeId === null || nodeId === undefined) {
+            return;
+        }
+        this.highlightRow(`row${String(nodeId)}`);
+    }
+
+    getTopLeftControlsContainer() {
+        return this.shadowRoot ? this.shadowRoot.querySelector('#diag-top-left-controls') : null;
+    }
+
+    upsertTopLeftLink({ id, href, textContent, target } = {}) {
+        if (!id) {
+            throw new Error('upsertTopLeftLink requires a non-empty id');
+        }
+
+        const controls = this.getTopLeftControlsContainer();
+        if (!controls) {
+            return null;
+        }
+
+        let link = this.shadowRoot.getElementById(id);
+        if (!link || link.tagName !== 'A') {
+            link = document.createElement('a');
+            link.id = id;
+            controls.appendChild(link);
+        }
+
+        if (href !== undefined) {
+            link.href = href;
+        }
+        if (textContent !== undefined) {
+            link.textContent = textContent;
+        }
+        if (target !== undefined) {
+            link.target = target;
+        }
+
+        return link;
     }
 
     render() {
@@ -149,11 +209,40 @@ class TableStandardFmt extends HTMLElement {
                 }
 
                 #diagram-wrapper {
+                    position: absolute;
+                    inset: 0;
+                    overflow: hidden;
+                    z-index: 0;
                     cursor: grab;
+                    user-select: none;
+                    -webkit-user-select: none;
+                    touch-action: none;
                 }
 
                 #diagram-wrapper:active {
                     cursor: grabbing;
+                }
+
+                #diagram-wrapper * {
+                    cursor: grab;
+                    user-select: none;
+                    -webkit-user-select: none;
+                }
+
+                #diagram-wrapper ::slotted(*) {
+                    cursor: grab;
+                    user-select: none;
+                    -webkit-user-select: none;
+                    -webkit-user-drag: none;
+                }
+
+                #diagram-wrapper.dragging,
+                #diagram-wrapper.dragging * {
+                    cursor: grabbing !important;
+                }
+
+                #diagram-wrapper.dragging ::slotted(*) {
+                    cursor: grabbing !important;
                 }
 
                 #zoom-controls {
@@ -173,7 +262,7 @@ class TableStandardFmt extends HTMLElement {
                     display: flex;
                     flex-direction: row;
                     align-items: center;
-                    gap: 5px;
+                    gap: 20px;
                     z-index: 1;
                 }
 
@@ -325,20 +414,39 @@ class TableStandardFmt extends HTMLElement {
     }
 
     setupThemeToggle() {
+        const storageKey = 'mermaid-table-standard-theme';
         const themeToggleButton = this.shadowRoot.querySelector("#toggle-theme");
-        let theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+
+        const getStoredTheme = () => {
+            try {
+                const stored = window.localStorage.getItem(storageKey);
+                if (stored === 'light' || stored === 'dark') {
+                    return stored;
+                }
+            } catch (error) {
+                // Ignore storage access issues (privacy mode / restricted env).
+            }
+            return null;
+        };
+
+        const setStoredTheme = (value) => {
+            try {
+                window.localStorage.setItem(storageKey, value);
+            } catch (error) {
+                // Ignore storage write issues.
+            }
+        };
+
+        let theme = getStoredTheme() || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
         this.setAttribute("data-theme", theme);
-    
-        const updateTheme = () => {
+
+        const updateTheme = async () => {
             theme = theme === "light" ? "dark" : "light";
             this.setAttribute("data-theme", theme);
-    
-            // Only update Mermaid theme if we were the ones who initialized it
-            const mermaidDiv = this.querySelector('.mermaid');
-            const alreadyInitialized = mermaidDiv?.querySelector("svg") !== null;
-            this.initializeMermaidWithTheme(theme);
+            setStoredTheme(theme);
+            await this.renderMermaidDiagram(theme, { force: true });
         };
-    
+
         themeToggleButton.addEventListener("click", updateTheme);
     }
 
@@ -351,7 +459,7 @@ class TableStandardFmt extends HTMLElement {
             if (tbody) {
                 tbody.querySelectorAll('tr').forEach(row => {
                 row.addEventListener('click', () => {
-                    this.highlightRow(row.id);
+                    this.highlightRow(row.id, true);
                 });
                 });
             }
@@ -364,25 +472,18 @@ class TableStandardFmt extends HTMLElement {
         slot.addEventListener('slotchange', async () => {
             const mermaidDiv = this.querySelector('.mermaid');
             if (!mermaidDiv) return;
-    
-            const alreadyInitialized = mermaidDiv.querySelector("svg") !== null;
-    
-            if (!alreadyInitialized) {
-                this.user_initialised_mermaid = false;
 
-                // If Mermaid.js isn't loaded, load it first
-                if (typeof window.mermaid === "undefined") {
-                    await this.loadMermaidScript();
-                }
-    
-                // Now, initialize it with the correct theme
-                const theme = this.getAttribute("data-theme") || "light";
-                this.initializeMermaidWithTheme(theme);
+            if (!this.mermaidDefinition && mermaidDiv.innerHTML) {
+                this.mermaidDefinition = mermaidDiv.innerHTML;
             }
-            mermaid.init(undefined, mermaidDiv).then(() => {
-                this.dispatchEvent(new CustomEvent("mermaidRendered", { bubbles: true }));
-            });
-            this.mermaidDiagram = mermaidDiv;
+
+            this.user_initialised_mermaid = false;
+            if (typeof window.mermaid === "undefined") {
+                await this.loadMermaidScript();
+            }
+
+            const theme = this.getAttribute("data-theme") || "light";
+            await this.renderMermaidDiagram(theme, { force: false });
         });
     }
 
@@ -392,7 +493,7 @@ class TableStandardFmt extends HTMLElement {
                 resolve();
                 return;
             }
-    
+
             const script = document.createElement("script");
             script.src = "https://cdn.jsdelivr.net/npm/mermaid@9/dist/mermaid.min.js";
             script.onload = () => {
@@ -407,38 +508,75 @@ class TableStandardFmt extends HTMLElement {
     initializeMermaidWithTheme(theme) {
         const mermaidDiv = this.querySelector('.mermaid');
         if (!mermaidDiv || typeof window.mermaid === "undefined") return;
-        const alreadyInitialized = mermaidDiv.querySelector("svg") !== null;
 
-        if (!alreadyInitialized) {
-            console.log("Mermaid initialised dynamically");
-            mermaid.initialize({
-                theme: theme === "dark" ? "dark" : "default",
-                startOnLoad: false,
-                flowchart: { useMaxWidth: false, htmlLabels: true, curve: 'basis' },
-                securityLevel:'loose',  // required for mermaid@9 tooltip functionality
-                maxTextSize: 99999999  // beyond this "Maximum text size in diagram exceeded"
-            });
-        } else {
-            console.warn("Mermaid re-initialization for dynamic theme change is not yet supported.");
+        mermaid.initialize({
+            theme: theme === "dark" ? "dark" : "default",
+            startOnLoad: false,
+            flowchart: { useMaxWidth: false, htmlLabels: true, curve: 'basis' },
+            securityLevel:'loose',  // required for mermaid@9 tooltip functionality
+            maxTextSize: 99999999  // beyond this "Maximum text size in diagram exceeded"
+        });
+    }
+
+    async renderMermaidDiagram(theme, { force = false } = {}) {
+        const mermaidDiv = this.querySelector('.mermaid');
+        if (!mermaidDiv || typeof window.mermaid === "undefined") {
+            return;
         }
+
+        const currentOffsetX = this.offsetX;
+        const currentOffsetY = this.offsetY;
+        const currentScale = this.scale;
+
+        if (!this.mermaidDefinition && mermaidDiv.innerHTML) {
+            this.mermaidDefinition = mermaidDiv.innerHTML;
+        }
+
+        if (force) {
+            mermaidDiv.removeAttribute('data-processed');
+            if (this.mermaidDefinition) {
+                mermaidDiv.innerHTML = this.mermaidDefinition;
+            }
+        }
+
+        // Render Mermaid at identity transform so text/label layout calculations
+        // are not affected by any existing pan/zoom transform.
+        mermaidDiv.style.transform = 'translate(0px, 0px) scale(1)';
+
+        this.initializeMermaidWithTheme(theme);
+
+        const currentNonce = ++this.mermaidRenderNonce;
+        await mermaid.init(undefined, mermaidDiv);
+        if (currentNonce !== this.mermaidRenderNonce) {
+            return;
+        }
+
+        this.mermaidDiagram = mermaidDiv;
+        this.offsetX = currentOffsetX;
+        this.offsetY = currentOffsetY;
+        this.scale = currentScale;
+        this.mermaidDiagram.style.transform = `translate(${this.offsetX}px, ${this.offsetY}px) scale(${this.scale})`;
+        this.dispatchEvent(new CustomEvent("mermaidRendered", { bubbles: true }));
     }
 
     setupMermaidClickHandling() {
         const container = this.shadowRoot.querySelector("#diagram-wrapper");
-    
+
         container.addEventListener("click", (event) => {
             const node = event.target.closest(".node"); // Find the nearest .node element
             if (!node) return;
-    
+
+            this.lastClickedMermaidNode = node;
+
             const match = node.textContent.match(/^\d+/); // Extract the leading number (row ID)
             if (match) {
                 const rowID = "row" + match[0]; // Assuming row IDs are formatted as 'row<number>'
-                this.highlightRow(rowID);
+                this.highlightRow(rowID); // Highlight the corresponding table row without centering the node
             }
         });
     }
 
-    highlightRow(rowID) {
+    highlightRow(rowID, centrerNode = false) {
         const row = this.querySelector(`#${rowID}`);
         if (row) {
             if (this.lastHighlightedRow) {
@@ -447,11 +585,34 @@ class TableStandardFmt extends HTMLElement {
             row.classList.add('highlighted');
             row.scrollIntoView({ behavior: 'smooth', block: 'center' });
             this.lastHighlightedRow = row;
+
+            // get mermaid node with nodeid position and offset mermaid diagram to center it in the container
+            // get element whos id matches flowchart-ID-*
+            if (centrerNode) {
+                const nodeid = rowID.replace('row', '');
+                var node = this.mermaidDiagram.querySelector(`[id^="flowchart-${nodeid}"]`);
+                if (this.mermaidDiagram && node) {
+                    const containerRect = this.shadowRoot.querySelector("#diagram-wrapper").getBoundingClientRect();
+                    const nodeRect = node.getBoundingClientRect();
+
+                    const nodeCenterX = nodeRect.left + nodeRect.width / 2;
+                    const nodeCenterY = nodeRect.top + nodeRect.height / 2;
+
+                    const offsetX = containerRect.width / 2 - nodeCenterX;
+                    const offsetY = containerRect.height / 2 - nodeCenterY;
+
+                    this.offsetX += offsetX;
+                    this.offsetY += offsetY;
+
+                    this.mermaidDiagram.style.transform = `translate(${this.offsetX}px, ${this.offsetY}px) scale(${this.scale})`;
+                }
+            }
         }
     }
 
     setupPanning() {
         const wrapper = this.shadowRoot.querySelector('#diagram-wrapper');
+        const controls = '#zoom-controls, #diag-top-left-controls, #diag-top-right-controls, #banner, #banner *';
 
         const updateTransform = () => {
             if (this.mermaidDiagram) {
@@ -459,16 +620,54 @@ class TableStandardFmt extends HTMLElement {
             }
         };
 
-        let startX, startY;
+        let startX = 0;
+        let startY = 0;
 
-        wrapper.addEventListener('mousedown', (event) => {
+        const stopDragging = (event) => {
+            if (event && event.pointerId !== undefined && this.activePointerId !== null && event.pointerId !== this.activePointerId) {
+                return;
+            }
+            this.isDragging = false;
+            this.activePointerId = null;
+            this.classList.remove('dragging');
+            wrapper.classList.remove('dragging');
+            if (this.mermaidDiagram) {
+                this.mermaidDiagram.classList.remove('dragging');
+            }
+            document.body.style.cursor = '';
+        };
+
+        const startDragging = (event, pointerId = null) => {
+            if (event.target && event.target.closest && event.target.closest(controls)) {
+                return;
+            }
+
             this.isDragging = true;
+            this.activePointerId = pointerId;
             startX = event.clientX;
             startY = event.clientY;
-        });
+            this.classList.add('dragging');
+            wrapper.classList.add('dragging');
+            if (this.mermaidDiagram) {
+                this.mermaidDiagram.classList.add('dragging');
+            }
+            document.body.style.cursor = 'grabbing';
+            event.preventDefault();
+        };
 
-        wrapper.addEventListener('mousemove', (event) => {
-            if (this.isDragging) {
+        if (window.PointerEvent) {
+            wrapper.addEventListener('pointerdown', (event) => {
+                if (event.button !== 0) {
+                    return;
+                }
+                startDragging(event, event.pointerId);
+            });
+
+            window.addEventListener('pointermove', (event) => {
+                if (!this.isDragging || event.pointerId !== this.activePointerId) {
+                    return;
+                }
+
                 const deltaX = event.clientX - startX;
                 const deltaY = event.clientY - startY;
                 this.offsetX += deltaX;
@@ -476,11 +675,40 @@ class TableStandardFmt extends HTMLElement {
                 startX = event.clientX;
                 startY = event.clientY;
                 updateTransform();
+            });
+
+            window.addEventListener('pointerup', stopDragging);
+            window.addEventListener('pointercancel', stopDragging);
+        } else {
+            wrapper.addEventListener('mousedown', (event) => {
+                if (event.button !== 0) {
+                    return;
+                }
+                startDragging(event, null);
+            });
+
+            window.addEventListener('mousemove', (event) => {
+                if (!this.isDragging) {
+                    return;
+                }
+
+                const deltaX = event.clientX - startX;
+                const deltaY = event.clientY - startY;
+                this.offsetX += deltaX;
+                this.offsetY += deltaY;
+                startX = event.clientX;
+                startY = event.clientY;
+                updateTransform();
+            });
+
+            window.addEventListener('mouseup', stopDragging);
+        }
+
+        window.addEventListener('blur', () => {
+            if (this.isDragging) {
+                stopDragging();
             }
         });
-
-        wrapper.addEventListener('mouseup', () => { this.isDragging = false; });
-        wrapper.addEventListener('mouseleave', () => { this.isDragging = false; });
     }
 
     setupZooming() {
@@ -624,6 +852,26 @@ style.textContent = `
         // z-index: 1; /* Lower than #diag-top-right-controls */
     }
 
+    mermaid-table-standard .mermaid,
+    mermaid-table-standard .mermaid * {
+        cursor: grab;
+        user-select: none;
+        -webkit-user-select: none;
+    }
+
+    mermaid-table-standard .mermaid .node,
+    mermaid-table-standard .mermaid .node *,
+    mermaid-table-standard .mermaid .cluster,
+    mermaid-table-standard .mermaid .cluster *,
+    mermaid-table-standard .mermaid .nodeLabel {
+        cursor: pointer;
+    }
+
+    mermaid-table-standard.dragging .mermaid,
+    mermaid-table-standard.dragging .mermaid * {
+        cursor: grabbing !important;
+    }
+
     .highlighted {
         background: var(--highlight-color) !important;
     }
@@ -648,137 +896,67 @@ document.head.appendChild(style);
 customElements.define('mermaid-table-standard', TableStandardFmt);
 
 
-//  * Adds interactive chain link symbols to specified Mermaid nodes in an SVG diagram.
-//  * 
-//  * This function listens for the "mermaidRendered" event and processes all nodes
-//  * matching the given selector. It appends an SVG group containing a clickable 
-//  * chain link symbol (🔗) to each node. The symbol allows navigation to a corresponding 
-//  * file, either by opening it in a new tab (middle mouse click) or navigating directly 
-//  * (left mouse click). The symbol is displayed only when the user hovers over the node.
-//  * 
-//  * @param {string} selector - A CSS selector to identify the Mermaid nodes to process.
-//  * @param {RegExp|null} [pattern=null] - An optional regular expression to extract a portion 
-//  *     of the node's text content. If provided, the first capturing group is used as the file name.
-//  * @param {string|null} [path_template=null] - An optional template string for generating 
-//  *     file paths. Use "{name}" as a placeholder for the extracted or full node text. 
-//  *     Defaults to "{nodeText}.html" if not provided.
-//  * 
-//  * @example
-//  * // Add clickable links to subgraph labels
-//  * addChainLinksToMermaidNodes("g.cluster-label");
-//  * 
-//  * @example
-// * // Add clickable links to node labels
-//  * addChainLinksToMermaidNodes("g.label");
-//  * 
-//  * @example
-//  * // Define a custom filepath pattern
-//  * addChainLinksToMermaidNodes("g.label", null, "/docs/{name}.html");
-//   * 
-//  * @example
-//  * // Extract section of node label matching regex (chain: <value>)
-//  * addChainLinksToMermaidNodes("g.label", /chain:\s*([\w-]+)/i);
-//    * 
-//  * @example
-//  * // Include only specified names (AA or BB)
-//  * addChainLinksToMermaidNodes("g.label", /^(AA|BB)$/i);
-//  * 
-//  * @example
-//  * // Include everything except specified names (AA or BB)
-//  * addChainLinksToMermaidNodes("g.label", /^(?!AA\b|BB\b)[\w-]+$/i);
-function addLinksToMermaidNodes(selector, pattern = null, path_template=null) {
-    document.addEventListener("mermaidRendered", () => {
-        const diagramWrapper = document.querySelector("body > mermaid-table-standard").shadowRoot.querySelector("#diagram-wrapper");
-        const mermaidDiagram = document.querySelector(".mermaid");
+function bindSubgraphClicks(callback, pattern = null, options = {}) {
+    const component = options.component
+        || document.querySelector('body > mermaid-table-standard')
+        || document.querySelector('mermaid-table-standard');
 
-        document.querySelectorAll(selector).forEach(node => {
-            let nodeText = node.textContent.trim();
-            if (!nodeText) {
-                console.log("excluding " + nodeText);
+    if (!component) {
+        return;
+    }
+
+    const bindNow = () => {
+        const labels = component.querySelectorAll('.nodeLabel');
+        let boundCount = 0;
+
+        labels.forEach((label) => {
+            // get class node if label within it's hierarchy or otherwise get class cluster
+            const node = label.closest('.node') || label.closest('.cluster');
+            if (!node) {
+                return; // skip if no node or cluster found
+            }
+            var text = label.textContent.trim() || '';
+
+            if (!text) {
                 return;
             }
 
-            console.log("processing " + nodeText);
-
+            // Check if pattern matches (if pattern is provided)
             if (pattern !== null) {
-                console.log("matching pattern " + pattern);
-                const match = nodeText.match(pattern);
+                const match = text.match(pattern);
                 if (!match) return; // Skip nodes without a match
-                nodeText = match[1];
+                text = match[1] ?? match[0];
             }
 
-            let newFileName;
-            if (path_template !== null) {
-                newFileName = path_template.replace("{name}", nodeText);
-            } else {
-                newFileName = `${nodeText}.html`;
+            if (node.dataset.subgraphClickBound === 'true') {
+                return;
             }
 
-            // Create anchor element
-            const anchor = document.createElement("a");
-            anchor.href = newFileName;
-            anchor.textContent = "🔗";
-            anchor.style.display = "none"; // Hidden by default
-            anchor.style.position = "absolute";
-            anchor.style.background = "var(--primary-background)";
-            anchor.style.color = "var(--primary-color)";
-            anchor.style.fontSize = "14px";
-            anchor.style.textDecoration = "none";
-            anchor.style.cursor = "pointer";
-            anchor.style.zIndex = "0";
-            anchor.style.padding = "2px 2px";
-            anchor.style.borderRadius = "10px"; // Rounded corners
-            diagramWrapper.appendChild(anchor);
-
-             // Show/hide on hover
-             const parent = node.parentElement;
-
-             parent.addEventListener("mouseenter", () => {
-                 anchor.style.display = "block";
-                 updatePosition();
-             });
-            const hideAnchorIfOutside = (event) => {
-                const parentRect = parent.getBoundingClientRect();
-                if (
-                    event.clientX < parentRect.left ||
-                    event.clientX > parentRect.right ||
-                    event.clientY < parentRect.top ||
-                    event.clientY > parentRect.bottom
-                ) {
-                    anchor.style.display = "none";
+            node.dataset.subgraphClickBound = 'true';
+            node.style.cursor = 'pointer';
+            node.addEventListener('click', () => {
+                if (typeof callback === 'function') {
+                    console.log(`Subgraph clicked: ${text}`);
+                    callback(text);
                 }
-            };
-
-            anchor.addEventListener("mouseleave", hideAnchorIfOutside);
-            parent.addEventListener("mouseleave", hideAnchorIfOutside);
-
-            // Function to update position relative to the node
-            const updatePosition = () => {
-                if (anchor.style.display === "none") return; // Only update if visible
-
-                const nodeRect = node.getBoundingClientRect();
-                const wrapperRect = diagramWrapper.getBoundingClientRect();
-                const ctm = node.getScreenCTM();
-                if (!ctm) return;
-                
-                const scale = ctm.a;
-                
-                // Apply the transformation matrix to get the correct position
-                const x = (nodeRect.left - wrapperRect.left);
-                const y = (nodeRect.top - wrapperRect.top);
-                
-                // Offset remains constant regardless of scale
-                const offsetX = -25;
-                anchor.style.left = `${x + offsetX * scale}px`;
-                anchor.style.top = `${y}px`;
-                anchor.style.transform = `scale(${scale})`;
-                anchor.style.transformOrigin = "top left";
-            };
-
-            updatePosition();
-            window.addEventListener("resize", updatePosition);
-            window.addEventListener("scroll", updatePosition);
-            new MutationObserver(updatePosition).observe(mermaidDiagram, { attributes: true, attributeFilter: ["style"] });
+            });
+            boundCount += 1;
         });
-    });
+
+        return boundCount;
+    };
+
+    const renderHandler = () => {
+        bindNow();
+    };
+
+    // Rebind after every Mermaid render (eg. theme toggles recreate SVG nodes).
+    if (component.__subgraphClickRenderHandler) {
+        component.removeEventListener('mermaidRendered', component.__subgraphClickRenderHandler);
+    }
+    component.__subgraphClickRenderHandler = renderHandler;
+    component.addEventListener('mermaidRendered', renderHandler);
+
+    // Bind immediately if labels already exist.
+    bindNow();
 }
