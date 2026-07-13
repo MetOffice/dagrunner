@@ -157,16 +157,16 @@ class Load(Plugin):
                         f"No such file or directory: {', '.join(missing_files)}"
                     )
                 elif len(args) == 0:
-                    raise ValueError(f"Empty input arguments.")
+                    raise ValueError(f"Empty input arguments")
                 
         except (FileNotFoundError, ValueError) as e:
             if self._on_missing == "error":
                 raise e
             elif self._on_missing == "ignore":
-                warnings.warn(str(e) + " Ignoring node.")
+                warnings.warn(str(e) + "\nIgnoring node.")
                 return events.IGNORE_EVENT
             elif self._on_missing == "skip":
-                warnings.warn(str(e) + " Skipping node")
+                warnings.warn(str(e) + "\nSkipping node.")
                 return events.SKIP_EVENT
             else:
                 raise ValueError(
