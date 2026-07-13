@@ -35,7 +35,7 @@ Here, Input2 and Input4 return an IGNORE event, likely due to there being missin
 Only the non-ignored cubes (`cube1` and `cube3`) reach `Proc`; the ignored inputs are
 dropped.
 
-### `event.IGNORE`
+### `event.SKIP`
 The SKIP event differs from the IGNORE event in that if **any** input to a plugin is a
 SKIP event, node execution is skipped and it instead propagates this skip event so that
 all dependent nodes and their descendants aren't executed.
