@@ -149,7 +149,7 @@ def plugin_executor(
     call = as_iterable(call)
 
     # IGNORE_EVENT event handling
-    if len(args) > 1 and all((map(lambda x: x is events.IGNORE_EVENT, args))):
+    if len(args) > 0 and all((map(lambda x: x is events.IGNORE_EVENT, args))):
         # all args are IGNORE_EVENT, return IGNORE_EVENT (pass along)
         if verbose:
             print(f"Retuning 'IGNORE_EVENT' event {call[0]}")
