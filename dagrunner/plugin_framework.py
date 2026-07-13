@@ -133,6 +133,7 @@ class Load(Plugin):
         Raises:
         - FileNotFoundError: If any of the files do not exist and `on_missing` is set
           to 'error'.
+        - ValueError: If `on_missing` is set to an invalid value.
 
         """
         args = list(map(process_path, args))
@@ -143,7 +144,7 @@ class Load(Plugin):
             raise ValueError(
                 "Staging directory must be specified for loading remote files."
             )
-
+        
         try:
             if self._staging_dir and args:
                 args = stage_to_dir(
@@ -155,21 +156,23 @@ class Load(Plugin):
                     raise FileNotFoundError(
                         f"No such file or directory: {', '.join(missing_files)}"
                     )
-        except FileNotFoundError as e:
+                elif len(args) == 0:
+                    raise ValueError(f"Empty input arguments.")
+                
+        except (FileNotFoundError, ValueError) as e:
             if self._on_missing == "error":
                 raise e
             elif self._on_missing == "ignore":
-                warnings.warn(str(e))
+                warnings.warn(str(e) + " Ignoring node.")
                 return events.IGNORE_EVENT
             elif self._on_missing == "skip":
-                warnings.warn(str(e))
+                warnings.warn(str(e) + " Skipping node")
                 return events.SKIP_EVENT
             else:
                 raise ValueError(
                     f"Invalid value for 'on_missing': {self._on_missing}. "
                     "Accepted values are 'error', 'ignore', and 'skip'."
                 )
-
         return self.load(*args, **kwargs)
 
 
