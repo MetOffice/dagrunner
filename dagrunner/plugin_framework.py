@@ -144,7 +144,7 @@ class Load(Plugin):
             raise ValueError(
                 "Staging directory must be specified for loading remote files."
             )
-        
+
         try:
             if self._staging_dir and args:
                 args = stage_to_dir(
@@ -157,8 +157,8 @@ class Load(Plugin):
                         f"No such file or directory: {', '.join(missing_files)}"
                     )
                 elif len(args) == 0:
-                    raise ValueError(f"Empty input arguments")
-                
+                    raise ValueError("Empty input arguments")
+
         except (FileNotFoundError, ValueError) as e:
             if self._on_missing == "error":
                 raise e

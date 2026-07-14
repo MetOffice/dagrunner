@@ -37,9 +37,9 @@ Only the non-ignored cubes (`cube1` and `cube3`) reach `Proc`; the ignored input
 dropped.
 
 ### _SkipEvent: `SKIP_EVENT`
-The skip event differs from the ignore event in that if **any** input to a plugin is 
-`SKIP_EVENT`, node execution is skipped and it instead propagates this skip event so that
-all dependent nodes and their descendants aren't executed.
+The skip event differs from the ignore event in that if **any** input to a plugin is
+`SKIP_EVENT`, node execution is skipped and it instead propagates this skip event so
+that all dependent nodes and their descendants aren't executed.
 
 ```mermaid
 ---
