@@ -50,6 +50,19 @@ def test_missing_data_skip():
     assert LoadJson(on_missing="skip")("dummy-file") == SKIP_EVENT
 
 
+def test_empty_args_error():
+    with pytest.raises(ValueError, match="Empty input arguments"):
+        LoadJson(on_missing="error")()
+
+
+def test_empty_args_ignore():
+    assert LoadJson(on_missing="ignore")() == IGNORE_EVENT
+
+
+def test_empty_args_skip():
+    assert LoadJson(on_missing="skip")() == SKIP_EVENT
+
+
 def test_missing_data_unknown():
     with pytest.raises(
         ValueError,
