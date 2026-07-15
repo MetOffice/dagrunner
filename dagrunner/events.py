@@ -14,10 +14,9 @@ execution flow of their graph.
 
 ### _IgnoreEvent: `IGNORE_EVENT`
 When a plugin returns `IGNORE_EVENT`, the immediate descendant node filters out that
-input.
-The remaining inputs of that plugin are utilised by that node as normal.
-If all inputs to a node are `IGNORE_EVENT`, the node's execution is skipped, and a
-`SKIP_EVENT` event is returned instead, skipping execution through all descendants.
+input. The remaining inputs of that plugin are utilised by that node as normal.
+If all inputs to a node are `IGNORE_EVENT`, the node's execution is skipped, and
+`IGNORE_EVENT` is returned instead.
 
 ```mermaid
 ---
@@ -37,9 +36,9 @@ Only the non-ignored cubes (`cube1` and `cube3`) reach `Proc`; the ignored input
 dropped.
 
 ### _SkipEvent: `SKIP_EVENT`
-The skip event differs from the ignore event in that if **any** input to a plugin is
-`SKIP_EVENT`, node execution is skipped and it instead propagates this skip event so
-that all dependent nodes and their descendants aren't executed.
+The skip event differs from the ignore event in that if **any** input to a plugin is 
+`SKIP_EVENT`, node execution is skipped and `SKIP_EVENT` is returned instead. This skip
+propagates so that all dependent nodes and their descendants are not executed.
 
 ```mermaid
 ---
