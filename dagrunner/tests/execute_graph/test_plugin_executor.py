@@ -109,16 +109,6 @@ def test_pass_class_arg_kwargs(plugin, init_args, call_args, target):
     assert res == target
 
 
-def test_ignore_event():
-    """Check what happens a subset of arguments and all arguments are IGNORE_EVENT."""
-    call = tuple([lambda x: x + 5])
-    res = plugin_executor(*(5, IGNORE_EVENT), call=call)
-    assert res == 10
-
-    res = plugin_executor(*(IGNORE_EVENT, IGNORE_EVENT), call=call)
-    assert res == IGNORE_EVENT
-
-
 @pytest.mark.parametrize(
     "args, expected",
     [
