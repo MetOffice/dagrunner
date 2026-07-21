@@ -133,10 +133,10 @@ class Load(Plugin):
         Raises:
         - FileNotFoundError: If any of the files do not exist and `on_missing` is set
           to 'error'.
-        - ValueError: If `on_missing` is set to an invalid value.
+        - ValueError: If no args provided or `on_missing` is set to an invalid value.
 
         """
-        args = list(map(process_path, args))
+        args = list(map(process_path, args))   
         if (
             any([arg.split(":")[0] for arg in args if ":" in arg])
             and self._staging_dir is None
@@ -150,16 +150,13 @@ class Load(Plugin):
                 args = stage_to_dir(
                     *args, staging_dir=self._staging_dir, verbose=self._verbose
                 )
-            elif not args:
-                raise ValueError("Empty input arguments")
             else:
                 missing_files = list(filter(lambda fpath: not glob(fpath), args))
                 if missing_files:
                     raise FileNotFoundError(
                         f"No such file or directory: {', '.join(missing_files)}"
                     )
-
-        except (FileNotFoundError, ValueError) as e:
+        except FileNotFoundError as e:
             if self._on_missing == "error":
                 raise e
             elif self._on_missing == "ignore":
