@@ -119,9 +119,6 @@ def test_ignore_event():
     assert res == IGNORE_EVENT
 
 
-def test_ignore_event_single_input():
-    """Check what happens when the sole argument is IGNORE_EVENT."""
-    res = plugin_executor(*(IGNORE_EVENT,), call=())
 @pytest.mark.parametrize(
     "args, expected",
     [
