@@ -137,16 +137,11 @@ def test_ignore_event(args, expected):
     assert res == expected
 
 
-def test_skip_event():
-    """Check what happens a subset of arguments are SKIP_EVENT."""
+@pytest.mark.parametrize("args", [(5, SKIP_EVENT), (SKIP_EVENT,)])
+def test_skip_event(args):
+    """Check what happens when any input argument is SKIP_EVENT."""
     call = tuple([lambda x: x + 5])
-    res = plugin_executor(*(5, SKIP_EVENT), call=call)
-    assert res == SKIP_EVENT
-
-
-def test_skip_event_single_input():
-    """Check what happens when the sole argument is SKIP_EVENT."""
-    res = plugin_executor(*(SKIP_EVENT,), call=())
+    res = plugin_executor(*args, call=call)
     assert res == SKIP_EVENT
 
 
