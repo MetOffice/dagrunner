@@ -10,7 +10,7 @@ from unittest.mock import patch
 
 import pytest
 
-from dagrunner.events import IGNORE_EVENT, SKIP_EVENT
+from dagrunner.events import IGNORE_EVENT, SKIP_EVENT, _EventBase
 from dagrunner.plugin_framework import LoadJson
 
 
@@ -50,17 +50,11 @@ def test_missing_data_skip():
     assert LoadJson(on_missing="skip")("dummy-file") == SKIP_EVENT
 
 
-def test_empty_args_error():
-    with pytest.raises(ValueError, match="Empty input arguments"):
-        LoadJson(on_missing="error")()
-
-
-def test_empty_args_ignore():
-    assert LoadJson(on_missing="ignore")() == IGNORE_EVENT
-
-
-def test_empty_args_skip():
-    assert LoadJson(on_missing="skip")() == SKIP_EVENT
+@pytest.mark.parametrize("on_missing", [None, "error", "skip", "ignore"])
+def test_empty_args(on_missing: str | None):
+    plugin = LoadJson(on_missing=on_missing) if on_missing else LoadJson()
+    with pytest.raises(ValueError, match="Invalid input arguments"):
+        plugin()
 
 
 def test_missing_data_unknown():

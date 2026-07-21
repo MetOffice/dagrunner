@@ -136,7 +136,9 @@ class Load(Plugin):
         - ValueError: If no args provided or `on_missing` is set to an invalid value.
 
         """
-        args = list(map(process_path, args))   
+        args = list(map(process_path, args))
+        if not args:
+            raise ValueError(f"Invalid input arguments: {args}")  
         if (
             any([arg.split(":")[0] for arg in args if ":" in arg])
             and self._staging_dir is None
