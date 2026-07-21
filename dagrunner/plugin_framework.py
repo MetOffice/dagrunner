@@ -150,14 +150,14 @@ class Load(Plugin):
                 args = stage_to_dir(
                     *args, staging_dir=self._staging_dir, verbose=self._verbose
                 )
+            elif not args:
+                raise ValueError("Empty input arguments")
             else:
                 missing_files = list(filter(lambda fpath: not glob(fpath), args))
                 if missing_files:
                     raise FileNotFoundError(
                         f"No such file or directory: {', '.join(missing_files)}"
                     )
-                elif len(args) == 0:
-                    raise ValueError("Empty input arguments")
 
         except (FileNotFoundError, ValueError) as e:
             if self._on_missing == "error":
