@@ -162,10 +162,10 @@ class Load(Plugin):
             if self._on_missing == "error":
                 raise e
             elif self._on_missing == "ignore":
-                warnings.warn(f"Ignoring node due to caught exception {str(e)!r}")
+                warnings.warn(f"Ignoring node - {str(e)}")
                 return events.IGNORE_EVENT
             elif self._on_missing == "skip":
-                warnings.warn(f"Skipping node due to caught exception {str(e)!r}")
+                warnings.warn(f"Skipping node - {str(e)}")
                 return events.SKIP_EVENT
             else:
                 raise ValueError(
