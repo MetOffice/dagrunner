@@ -10,7 +10,7 @@ from unittest.mock import patch
 
 import pytest
 
-from dagrunner.events import IGNORE_EVENT, SKIP_EVENT, _EventBase
+from dagrunner.events import IGNORE_EVENT, SKIP_EVENT
 from dagrunner.plugin_framework import LoadJson
 
 
