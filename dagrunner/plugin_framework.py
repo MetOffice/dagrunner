@@ -133,12 +133,10 @@ class Load(Plugin):
         Raises:
         - FileNotFoundError: If any of the files do not exist and `on_missing` is set
           to 'error'.
-        - ValueError: If no args provided or `on_missing` is set to an invalid value.
+        - ValueError: If `on_missing` is set to an invalid value.
 
         """
         args = list(map(process_path, args))
-        if not args:
-            raise ValueError(f"Invalid input arguments: {args}")  
         if (
             any([arg.split(":")[0] for arg in args if ":" in arg])
             and self._staging_dir is None
@@ -162,10 +160,10 @@ class Load(Plugin):
             if self._on_missing == "error":
                 raise e
             elif self._on_missing == "ignore":
-                warnings.warn(f"Ignoring node - {str(e)}")
+                warnings.warn(f"Ignoring load - {str(e)}")
                 return events.IGNORE_EVENT
             elif self._on_missing == "skip":
-                warnings.warn(f"Skipping node - {str(e)}")
+                warnings.warn(f"Skipping load - {str(e)}")
                 return events.SKIP_EVENT
             else:
                 raise ValueError(
