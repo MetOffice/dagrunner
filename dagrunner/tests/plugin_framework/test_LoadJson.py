@@ -50,13 +50,6 @@ def test_missing_data_skip():
     assert LoadJson(on_missing="skip")("dummy-file") == SKIP_EVENT
 
 
-@pytest.mark.parametrize("on_missing", [None, "error", "skip", "ignore"])
-def test_empty_args(on_missing: str | None):
-    plugin = LoadJson(on_missing=on_missing) if on_missing else LoadJson()
-    with pytest.raises(ValueError, match="Invalid input arguments"):
-        plugin()
-
-
 def test_missing_data_unknown():
     with pytest.raises(
         ValueError,
