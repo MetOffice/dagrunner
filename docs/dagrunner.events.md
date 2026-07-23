@@ -15,8 +15,8 @@ execution flow of their graph.
 When a plugin returns `event.IGNORE`, the immediate descendant node filters out that
 input.
 The remaining inputs of that plugin are utilised by that node as normal.
-If all inputs to a node are `event.IGNORE`, the node's execution is skipped, and a
-`event.SKIP` event is returned instead, skipping execution through all descendants.
+If all inputs to a node are `event.IGNORE`, the node's execution is ignored, and a
+`event.IGNORE` event is returned instead, ignoring execution through all descendants.
 
 ```mermaid
 ---
@@ -61,4 +61,3 @@ see [class: dagrunner.utils.Singleton](dagrunner.utils.md#class-singleton)
 ## _IgnoreEvent: `IGNORE_EVENT`
 
 ## _SkipEvent: `SKIP_EVENT`
-

@@ -8,7 +8,6 @@ import os
 import pickle
 import string
 import subprocess
-import warnings
 from abc import ABC, abstractmethod
 from glob import glob
 
@@ -133,6 +132,7 @@ class Load(Plugin):
         Raises:
         - FileNotFoundError: If any of the files do not exist and `on_missing` is set
           to 'error'.
+        - ValueError: If `on_missing` is set to an invalid value.
 
         """
         args = list(map(process_path, args))
@@ -159,17 +159,14 @@ class Load(Plugin):
             if self._on_missing == "error":
                 raise e
             elif self._on_missing == "ignore":
-                warnings.warn(str(e))
                 return events.IGNORE_EVENT
             elif self._on_missing == "skip":
-                warnings.warn(str(e))
                 return events.SKIP_EVENT
             else:
                 raise ValueError(
                     f"Invalid value for 'on_missing': {self._on_missing}. "
                     "Accepted values are 'error', 'ignore', and 'skip'."
                 )
-
         return self.load(*args, **kwargs)
 
 

@@ -109,20 +109,26 @@ def test_pass_class_arg_kwargs(plugin, init_args, call_args, target):
     assert res == target
 
 
-def test_ignore_event():
-    """Check what happens a subset of arguments and all arguments are IGNORE_EVENT."""
+@pytest.mark.parametrize(
+    "args, expected",
+    [
+        ((5, IGNORE_EVENT), 10),
+        ((IGNORE_EVENT, IGNORE_EVENT), IGNORE_EVENT),
+        ((IGNORE_EVENT,), IGNORE_EVENT),
+    ],
+)
+def test_ignore_event(args, expected):
+    """Check IGNORE_EVENT behaviour across mixed, all, and single-input cases."""
     call = tuple([lambda x: x + 5])
-    res = plugin_executor(*(5, IGNORE_EVENT), call=call)
-    assert res == 10
-
-    res = plugin_executor(*(IGNORE_EVENT, IGNORE_EVENT), call=call)
-    assert res == IGNORE_EVENT
+    res = plugin_executor(*args, call=call)
+    assert res == expected
 
 
-def test_skip_event():
-    """Check what happens a subset of arguments are SKIP_EVENT."""
+@pytest.mark.parametrize("args", [(5, SKIP_EVENT), (SKIP_EVENT,)])
+def test_skip_event(args):
+    """Check what happens when any input argument is SKIP_EVENT."""
     call = tuple([lambda x: x + 5])
-    res = plugin_executor(*(5, SKIP_EVENT), call=call)
+    res = plugin_executor(*args, call=call)
     assert res == SKIP_EVENT
 
 
