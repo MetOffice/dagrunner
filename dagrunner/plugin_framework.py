@@ -160,10 +160,8 @@ class Load(Plugin):
             if self._on_missing == "error":
                 raise e
             elif self._on_missing == "ignore":
-                warnings.warn(f"Ignoring load - {str(e)}")
                 return events.IGNORE_EVENT
             elif self._on_missing == "skip":
-                warnings.warn(f"Skipping load - {str(e)}")
                 return events.SKIP_EVENT
             else:
                 raise ValueError(
