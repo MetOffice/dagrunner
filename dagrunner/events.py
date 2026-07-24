@@ -56,7 +56,7 @@ graph
 Because `Input2` returns a SKIP event, the Proc node and everything that follows aren't
 executed and neither is the Save node since the skip is propagated along the execution
 graph.
-"""
+"""  # noqa: E501
 
 from dagrunner.utils import Singleton
 
