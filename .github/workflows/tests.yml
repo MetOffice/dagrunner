@@ -40,7 +40,7 @@ jobs:
         run: echo "PYSHA=$(python -VV | sha256sum | cut -d' ' -f1)" >> $GITHUB_ENV
 
       - name: Cache pre-commit
-        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         id: pre-commit-cache
         with:
           path: ~/.cache/pre-commit
@@ -189,7 +189,7 @@ jobs:
       ############################
       - name: Cache ref branch coverage report
         id: cache-ref-coverage
-        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: ref/coverage_output.txt
           key: ref-${{ github.event.pull_request.base.sha }}
