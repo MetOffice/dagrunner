@@ -46,6 +46,7 @@ version: {module.__version__}
       - [function: docstring_parse](dagrunner.utils.md#function-docstring_parse)
       - [function: function_to_argparse](dagrunner.utils.md#function-function_to_argparse)
       - [function: function_to_argparse_parse_args](dagrunner.utils.md#function-function_to_argparse_parse_args)
+      - [function: get_object_dot_module_path](dagrunner.utils.md#function-get_object_dot_module_path)
       - [function: get_proc_mem_stat](dagrunner.utils.md#function-get_proc_mem_stat)
       - [function: get_sys_mem_stat](dagrunner.utils.md#function-get_sys_mem_stat)
       - [function: in_notebook](dagrunner.utils.md#function-in_notebook)

@@ -10,7 +10,7 @@ see [function: dagrunner.utils.in_notebook](dagrunner.utils.md#function-in_noteb
 
 ## class: `HTMLTable`
 
-[Source](../dagrunner/utils/visualisation.py#L44)
+[Source](../dagrunner/utils/visualisation.py#L45)
 
 ### Call Signature:
 
@@ -20,7 +20,7 @@ HTMLTable(column_names)
 
 ### function: `__init__`
 
-[Source](../dagrunner/utils/visualisation.py#L53)
+[Source](../dagrunner/utils/visualisation.py#L54)
 
 #### Call Signature:
 
@@ -32,7 +32,7 @@ Initialize self.  See help(type(self)) for accurate signature.
 
 ### function: `__str__`
 
-[Source](../dagrunner/utils/visualisation.py#L72)
+[Source](../dagrunner/utils/visualisation.py#L73)
 
 #### Call Signature:
 
@@ -44,7 +44,7 @@ Return str(self).
 
 ### function: `add_row`
 
-[Source](../dagrunner/utils/visualisation.py#L62)
+[Source](../dagrunner/utils/visualisation.py#L63)
 
 #### Call Signature:
 
@@ -58,7 +58,7 @@ add_row(self, *args, id=None)
 
 ## class: `MermaidGraph`
 
-[Source](../dagrunner/utils/visualisation.py#L78)
+[Source](../dagrunner/utils/visualisation.py#L79)
 
 ### Call Signature:
 
@@ -68,7 +68,7 @@ MermaidGraph(title=None)
 
 ### function: `__init__`
 
-[Source](../dagrunner/utils/visualisation.py#L85)
+[Source](../dagrunner/utils/visualisation.py#L86)
 
 #### Call Signature:
 
@@ -80,7 +80,7 @@ Initialize self.  See help(type(self)) for accurate signature.
 
 ### function: `__str__`
 
-[Source](../dagrunner/utils/visualisation.py#L109)
+[Source](../dagrunner/utils/visualisation.py#L110)
 
 #### Call Signature:
 
@@ -92,7 +92,7 @@ Return str(self).
 
 ### function: `add_connection`
 
-[Source](../dagrunner/utils/visualisation.py#L106)
+[Source](../dagrunner/utils/visualisation.py#L107)
 
 #### Call Signature:
 
@@ -102,7 +102,7 @@ add_connection(self, id1, id2)
 
 ### function: `add_node`
 
-[Source](../dagrunner/utils/visualisation.py#L92)
+[Source](../dagrunner/utils/visualisation.py#L93)
 
 #### Call Signature:
 
@@ -112,7 +112,7 @@ add_node(self, nodeid, label=None, tooltip=None, url=None)
 
 ### function: `add_raw`
 
-[Source](../dagrunner/utils/visualisation.py#L89)
+[Source](../dagrunner/utils/visualisation.py#L90)
 
 #### Call Signature:
 
@@ -122,7 +122,7 @@ add_raw(self, raw)
 
 ### function: `base64`
 
-[Source](../dagrunner/utils/visualisation.py#L112)
+[Source](../dagrunner/utils/visualisation.py#L113)
 
 #### Call Signature:
 
@@ -132,7 +132,7 @@ base64(self)
 
 ### function: `display`
 
-[Source](../dagrunner/utils/visualisation.py#L130)
+[Source](../dagrunner/utils/visualisation.py#L131)
 
 #### Call Signature:
 
@@ -142,7 +142,7 @@ display(self, output_filepath: str = None)
 
 ## class: `MermaidHTML`
 
-[Source](../dagrunner/utils/visualisation.py#L156)
+[Source](../dagrunner/utils/visualisation.py#L157)
 
 ### Call Signature:
 
@@ -152,7 +152,7 @@ MermaidHTML(mermaid, table=None)
 
 ### function: `__init__`
 
-[Source](../dagrunner/utils/visualisation.py#L179)
+[Source](../dagrunner/utils/visualisation.py#L180)
 
 #### Call Signature:
 
@@ -164,7 +164,7 @@ Initialize self.  See help(type(self)) for accurate signature.
 
 ### function: `__str__`
 
-[Source](../dagrunner/utils/visualisation.py#L182)
+[Source](../dagrunner/utils/visualisation.py#L183)
 
 #### Call Signature:
 
@@ -176,7 +176,7 @@ Return str(self).
 
 ### function: `save`
 
-[Source](../dagrunner/utils/visualisation.py#L189)
+[Source](../dagrunner/utils/visualisation.py#L190)
 
 #### Call Signature:
 
@@ -188,7 +188,7 @@ save(self, output_filepath)
 
 ## function: `visualise_graph_matplotlib`
 
-[Source](../dagrunner/utils/visualisation.py#L197)
+[Source](../dagrunner/utils/visualisation.py#L198)
 
 ### Call Signature:
 
@@ -209,7 +209,7 @@ Args:
 
 ## function: `visualise_graph_mermaid`
 
-[Source](../dagrunner/utils/visualisation.py#L341)
+[Source](../dagrunner/utils/visualisation.py#L342)
 
 ### Call Signature:
 

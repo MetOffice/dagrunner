@@ -12,7 +12,7 @@ see [function: dagrunner.utils.stage_to_dir](dagrunner.utils.md#function-stage_t
 
 ## class: `DataPolling`
 
-[Source](../dagrunner/plugin_framework.py#L176)
+[Source](../dagrunner/plugin_framework.py#L173)
 
 ### Call Signature:
 
@@ -27,7 +27,7 @@ local and remote glob patterns.
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L201)
+[Source](../dagrunner/plugin_framework.py#L198)
 
 #### Call Signature:
 
@@ -45,7 +45,7 @@ Returns:
 
 ### function: `__init__`
 
-[Source](../dagrunner/plugin_framework.py#L184)
+[Source](../dagrunner/plugin_framework.py#L181)
 
 #### Call Signature:
 
@@ -65,7 +65,7 @@ Args:
 
 ## class: `Input`
 
-[Source](../dagrunner/plugin_framework.py#L222)
+[Source](../dagrunner/plugin_framework.py#L219)
 
 ### Call Signature:
 
@@ -77,7 +77,7 @@ A plugin to expand filepaths using keyword arguments and environment variables.
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L227)
+[Source](../dagrunner/plugin_framework.py#L224)
 
 #### Call Signature:
 
@@ -105,7 +105,7 @@ Raises:
 
 ## class: `Load`
 
-[Source](../dagrunner/plugin_framework.py#L68)
+[Source](../dagrunner/plugin_framework.py#L67)
 
 ### Call Signature:
 
@@ -122,7 +122,7 @@ as globbing of file paths (local or remote).
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L119)
+[Source](../dagrunner/plugin_framework.py#L118)
 
 #### Call Signature:
 
@@ -145,10 +145,11 @@ Returns:
 Raises:
 - FileNotFoundError: If any of the files do not exist and `on_missing` is set
   to 'error'.
+- ValueError: If `on_missing` is set to an invalid value.
 
 ### function: `__init__`
 
-[Source](../dagrunner/plugin_framework.py#L78)
+[Source](../dagrunner/plugin_framework.py#L77)
 
 #### Call Signature:
 
@@ -171,7 +172,7 @@ Args:
 
 ### function: `load`
 
-[Source](../dagrunner/plugin_framework.py#L102)
+[Source](../dagrunner/plugin_framework.py#L101)
 
 #### Call Signature:
 
@@ -193,7 +194,7 @@ Raises:
 
 ## class: `LoadJson`
 
-[Source](../dagrunner/plugin_framework.py#L261)
+[Source](../dagrunner/plugin_framework.py#L258)
 
 ### Call Signature:
 
@@ -205,7 +206,7 @@ json file loader.
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L119)
+[Source](../dagrunner/plugin_framework.py#L118)
 
 #### Call Signature:
 
@@ -228,10 +229,11 @@ Returns:
 Raises:
 - FileNotFoundError: If any of the files do not exist and `on_missing` is set
   to 'error'.
+- ValueError: If `on_missing` is set to an invalid value.
 
 ### function: `__init__`
 
-[Source](../dagrunner/plugin_framework.py#L78)
+[Source](../dagrunner/plugin_framework.py#L77)
 
 #### Call Signature:
 
@@ -254,7 +256,7 @@ Args:
 
 ### function: `load`
 
-[Source](../dagrunner/plugin_framework.py#L264)
+[Source](../dagrunner/plugin_framework.py#L261)
 
 #### Call Signature:
 
@@ -276,7 +278,7 @@ Raises:
 
 ## class: `LoadPickle`
 
-[Source](../dagrunner/plugin_framework.py#L305)
+[Source](../dagrunner/plugin_framework.py#L302)
 
 ### Call Signature:
 
@@ -288,7 +290,7 @@ pickle file loader.
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L119)
+[Source](../dagrunner/plugin_framework.py#L118)
 
 #### Call Signature:
 
@@ -311,10 +313,11 @@ Returns:
 Raises:
 - FileNotFoundError: If any of the files do not exist and `on_missing` is set
   to 'error'.
+- ValueError: If `on_missing` is set to an invalid value.
 
 ### function: `__init__`
 
-[Source](../dagrunner/plugin_framework.py#L78)
+[Source](../dagrunner/plugin_framework.py#L77)
 
 #### Call Signature:
 
@@ -337,7 +340,7 @@ Args:
 
 ### function: `load`
 
-[Source](../dagrunner/plugin_framework.py#L308)
+[Source](../dagrunner/plugin_framework.py#L305)
 
 #### Call Signature:
 
@@ -359,7 +362,7 @@ Raises:
 
 ## class: `NodeAwarePlugin`
 
-[Source](../dagrunner/plugin_framework.py#L42)
+[Source](../dagrunner/plugin_framework.py#L41)
 
 ### Call Signature:
 
@@ -373,7 +376,7 @@ that are 'node aware'.
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L23)
+[Source](../dagrunner/plugin_framework.py#L22)
 
 #### Call Signature:
 
@@ -395,7 +398,7 @@ Returns:
 
 ## class: `Plugin`
 
-[Source](../dagrunner/plugin_framework.py#L20)
+[Source](../dagrunner/plugin_framework.py#L19)
 
 ### Call Signature:
 
@@ -407,7 +410,7 @@ Abstract base class to define our plugin UI
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L23)
+[Source](../dagrunner/plugin_framework.py#L22)
 
 #### Call Signature:
 
@@ -429,7 +432,7 @@ Returns:
 
 ## class: `SaveJson`
 
-[Source](../dagrunner/plugin_framework.py#L274)
+[Source](../dagrunner/plugin_framework.py#L271)
 
 ### Call Signature:
 
@@ -441,7 +444,7 @@ Save data to a JSON file.
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L277)
+[Source](../dagrunner/plugin_framework.py#L274)
 
 #### Call Signature:
 
@@ -467,7 +470,7 @@ Returns:
 
 ## class: `SavePickle`
 
-[Source](../dagrunner/plugin_framework.py#L316)
+[Source](../dagrunner/plugin_framework.py#L313)
 
 ### Call Signature:
 
@@ -479,7 +482,7 @@ Save data to a Pickle file.
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L319)
+[Source](../dagrunner/plugin_framework.py#L316)
 
 #### Call Signature:
 
@@ -505,7 +508,7 @@ Returns:
 
 ## class: `Shell`
 
-[Source](../dagrunner/plugin_framework.py#L50)
+[Source](../dagrunner/plugin_framework.py#L49)
 
 ### Call Signature:
 
@@ -517,7 +520,7 @@ Abstract base class to define our plugin UI
 
 ### function: `__call__`
 
-[Source](../dagrunner/plugin_framework.py#L51)
+[Source](../dagrunner/plugin_framework.py#L50)
 
 #### Call Signature:
 
