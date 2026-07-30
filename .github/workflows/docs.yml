@@ -62,7 +62,10 @@ jobs:
             --base ${{ github.head_ref }} \
             --head ${{ github.head_ref }} \
             --label "documentation" \
-            --assignee ${{ github.actor }} \
+            --assignee ${{ github.actor }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+
 
       # # https://github.com/orgs/community/discussions/26560#discussioncomment-3531273
       # # This must be our very final step to ensure that it runs only on condition of
