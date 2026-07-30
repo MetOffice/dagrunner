@@ -62,7 +62,8 @@ jobs:
 
           source_branch="${{ github.ref_name }}"
           DOCS_BRANCH="docs-update/${source_branch//\//-}"
-          short_sha="${{ github.sha::8 }}"
+          sha="${{ github.sha }}"
+          short_sha="${sha::8}"
 
           git switch -c "$DOCS_BRANCH"
           git commit -m "Automated reference documentation update for $short_sha [skip ci]"
