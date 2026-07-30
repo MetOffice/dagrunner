@@ -1,6 +1,6 @@
 # module: `dagrunner.config`
 
-[Source](../dagrunner/config.py#L0)
+[Source](../../dagrunner/config.py#L0)
 
 This module handles the run-time configuration of the dagrunner library.
 
@@ -19,7 +19,7 @@ see [class: dagrunner.utils.Singleton](dagrunner.utils.md#class-singleton)
 
 ## class: `GlobalConfiguration`
 
-[Source](../dagrunner/config.py#L28)
+[Source](../../dagrunner/config.py#L28)
 
 ### Call Signature:
 
@@ -63,7 +63,7 @@ options::
 
 ### function: `__getitem__`
 
-[Source](../dagrunner/config.py#L172)
+[Source](../../dagrunner/config.py#L172)
 
 #### Call Signature:
 
@@ -73,7 +73,7 @@ __getitem__(self, key)
 
 ### function: `__init__`
 
-[Source](../dagrunner/config.py#L83)
+[Source](../../dagrunner/config.py#L83)
 
 #### Call Signature:
 
@@ -85,7 +85,7 @@ Initialize self.  See help(type(self)) for accurate signature.
 
 ### function: `__repr__`
 
-[Source](../dagrunner/config.py#L90)
+[Source](../../dagrunner/config.py#L90)
 
 #### Call Signature:
 
@@ -97,7 +97,7 @@ Return repr(self).
 
 ### function: `__setitem__`
 
-[Source](../dagrunner/config.py#L175)
+[Source](../../dagrunner/config.py#L175)
 
 #### Call Signature:
 
@@ -107,7 +107,7 @@ __setitem__(self, key, value)
 
 ### function: `__str__`
 
-[Source](../dagrunner/config.py#L87)
+[Source](../../dagrunner/config.py#L87)
 
 #### Call Signature:
 
@@ -119,7 +119,7 @@ Return str(self).
 
 ### function: `parse_configuration`
 
-[Source](../dagrunner/config.py#L146)
+[Source](../../dagrunner/config.py#L146)
 
 #### Call Signature:
 

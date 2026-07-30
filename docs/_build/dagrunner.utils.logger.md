@@ -1,6 +1,6 @@
 # module: `dagrunner.utils.logger`
 
-[Source](../dagrunner/utils/logger.py#L0)
+[Source](../../dagrunner/utils/logger.py#L0)
 
 This module takes much from the Python logging cookbook:
 https://docs.python.org/3/howto/logging-cookbook.html#sending-and-receiving-logging-events-across-a-network
@@ -24,7 +24,7 @@ see [function: dagrunner.utils.function_to_argparse_parse_args](dagrunner.utils.
 
 ## class: `CustomFormatter`
 
-[Source](../dagrunner/utils/logger.py#L217)
+[Source](../../dagrunner/utils/logger.py#L217)
 
 ### Call Signature:
 
@@ -76,7 +76,7 @@ attributes in a LogRecord are described by:
 
 ### function: `__init__`
 
-[Source](../dagrunner/utils/logger.py#L218)
+[Source](../../dagrunner/utils/logger.py#L218)
 
 #### Call Signature:
 
@@ -100,7 +100,7 @@ use one of %-formatting, :meth:`str.format` (``{}``) formatting or
 
 ### function: `format`
 
-[Source](../dagrunner/utils/logger.py#L221)
+[Source](../../dagrunner/utils/logger.py#L221)
 
 #### Call Signature:
 
@@ -123,7 +123,7 @@ it is formatted using formatException() and appended to the message.
 
 ## class: `LogRecordSocketReceiver`
 
-[Source](../dagrunner/utils/logger.py#L121)
+[Source](../../dagrunner/utils/logger.py#L121)
 
 ### Call Signature:
 
@@ -138,7 +138,7 @@ log records.
 
 ### function: `__init__`
 
-[Source](../dagrunner/utils/logger.py#L131)
+[Source](../../dagrunner/utils/logger.py#L131)
 
 #### Call Signature:
 
@@ -150,7 +150,7 @@ Constructor.  May be extended, do not override.
 
 ### function: `serve_until_stopped`
 
-[Source](../dagrunner/utils/logger.py#L142)
+[Source](../../dagrunner/utils/logger.py#L142)
 
 #### Call Signature:
 
@@ -160,7 +160,7 @@ serve_until_stopped(self)
 
 ## class: `LogRecordStreamHandler`
 
-[Source](../dagrunner/utils/logger.py#L76)
+[Source](../../dagrunner/utils/logger.py#L76)
 
 ### Call Signature:
 
@@ -175,7 +175,7 @@ records and customise logging events.
 
 ### function: `handle`
 
-[Source](../dagrunner/utils/logger.py#L84)
+[Source](../../dagrunner/utils/logger.py#L84)
 
 #### Call Signature:
 
@@ -189,7 +189,7 @@ according to whatever policy is configured locally.
 
 ### function: `handle_log_record`
 
-[Source](../dagrunner/utils/logger.py#L106)
+[Source](../../dagrunner/utils/logger.py#L106)
 
 #### Call Signature:
 
@@ -199,7 +199,7 @@ handle_log_record(self, record)
 
 ### function: `unpickle`
 
-[Source](../dagrunner/utils/logger.py#L103)
+[Source](../../dagrunner/utils/logger.py#L103)
 
 #### Call Signature:
 
@@ -209,7 +209,7 @@ unpickle(self, data)
 
 ## class: `SQLiteHandler`
 
-[Source](../dagrunner/utils/logger.py#L153)
+[Source](../../dagrunner/utils/logger.py#L153)
 
 ### Call Signature:
 
@@ -221,7 +221,7 @@ Custom logging handler to write log messages to an SQLite database.
 
 ### function: `__init__`
 
-[Source](../dagrunner/utils/logger.py#L158)
+[Source](../../dagrunner/utils/logger.py#L158)
 
 #### Call Signature:
 
@@ -234,7 +234,7 @@ and the filter list to empty.
 
 ### function: `close`
 
-[Source](../dagrunner/utils/logger.py#L212)
+[Source](../../dagrunner/utils/logger.py#L212)
 
 #### Call Signature:
 
@@ -246,7 +246,7 @@ Ensure the database connection is closed cleanly.
 
 ### function: `emit`
 
-[Source](../dagrunner/utils/logger.py#L185)
+[Source](../../dagrunner/utils/logger.py#L185)
 
 #### Call Signature:
 
@@ -258,7 +258,7 @@ Emit a log record, and insert it into the database.
 
 ## function: `client_attach_socket_handler`
 
-[Source](../dagrunner/utils/logger.py#L43)
+[Source](../../dagrunner/utils/logger.py#L43)
 
 ### Call Signature:
 
@@ -288,7 +288,7 @@ Args:
 
 ## function: `main`
 
-[Source](../dagrunner/utils/logger.py#L265)
+[Source](../../dagrunner/utils/logger.py#L265)
 
 ### Call Signature:
 
@@ -302,7 +302,7 @@ Parses command line arguments and executes the logging server
 
 ## function: `start_logging_server`
 
-[Source](../dagrunner/utils/logger.py#L231)
+[Source](../../dagrunner/utils/logger.py#L231)
 
 ### Call Signature:
 

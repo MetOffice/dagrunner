@@ -1,6 +1,6 @@
 # module: `dagrunner.runner.schedulers`
 
-[Source](../dagrunner/runner/schedulers/__init__.py#L0)
+[Source](../../dagrunner/runner/schedulers/__init__.py#L0)
 
 Supackage which provides access to various schedulers through a common UI.
 

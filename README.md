@@ -16,7 +16,7 @@ DAGrunner takes advantage of the native markdown rendering support provided by g
 
 ## API
 
-See [DAGrunner API](docs/dagrunner_index.md)
+See [DAGrunner API](docs/_build/dagrunner_index.md)
 
 ## License/copyright
 
@@ -52,7 +52,7 @@ See [docs/demo.ipynb](docs/demo.ipynb)
 DAGrunner concerns itself with graph execution and does not strictly require processing modules (plugins) to take any particular form.  That is, you may or may not choose to use or subclass the plugins provided by DAGrunner.
 However, for convenience, DAGrunner does define some plugins which fall into two broad categories, some abstract and some for use as they are.
 
-See [here](docs/dagrunner.plugin_framework.md) for more information.
+See [here](docs/_build/dagrunner.plugin_framework.md) for more information.
 
 ## Schedulers
 
@@ -63,7 +63,7 @@ These range from [dask](https://www.dask.org/), [ray](https://docs.ray.io/en/lat
 ## Logging and monitoring
 
 DAGrunner provides a script `dagrunner-logger` for running a TCP server.  This enables logging to function across the network.  Additionally, it will write logs to an sqlite database to aid in realtime monitoring from external tools.
-See [logger](docs/dagrunner.utils.logger.md) for more information.
+See [logger](docs/_build/dagrunner.utils.logger.md) for more information.
 
 ## Logo
 

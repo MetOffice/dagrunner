@@ -1,6 +1,6 @@
 # module: `dagrunner.execute_graph`
 
-[Source](../dagrunner/execute_graph.py#L0)
+[Source](../../dagrunner/execute_graph.py#L0)
 
 see [GlobalConfiguration: dagrunner.config.CONFIG](dagrunner.config.md#globalconfiguration-config)
 
@@ -16,13 +16,15 @@ see [module: dagrunner.events](dagrunner.events.md#module-dagrunnerevents)
 
 see [function: dagrunner.utils.function_to_argparse_parse_args](dagrunner.utils.md#function-function_to_argparse_parse_args)
 
+see [function: dagrunner.utils.get_object_dot_module_path](dagrunner.utils.md#function-get_object_dot_module_path)
+
 see [module: dagrunner.utils.logger](dagrunner.utils.logger.md#module-dagrunnerutilslogger)
 
 see [function: dagrunner.utils.networkx.visualise_graph](dagrunner.utils.networkx.md#function-visualise_graph)
 
 ## class: `ExecuteGraph`
 
-[Source](../dagrunner/execute_graph.py#L274)
+[Source](../../dagrunner/execute_graph.py#L318)
 
 ### Call Signature:
 
@@ -32,7 +34,7 @@ ExecuteGraph(networkx_graph: str, networkx_graph_kwargs: dict = None, <function 
 
 ### function: `__call__`
 
-[Source](../dagrunner/execute_graph.py#L399)
+[Source](../../dagrunner/execute_graph.py#L443)
 
 #### Call Signature:
 
@@ -44,7 +46,7 @@ Call self as a function.
 
 ### function: `__init__`
 
-[Source](../dagrunner/execute_graph.py#L275)
+[Source](../../dagrunner/execute_graph.py#L319)
 
 #### Call Signature:
 
@@ -101,7 +103,7 @@ Args:
 
 ### function: `visualise`
 
-[Source](../dagrunner/execute_graph.py#L396)
+[Source](../../dagrunner/execute_graph.py#L440)
 
 #### Call Signature:
 
@@ -113,7 +115,7 @@ visualise(self, **kwargs)
 
 ## function: `main`
 
-[Source](../dagrunner/execute_graph.py#L410)
+[Source](../../dagrunner/execute_graph.py#L454)
 
 ### Call Signature:
 
@@ -126,7 +128,7 @@ Parses command line arguments and executes the graph using the ExecuteGraph clas
 
 ## function: `plugin_executor`
 
-[Source](../dagrunner/execute_graph.py#L47)
+[Source](../../dagrunner/execute_graph.py#L83)
 
 ### Call Signature:
 
