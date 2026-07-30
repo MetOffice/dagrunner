@@ -48,11 +48,12 @@ jobs:
           rm -rf ./docs/_build
           mkdir -p ./docs/_build
           ./docs/gen_docs dagrunner ./docs/_build
+          git add -f docs/_build/
 
       - name: Check if documentation has changed
         id: check-docs
         run: |
-          echo "changed=$(git diff --quiet --exit-code || echo true)" | tee -a $GITHUB_OUTPUT
+          echo "changed=$(git diff --cached --quiet --exit-code || echo true)" | tee -a $GITHUB_OUTPUT
 
       # https://github.com/orgs/community/discussions/26560#discussioncomment-3531273
       # This must be our very final step to ensure that it runs only on condition of
