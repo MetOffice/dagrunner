@@ -25,11 +25,11 @@ title: event.IGNORE (filtering some)
 ---
 graph
     cycle1{cycleX}
-    cycle1 --> Input1 --> filepath --> Load1 --> cube1 --> Proc
-    cycle1 --> Input2 --> filepath --> Load2 --> event.IGNORE --> Proc
-    cycle1 --> Input3 --> filepath --> Load3 --> cube3 --> Proc
-    cycle1 --> Input4 --> filepath --> Load4 --> event.IGNORE --> Proc
-    Proc --> cube --> Save
+    cycle1 --> Input1 -- filepath --> Load1 --cube1 --> Proc
+    cycle1 --> Input2 -- filepath --> Load2 -- event.IGNORE --> Proc
+    cycle1 --> Input3 -- filepath --> Load3 -- cube3 --> Proc
+    cycle1 --> Input4 -- filepath --> Load4 -- event.IGNORE --> Proc
+    Proc -- cube --> Save
     Proc["Proc (cube1, cube3)"]
 ```
 Here, Input2 and Input4 return an IGNORE event, likely due to there being missing data.
@@ -47,16 +47,16 @@ title: event.SKIP
 ---
 graph
     cycle1{cycleX}
-    cycle1 --> Input1 --> filepath --> Load1 --> cube --> Proc
-    cycle1 --> Input2 --> filepath --> Load2 --> event.SKIP --> Proc
-    cycle1 --> Input3 --> filepath --> Load3 --> cube --> Proc
-    cycle1 --> Input4 --> filepath --> Load4 --> event.IGNORE --> Proc
-    Proc --> event.SKIP --> Save
+    cycle1 --> Input1 -- filepath --> Load1 -- cube --> Proc
+    cycle1 --> Input2 -- filepath --> Load2 -- event.SKIP --> Proc
+    cycle1 --> Input3 -- filepath --> Load3 -- cube --> Proc
+    cycle1 --> Input4 -- filepath --> Load4 -- event.IGNORE --> Proc
+    Proc["Proc<br><sup>(not called)"] -- event.SKIP --> Save["Save<br><sup>(not called)"]
 ```
 Because `Input2` returns a SKIP event, the Proc node and everything that follows aren't
 executed and neither is the Save node since the skip is propagated along the execution
 graph.
-"""
+"""  # noqa: E501
 
 from dagrunner.utils import Singleton
 
