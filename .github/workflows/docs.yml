@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   build:
-    if: ${{ !contains(github.event.pull_request.title, '[skip ci]') && !github.event.pull_request.head.repo.fork }}
+    if: ${{ !contains(github.event.pull_request.title, '[skip ci]') }}
     runs-on: ubuntu-latest
 
     steps:
