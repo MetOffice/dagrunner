@@ -1,16 +1,45 @@
 #!/usr/bin/env python3
 """
-Generate reference documentation for a Python module.
+Generate markdown reference documentation for a Python package
 
 Example usage:
-    python generate_docs.py my_module /path/to/docs
+    gen_docs python.module.path /path/to/output
+
+Each module will be converted into a markdown file, and an index file will be
+generated for the package.
+`<package-name>.<module-name>` will be written to `<package-name>.<module-name>.md`,
+and the index file `<package-name>_index.md` will be extended to include a link to
+this module and its contents.
+
+Note that markdown syntax is supported in docstrings, taken without modification.
+This means that anything supported by your markdown renderer (e.g. vscode and GitHub)
+will be supported in docstrings, including links to other documentation, images,
+tables and other markdown features.
+
+Example usage:
+
+```
+def function(args1, keywarg1=default1):
+    \"""
+    Dummy function to demonstrate markdown docstrings.
+
+    Args:
+    - `args1` (str):
+      Some positional argument.
+    - `keywarg1` (int, optional):
+      Some keyword argument with a default value.
+
+    \"""
+    ...
+```
+
 """
 
+import argparse
 import importlib
 import importlib.util
 import inspect
 import os
-import sys
 
 
 def gen_source_link(obj, target_root):
@@ -281,6 +310,16 @@ def generate_markdown_recursive(module_dot_path, target_root):
 
 
 if __name__ == "__main__":
-    module_path = sys.argv[1]
-    target_root = os.path.abspath(sys.argv[2])
-    generate_markdown_recursive(module_path, target_root)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument(
+        "pymodule_path", help="Python module path, which must be on the PYTHONPATH"
+    )
+    parser.add_argument(
+        "target_root", help="Target root directory for generated markdown"
+    )
+    args = parser.parse_args()
+    pymodule_path = args.pymodule_path
+    target_root = os.path.abspath(args.target_root)
+    generate_markdown_recursive(pymodule_path, target_root)

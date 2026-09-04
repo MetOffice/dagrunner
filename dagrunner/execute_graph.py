@@ -304,7 +304,12 @@ def _get_networkx(networkx_graph):
     else:
         try:
             edges, nodes = networkx_graph
-            nodes = {k: _process_nodes(k) | nodes[k] for k in nodes.keys()}.items()
+            # if the keys are have __dict__ attribute, then assume to add these to
+            # the nodes attributes
+            if hasattr(list(nodes.keys())[0], "__dict__"):
+                nodes = {k: _process_nodes(k) | nodes[k] for k in nodes.keys()}.items()
+            else:
+                nodes = nodes.items()
             nxgraph = nx.DiGraph()
             nxgraph.add_edges_from(edges)
             nxgraph.add_nodes_from(nodes)
