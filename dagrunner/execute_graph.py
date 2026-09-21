@@ -117,8 +117,8 @@ def plugin_executor(
       to global or environment variable usage.
     - `node_id`: The unique identifier of the node being executed.  This is used for
       caching and logging purposes.
-    - `cache_result`: A boolean indicating whether to cache the results of the plugin
-      execution.  If set to `True`, the results will be cached and reused for subsequent
+    - `cache_result`: A boolean indicating whether to cache the results of the node being
+      executed.  If set to `True`, the results will be cached and reused for subsequent
       executions of the same node with the same arguments.  Note that caching can be
       enabled or disabled globally via the `dagrunner_runtime.cache_enabled` configuration.
       The cache location is determined by the `dagrunner_runtime.cache_dir` configuration.
@@ -136,13 +136,32 @@ def plugin_executor(
     if CONFIG["dagrunner_logging"].pop("enabled", False) is True:
         logger.client_attach_socket_handler(CONFIG["dagrunner_logging"])
 
-    pcache = cache_result or bool(
-        CONFIG["dagrunner_runtime"].get("cache_enabled", False)
+    pcache = not dry_run and (
+        cache_result or bool(CONFIG["dagrunner_runtime"].get("cache_enabled", False))
     )
     if pcache:
-        pcache = _PickleCache(node_id, verbose=verbose)
-        if pcache.cache_available:
-            return pcache.load()
+        try:
+            token = tokenize(
+                args,
+                call,
+                common_kwargs,
+                node_properties,
+                node_id,
+                ensure_deterministic=True,
+            )
+            node_id_token = f"{token}_{node_id}"
+        except dask.base.TokenizationError:
+            pcache = False
+            warnings.warn(
+                "Failed to generate deterministic token for node_id "
+                f"'{node_id}', caching will be disabled for this node.  "
+                "This may be due to non-deterministic arguments or callables "
+                f"being passed to the plugin_executor."
+            )
+        else:
+            pcache = _PickleCache(node_id_token, verbose=verbose)
+            if pcache.cache_available:
+                return pcache.load()
 
     if common_kwargs is None:
         common_kwargs = {}

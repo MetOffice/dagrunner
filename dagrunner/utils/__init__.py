@@ -30,7 +30,8 @@ def get_object_dot_module_path(obj):
     elif (
         hasattr(obj, "__module__")
         and hasattr(obj, "__name__")
-        and ".<locals>." not in getattr(obj, "__qualname__", "")
+        and ".<locals>."
+        not in getattr(obj, "__qualname__", "")  # exclude local nested functions
     ):
         # Module-level functions (not nested/local functions)
         res = f"{obj.__module__}.{obj.__name__}"
