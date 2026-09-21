@@ -285,7 +285,9 @@ def mock_config(tmp_path):
         [lambda x: None, None, 1],  # check None return caching
     ],
 )
-def test_cached_execution_enabled(mock_config, side_effect, res, final_call_count):
+def test_global_cached_execution_enabled(
+    mock_config, side_effect, res, final_call_count
+):
     """Test that execution is utilising cache."""
     args = (5,)
 
@@ -305,6 +307,32 @@ def test_cached_execution_enabled(mock_config, side_effect, res, final_call_coun
 
     assert res == res
     assert mock_callable.call_count == final_call_count
+
+
+@pytest.fixture
+def mock_config_single(tmp_path):
+    DummyConfig = GlobalConfiguration._INI_PARAMETERS.copy()
+    DummyConfig.update(
+        {"dagrunner_runtime": {"cache_enabled": False, "cache_dir": str(tmp_path)}}
+    )
+    patch_config1 = mock.patch("dagrunner.execute_graph.CONFIG", new=DummyConfig)
+    patch_config2 = mock.patch("dagrunner.utils._cache.CONFIG", new=DummyConfig)
+
+    with patch_config1 as p1, patch_config2 as p2:
+        yield (p1, p2)
+
+
+def test_single_node_cache(mock_config_single):
+    """Test that execution is utilising cache for a single node."""
+    args = (5,)
+    mock_callable = mock.Mock(side_effect=lambda x: x + 5)
+    call = tuple([mock_callable])
+    _ = plugin_executor(*args, call=call)
+    assert mock_callable.call_count == 1
+    _ = plugin_executor(*args, cache_result=True, call=call)
+    assert mock_callable.call_count == 2
+    _ = plugin_executor(*args, cache_result=True, call=call)
+    assert mock_callable.call_count == 2
 
 
 def test_extended_init_failure_context():
