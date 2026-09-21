@@ -52,5 +52,11 @@ class _PickleCache:
         self._pickle_filepath.parent.mkdir(parents=True, exist_ok=True)
         if self._verbose:
             print(f"saving to pickle: {self._pickle_filepath}")
-        with open(self._pickle_filepath, "wb") as f:
-            pickle.dump(res, f)
+        try:
+            # Atomically create and write (fails if file exists)
+            # avoids race condition potential with separate exists check and write
+            fd = os.open(self._pickle_filepath, os.O_WRONLY | os.O_CREAT | os.O_EXCL)
+            with os.fdopen(fd, "wb") as f:
+                pickle.dump(res, f)
+        except FileExistsError:
+            print(f"pickle file already exists for {self._node_id}, skipping dump")
