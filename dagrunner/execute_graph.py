@@ -87,6 +87,7 @@ def plugin_executor(
     dry_run=False,
     common_kwargs=None,
     node_id=None,
+    cache_result=False,
     **node_properties,
 ):
     """
@@ -114,6 +115,15 @@ def plugin_executor(
       applicable plugins.  That is, being passed to the plugin initialisation and or
       call if such keywords are expected from the plugin.  This is a useful alternative
       to global or environment variable usage.
+    - `node_id`: The unique identifier of the node being executed.  This is used for
+      caching and logging purposes.
+    - `cache_result`: A boolean indicating whether to cache the results of the plugin
+      execution.  If set to `True`, the results will be cached and reused for subsequent
+      executions of the same node with the same arguments.  Note that caching can be
+      enabled or disabled globally via the `dagrunner_runtime.cache_enabled` configuration.
+      The cache location is determined by the `dagrunner_runtime.cache_dir` configuration.
+      The default cache location is the system temporary directory.  The cache is implemented
+      using the `pickle` module.
     - `**node_properties`: Node properties.  These will be passed to 'node-aware'
       plugins.
 
@@ -126,7 +136,9 @@ def plugin_executor(
     if CONFIG["dagrunner_logging"].pop("enabled", False) is True:
         logger.client_attach_socket_handler(CONFIG["dagrunner_logging"])
 
-    pcache = bool(CONFIG["dagrunner_runtime"].get("cache_enabled", False))
+    pcache = cache_result or bool(
+        CONFIG["dagrunner_runtime"].get("cache_enabled", False)
+    )
     if pcache:
         pcache = _PickleCache(node_id, verbose=verbose)
         if pcache.cache_available:

@@ -8,6 +8,8 @@ import tempfile
 import warnings
 from pathlib import Path
 
+from dask.base import tokenize
+
 from dagrunner.config import CONFIG
 
 
@@ -20,7 +22,9 @@ class _PickleCache:
             self._pickle_filepath = Path(tempfile.gettempdir()) / "dagrunner_cache"
         else:
             self._pickle_filepath = Path(cache_dir)
-        self._pickle_filepath = self._pickle_filepath / f"{node_id}.pickle"
+        self._pickle_filepath = (
+            self._pickle_filepath / f"{tokenize(node_id)}_{node_id}.pickle"
+        )
         warnings.warn(
             "This class is experimental and untested.  "
             "It may be removed in a future release.",
