@@ -357,21 +357,32 @@ def test_single_node_cache(mock_config_single, mock_normalize_token):
     assert mock_callable.call_count == 2
 
 
+class CallableWithNonDeterministicToken:
+    def __getstate__(self):
+        raise RuntimeError("cannot pickle this")
+
+    def __call__(self, *args, **kwargs):
+        return False
+
+
 def test_non_deterministic_token(mock_config_single):
     """
     Ensure a warning is raised when a non-deterministic token is generated for
     a node_id and that caching is disabled for that node.
     """
     args = (5,)
-    mock_callable = mock.Mock(side_effect=lambda x: x + 5)
+    mock_callable = mock.Mock(CallableWithNonDeterministicToken())
+
     call = tuple([mock_callable])
     with pytest.warns(UserWarning, match="Failed to generate deterministic token"):
-        _ = plugin_executor(*args, call=call)
-        assert mock_callable.call_count == 1
-        _ = plugin_executor(*args, cache_result=True, call=call)
-        assert mock_callable.call_count == 2
-        _ = plugin_executor(*args, cache_result=True, call=call)
-        assert mock_callable.call_count == 3
+        _ = plugin_executor(*args, call=call, cache_result=True)
+    assert mock_callable.call_count == 1
+    with pytest.warns(UserWarning, match="Failed to generate deterministic token"):
+        _ = plugin_executor(*args, call=call, cache_result=True)
+    assert mock_callable.call_count == 2
+    with pytest.warns(UserWarning, match="Failed to generate deterministic token"):
+        _ = plugin_executor(*args, call=call, cache_result=True)
+    assert mock_callable.call_count == 3
 
 
 def test_extended_init_failure_context():

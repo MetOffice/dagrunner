@@ -11,7 +11,7 @@ from functools import partial, wraps
 
 import dask
 import networkx as nx
-from dask.base import tokenize
+from dask.base import TokenizationError, tokenize
 from dask.utils import apply
 
 from dagrunner.config import CONFIG
@@ -150,7 +150,7 @@ def plugin_executor(
                 ensure_deterministic=True,
             )
             node_id_token = f"{token}_{node_id}"
-        except dask.base.TokenizationError:
+        except TokenizationError:
             pcache = False
             warnings.warn(
                 "Failed to generate deterministic token for node_id "
