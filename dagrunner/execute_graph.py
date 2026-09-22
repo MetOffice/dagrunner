@@ -11,7 +11,7 @@ from functools import partial, wraps
 
 import dask
 import networkx as nx
-from dask.base import TokenizationError, tokenize
+from dask.tokenize import TokenizationError, tokenize
 from dask.utils import apply
 
 from dagrunner.config import CONFIG
