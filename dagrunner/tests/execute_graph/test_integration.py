@@ -314,7 +314,8 @@ def test_cache_uitilisation_all(mock_config, edges, exists, mtime, expected_run_
     Cache utilisation
 
     Demonstrating that nodes are correctly skipped when their output cache files exist
-    and whether their inputs timestamps are older.
+    and whether their inputs timestamps are older.  Also ensure that the graph is
+    correctly filtered to remove the skipped nodes and their ancestors.
     """
 
     nodes = [
