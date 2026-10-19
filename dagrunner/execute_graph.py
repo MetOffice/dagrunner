@@ -257,7 +257,8 @@ def plugin_executor(
                     )
                     raise RuntimeError(msg) from err
             msg = f"{str(timer)}; {msg}; {mem.max()}"
-    logging.info(msg)
+    logger_name = CONFIG["dagrunner_logging"].get("name", "")
+    logging.getLogger(logger_name).info(msg)
 
     if verbose:
         try:
