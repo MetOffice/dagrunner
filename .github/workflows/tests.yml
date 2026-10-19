@@ -2,6 +2,10 @@ name: Pull Request Tests
 
 on: [pull_request]
 
+env:
+  PYTHON_VERSION_LOWER: "3.12"
+  PYTHON_VERSION_LATEST: "3.x"
+
 permissions:
   contents: read
 
@@ -22,7 +26,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
-          python-version: 3.x
+          python-version: ${{ env.PYTHON_VERSION_LATEST }}
           cache: 'pip'
 
       - name: Add checkout directory to PYTHONPATH
@@ -70,7 +74,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
-          python-version: 3.12
+          python-version: ${{ env.PYTHON_VERSION_LOWER }}
           cache: 'pip'
 
       - name: Add checkout directory to PYTHONPATH
@@ -94,8 +98,7 @@ jobs:
       - name: Run pytest
         run: pytest .
 
-
-  upper-bound-packages:
+  upper-bound-packages-plus-test-coverage:
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
     runs-on: ubuntu-latest
 
@@ -110,58 +113,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
-          python-version: 3.x
-          cache: 'pip'
-
-      - name: Add checkout directory to PYTHONPATH
-        run: echo "PYTHONPATH=$(pwd):$PYTHONPATH" >> $GITHUB_ENV
-
-      - name: Install dependencies
-        id: install-dependencies
-        run: |
-          pip install .[tests,visualisation]
-          pip uninstall dagrunner -y
-
-      - name: Set up SSH for localhost
-        run: |
-          ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa
-          cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
-          ssh-keyscan -H $(hostname) >> ~/.ssh/known_hosts
-          chmod 600 ~/.ssh/authorized_keys
-
-      # TESTS
-      ############################
-      - name: Run pytest
-        run: pytest .
-
-      # DOCUMENTATION
-      ############################
-      - name: Build documentation
-        run: |
-          ./docs/gen_docs dagrunner ./docs
-
-      - name: Check if documentation has changed
-        id: check-docs
-        run: |
-          echo "changed=$(git diff --quiet --exit-code || echo true)" | tee -a $GITHUB_OUTPUT
-
-
-  test-coverage:
-    if: "!contains(github.event.head_commit.message, '[skip ci]')"
-    runs-on: ubuntu-latest
-
-    steps:
-      # SETUP
-      ############################
-      - name: Checkout code
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          persist-credentials: false
-
-      - name: Set up Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
-        with:
-          python-version: 3.x
+          python-version: ${{ env.PYTHON_VERSION_LATEST }}
           cache: 'pip'
 
       - name: Add checkout directory to PYTHONPATH
