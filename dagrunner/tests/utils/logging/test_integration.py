@@ -35,8 +35,6 @@ def server(sqlite_filepath):
             "logger",
             "--sqlite-filepath",
             str(sqlite_filepath),
-            "--port",
-            "12345",
             "--verbose",
         ],
         env=env,
@@ -60,9 +58,9 @@ def test_sqlitedb(server, caplog):
         ["Indentation defines code blocks.", "myapp.area2", "warning"],
         ["Libraries extend Pythons capabilities.", "myapp.area2", "error"],
     )
-    client_attach_socket_handler(port=12345)
-    for msg, lvlname, name in test_inputs:
-        getattr(logging.getLogger(lvlname), name)(msg)
+    client_attach_socket_handler()
+    for msg, tgt_name, level in test_inputs:
+        getattr(logging.getLogger(tgt_name), level)(msg)
 
     # Check log messages
     assert len(caplog.record_tuples) == len(test_inputs)
@@ -97,6 +95,68 @@ def test_sqlitedb(server, caplog):
             test_input[1],
             test_input[2].upper(),
             test_input[0],
+            os.uname().nodename,
+            int,
+            int,
+        )
+
+        assert len(record) == len(tar_format)
+        for tar, rec in zip(tar_format, record):
+            if isinstance(tar, type):
+                # simply check it is the correct type
+                try:
+                    assert type(eval(rec)) is tar
+                except SyntaxError:
+                    continue
+            else:
+                assert rec == tar
+    conn.close()
+
+
+def test_named_logger(server, caplog):
+    test_inputs = (
+        [False, "Python is versatile and powerful.", "root", "info"],
+        [True, "Lists store collections of items.", "bla", "info"],
+        [True, "Functions encapsulate reusable code.", "bla.myapp.area1", "info"],
+        [False, "Indentation defines code blocks.", "aba.myapp.area2", "info"],
+    )
+    client_attach_socket_handler(name="bla")
+    for _, msg, tgt_name, level in test_inputs:
+        getattr(logging.getLogger(tgt_name), level)(msg)
+
+    # Check log messages
+    assert len(caplog.record_tuples) == len(test_inputs)
+    for test_input, record in zip(test_inputs, caplog.record_tuples):
+        assert (
+            tuple(
+                [test_input[2], getattr(logging, test_input[3].upper()), test_input[1]]
+            )
+            == record
+        )
+
+    server_proc, sqlite_filepath = server
+    time.sleep(1)  # wait for db write to complete
+    server_proc.terminate()
+
+    # Check there are any records in the database
+    conn = sqlite3.connect(str(sqlite_filepath))
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM logs")
+    count = cursor.fetchone()[0]
+    assert count > 0, "At least one log record should be stored in the database"
+
+    # Verify database records
+    records = cursor.execute("SELECT * FROM logs").fetchall()
+    test_inputs = list(filter(lambda x: x[0], test_inputs))
+    assert len(test_inputs) == len(records), (
+        "Mismatch between expected and actual records"
+    )
+    for test_input, record in zip(test_inputs, records):
+        tar_format = (
+            str,
+            test_input[2],
+            test_input[3].upper(),
+            test_input[1],
             os.uname().nodename,
             int,
             int,

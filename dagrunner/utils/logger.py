@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # (C) Crown Copyright, Met Office. All rights reserved.
 #
 # This file is part of 'dagrunner' and is released under the BSD 3-Clause license.
@@ -41,12 +42,14 @@ DATEFMT = "%Y-%m-%dT%H:%M:%S"  # Date in ISO 8601 format
 
 
 def client_attach_socket_handler(
-    host: str = "localhost", port: int = logging.handlers.DEFAULT_TCP_LOGGING_PORT
+    host: str = "localhost",
+    port: int = logging.handlers.DEFAULT_TCP_LOGGING_PORT,
+    name: str = "",
 ):
     """
-    Attach a SocketHandler instance to the root logger at the sending end.
+    Attach a SocketHandler instance to the named logger at the sending end.
 
-    Now, we can log to the root logger, or any other logger. First the root...
+    Now, we can log to the named logger, or any other logger. First the root...
         logging.info('Jackdaws love my big sphinx of quartz.')
 
     Now, define a couple of other loggers which might represent areas in your
@@ -63,9 +66,12 @@ def client_attach_socket_handler(
     Args:
     - `host`: The host name of the server.  Optional.
     - `port`: The port number the server is listening on.  Optional.
+    - `name`: The name of the logger to attach the socket handler to.  Optional.
+              If `name` is not specified, the socket handler is attached to the
+              root logger as per `logging.getLogger("")`
 
     """
-    rootLogger = logging.getLogger("")
+    rootLogger = logging.getLogger(name)
     rootLogger.setLevel(logging.DEBUG)
     socketHandler = logging.handlers.SocketHandler(host, port)
     # don't bother with a formatter, since a socket handler sends the event as
@@ -242,6 +248,7 @@ def start_logging_server(
     - `host`: The host name of the server.  Optional.
     - `port`: The port number the server is listening on.  Optional.
     - `verbose`: Whether to print verbose output.  Optional.
+
     """
     logging.basicConfig(
         format=(
