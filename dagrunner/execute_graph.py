@@ -124,7 +124,7 @@ def plugin_executor(
     - ValueError: If the `call` argument is not provided.
     """  # noqa: E501
     if CONFIG["dagrunner_logging"].pop("enabled", False) is True:
-        logger.client_attach_socket_handler(CONFIG["dagrunner_logging"])
+        logger.client_attach_socket_handler(**CONFIG["dagrunner_logging"])
 
     pcache = bool(CONFIG["dagrunner_runtime"].get("cache_enabled", False))
     if pcache:

@@ -57,9 +57,14 @@ class GlobalConfiguration(object, metaclass=Singleton):
 
         # Logging
         [dagrunner_logging]
+        # Enabled flag for logging, should be set to True or False (default is False).
         enabled
+        # Hostname of the logging server (default is 'localhost').
         host
+        # Port number of the logging server (default is 9020).
         port
+        # Name of the logger to attach the socket handler to (root if not specified).
+        name
 
     """
 
@@ -67,7 +72,12 @@ class GlobalConfiguration(object, metaclass=Singleton):
     # specified vs unspecified by the user.
     # Logic around default values belong in the functions which use them.
     _INI_PARAMETERS = {
-        "dagrunner_logging": {"host": None, "port": None, "enabled": None},
+        "dagrunner_logging": {
+            "host": None,
+            "port": None,
+            "enabled": None,
+            "name": None,
+        },
         "dagrunner_visualisation": {
             "enabled": None,
             "title": None,
