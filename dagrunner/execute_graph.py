@@ -304,11 +304,10 @@ def _get_networkx(networkx_graph):
     else:
         try:
             edges, nodes = networkx_graph
-            # if the keys are have __dict__ attribute, then assume to add these to
-            # the nodes attributes
-            if hasattr(list(nodes.keys())[0], "__dict__"):
+            try:
                 nodes = {k: _process_nodes(k) | nodes[k] for k in nodes.keys()}.items()
-            else:
+            except TypeError:
+                # fallback as vars() isn't supported, just use the items as they are
                 nodes = nodes.items()
             nxgraph = nx.DiGraph()
             nxgraph.add_edges_from(edges)
