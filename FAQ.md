@@ -11,31 +11,7 @@ DAGrunner is neither a scheduler nor an orchestration engine. Instead, it provid
 - A Python environment containing NetworkX and a supported scheduler (see [schedulers](README.md#schedulers)).
 - A graph consisting of nodes, their associated attributes (collectively referred to as settings), and edges defining the connectivity between them.
 
-The example below defines a simple graph that starts with a node returning 0, passes the result to a node that adds 2, and then to a final node that adds 5, producing a final result of 7:
-
-```python
-def add(*arg, const=0):
-    return sum(arg) + const
-
-node0 = 'a'
-node1 = 'b'
-node2 = 'c'
-
-settings = {
-    node0: {'call': (lambda : 0,)}
-    node1: {'call': (add, const=2)}
-    node2: {'call': (add, const=5)}
-}
-edges = [
-    [node0, node1],
-    [node1, node2],
-]
-
-graph = ExecuteGraph((edges, settings))
-graph()
-```
-
-While this example is intentionally simple, node execution logic can be arbitrarily complex. See [Example DAGrunner usage](README.md#example-dagrunner-usage) for more advanced examples.
+See [Example DAGrunner usage](README.md#example-dagrunner-usage) for examples.
 
 ## If multiple outputs share the same inputs or intermediate calculations, will DAGrunner only execute them once?
 
@@ -49,5 +25,5 @@ DAGrunner isn't a scheduler and cylc is more an orchestration engine.  Cylc work
 
 ## Is the order of predecessors to a node preserved?
 
-This is more a question of NetworkX), rather than DAGrunner.
-However, NetworkX graphs [respect insertion order](https://networkx.org/documentation/stable/reference/classes/index.html#basic-graph-types) as its classes are internally implemented using Python dictionaries which since Python 3.7, dictionaries officially preserve insertion order as part of the language specification.  Since DAGrunner uses NetworkX and dictionaries itself internal, order is similarly preserved.
+This is more a question of NetworkX, rather than DAGrunner.
+However, NetworkX graphs [respect insertion order](https://networkx.org/documentation/stable/reference/classes/index.html#basic-graph-types) as its classes are implemented using Python dictionaries internally which since Python 3.7, preserve insertion order as part of the language specification.  Since DAGrunner uses NetworkX and dictionaries itself internal, order is similarly preserved.
