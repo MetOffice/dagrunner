@@ -6,6 +6,7 @@ from dataclasses import dataclass
 
 import networkx as nx
 import pytest
+from networkx.utils.misc import graphs_equal
 
 from dagrunner.execute_graph import _get_networkx
 
@@ -20,19 +21,23 @@ def test_get_networkx_accepts_digraph_instance():
     """A provided NetworkX graph object is returned unchanged."""
     graph = nx.DiGraph()
     graph.add_edge("a", "b")
+    original_graph = graph.copy()
 
     result = _get_networkx(graph)
 
     assert result is graph
+    assert graphs_equal(result, original_graph)
 
 
 def test_get_networkx_accepts_callable():
     """A callable graph factory is returned unchanged."""
-    graph_factory = nx.path_graph
+    graph = nx.DiGraph()
+    graph.add_edge("a", "b")
+    graph_factory = lambda: graph
 
     result = _get_networkx(graph_factory)
 
-    assert result is graph_factory
+    assert graphs_equal(result(), graph)
 
 
 def test_get_networkx_resolves_dot_path_string():

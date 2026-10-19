@@ -19,15 +19,18 @@ tables and other markdown features.
 Example usage:
 
 ```
-def function(args1, keywarg1=default1):
+def function(args1, kwarg1=default1):
     \"""
     Dummy function to demonstrate markdown docstrings.
 
     Args:
     - `args1` (str):
       Some positional argument.
-    - `keywarg1` (int, optional):
+    - `kwarg1` (int, optional):
       Some keyword argument with a default value.
+
+    Returns:
+    - str: The dummy result.
 
     \"""
     ...

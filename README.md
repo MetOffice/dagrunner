@@ -33,7 +33,7 @@ This will also make an executable script available to the PATH: `dagrunner-execu
 
 ## Execution of a networkx graph using the `dagrunner-execute-graph` script
 
-Thought you can execute your graphs by interacting with the DAGrunner library within your interactive Python shell, typically it is assumed to be more useful to utilise the script provided:
+Though you can execute your graphs by interacting with the DAGrunner library within your interactive Python shell, typically it is assumed to be more useful to utilise the script provided:
 ```
 usage: dagrunner-execute-graph [-h] [--scheduler SCHEDULER] [--num-workers NUM_WORKERS] [--profiler-filepath PROFILER_FILEPATH] [--dry-run] [--verbose] networkx-graph
 ```
