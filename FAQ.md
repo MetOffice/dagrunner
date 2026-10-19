@@ -21,9 +21,24 @@ If `A`, `B` or `C` appear as separate nodes with different identities, DAGrunner
 
 ## Will Cylc be added as a scheduler?
 
-DAGrunner isn't a scheduler and cylc is more an orchestration engine.  Cylc workflows can indeed call DAGrunner to execute a graph with your chosen python scheduler easy enough by utilising the [DAGrunner commandline script](README.md#execution-of-a-networkx-graph-using-dagrunner-execute-graph-script).
+Cylc is more an orchestration engine.  Cylc workflows can indeed call DAGrunner to execute a graph with your chosen python scheduler easy enough by utilising the [DAGrunner commandline script](README.md#execution-of-a-networkx-graph-using-dagrunner-execute-graph-script).
 
 ## Is the order of predecessors to a node preserved?
 
 This is more a question of NetworkX, rather than DAGrunner.
-However, NetworkX graphs [respect insertion order](https://networkx.org/documentation/stable/reference/classes/index.html#basic-graph-types) as its classes are implemented using Python dictionaries internally which since Python 3.7, preserve insertion order as part of the language specification.  Since DAGrunner uses NetworkX and dictionaries itself internal, order is similarly preserved.
+NetworkX graphs [respect insertion order](https://networkx.org/documentation/stable/reference/classes/index.html#basic-graph-types) as its classes are implemented using Python dictionaries internally which since Python 3.7, preserve insertion order as part of the language specification.  Since DAGrunner uses NetworkX and dictionaries itself internal, order is similarly preserved.
+
+## Who owns the graph and is responsible for graph construction?
+
+DAGrunner does not own, define, or construct your graph. Graph ownership and construction remain the responsibility of the project using DAGrunner.
+
+DAGrunner is intentionally designed to be decoupled from graph construction. Instead of requiring graphs to be defined in a particular format or through a prescribed user interface, DAGrunner accepts a graph factory: a user-defined callable that takes project-specific parameters and returns a NetworkX graph.
+
+This means that:
+
+- Your project defines how graphs are constructed.
+- Your project defines any configuration, parameters, or user interfaces used to control graph construction.
+- Your project is responsible for ensuring that the returned graph represents the desired workflow.
+- DAGrunner's responsibility is simply to invoke the graph factory with the supplied arguments and execute the resulting graph using the specified scheduler.
+
+The only contract DAGrunner requires is that the graph factory, when called with the configured arguments, returns a valid NetworkX graph. This approach allows projects complete flexibility in how graphs are generated while ensuring DAGrunner remains focused solely on graph execution.

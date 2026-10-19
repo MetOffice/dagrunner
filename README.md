@@ -58,6 +58,18 @@ The `dagrunner-execute-graph` script exposes a scheduler argument for specifying
 
 These range from [dask](https://www.dask.org/), [ray](https://docs.ray.io/en/latest/ray-more-libs/dask-on-ray.html) to our own in-house multiprocessing asynchronous scheduler (built upon the [multiprocessing](https://docs.python.org/3/library/multiprocessing.html) library).  See command help for further details.
 
+## Controlling graph execution
+
+Controlling graph execution can broadly be divided into two categories: defining what should be executed before runtime, and controlling how execution proceeds at runtime.
+
+The first is achieved by passing DAGrunner a graph factory, along with any arguments supported by that factory. The graph factory is a project-defined callable that accepts these arguments and returns a graph for execution. This approach intentionally decouples DAGrunner from graph ownership and construction. Rather than imposing a particular mechanism for building graphs, DAGrunner delegates this responsibility to the project itself. As a result, projects are free to define their own graph-construction interfaces, configuration parameters, or user-facing controls. DAGrunner's only requirement is that, when invoked with the supplied arguments, the graph factory returns a valid NetworkX graph.
+
+A common use case is for the graph factory to expose parameters that allow it to return only a subset of the full graph, enabling selective execution of particular workflows or graph sections.
+
+The second category concerns runtime control of graph execution. This is typically achieved through applications that perform specific functions, such as polling for data. DAGrunner already provides a number of such applications, but users can also develop their own applications that emit DAGrunner events. These events can influence the execution of downstream nodes, for example by skipping individual nodes or entire branches of the graph. Such behaviour is propagated through descendant nodes, allowing execution paths to be dynamically adjusted as the workflow runs.
+
+For further details, see the [events](docs/_build/dagrunner.events.md) documentation.
+
 ## Logging and monitoring
 
 DAGrunner provides a script `dagrunner-logger` for running a TCP server.  This enables logging to function across the network.  Additionally, it will write logs to an sqlite database to aid in realtime monitoring from external tools.
