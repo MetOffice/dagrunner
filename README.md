@@ -63,6 +63,8 @@ These range from [dask](https://www.dask.org/), [ray](https://docs.ray.io/en/lat
 ## Logging and monitoring
 
 DAGrunner provides a script `dagrunner-logger` for running a TCP server.  This enables logging to function across the network.  Additionally, it will write logs to an sqlite database to aid in realtime monitoring from external tools.
+Terminate it with Ctrl-C (`SIGINT`) or `SIGTERM` to close the server and clean up its SQLite logging handler.
+Shutdown finishes in-progress logging and SQLite writes and drains complete records already available on the sockets, without waiting for clients to disconnect. Incomplete records requiring more client data are discarded.
 See [logger](docs/_build/dagrunner.utils.logger.md) for more information.
 
 ## Logo

@@ -61,7 +61,12 @@ def server(sqlite_filepath):
 
     # Teardown: Kill the server after tests are done
     server_proc.terminate()
-    server_proc.wait()
+    try:
+        server_proc.wait(timeout=5)
+    finally:
+        if server_proc.poll() is None:
+            server_proc.kill()
+            server_proc.wait(timeout=5)
 
 
 @pytest.mark.parametrize("cleanup_logging_handlers", [None], indirect=True)
@@ -88,9 +93,9 @@ def test_sqlitedb(server, caplog, cleanup_logging_handlers):
         )
 
     server_proc, sqlite_filepath = server
-    time.sleep(1)  # wait for db write to complete
     server_proc.terminate()
-    server_proc.wait()
+    server_proc.wait(timeout=5)
+    assert server_proc.returncode == 0, "Server process did not exit normally"
 
     # Check there are any records in the database
     conn = sqlite3.connect(str(sqlite_filepath))
@@ -105,6 +110,9 @@ def test_sqlitedb(server, caplog, cleanup_logging_handlers):
     # Verify against expected values and ensure dynamic values are of the expected
     # type.
     records = cursor.execute("SELECT * FROM logs").fetchall()
+    assert len(records) == len(test_inputs), (
+        "Mismatch between expected and actual records"
+    )
     for test_input, record in zip(test_inputs, records):
         tar_format = (
             str,
@@ -152,9 +160,9 @@ def test_named_logger(server, caplog, cleanup_logging_handlers):
         )
 
     server_proc, sqlite_filepath = server
-    time.sleep(1)  # wait for db write to complete
     server_proc.terminate()
-    server_proc.wait()
+    server_proc.wait(timeout=5)
+    assert server_proc.returncode == 0, "Server process did not exit normally"
 
     # Check there are any records in the database
     conn = sqlite3.connect(str(sqlite_filepath))
