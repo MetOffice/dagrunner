@@ -16,8 +16,8 @@ maintainers = [
 readme = "README.md"
 license = {file = "LICENSE"}
 dependencies = [
-  'networkx >= 3.2',
-  'dask[distributed] >= 2024.1.1',
+  'networkx >= 3.6',
+  'dask[distributed] >= 2026.3.0',
 ]
 
 [tool.setuptools.packages.find]
@@ -39,8 +39,8 @@ dev = [
 ]
 # specifying lower bound versions of packages (testing purposes)
 minver=[
-  'networkx == 3.2',
-  'dask[distributed] == 2024.1.1',
+  'networkx == 3.6',
+  'dask[distributed] == 2026.3.0',
 ]
 
 [project.urls]
