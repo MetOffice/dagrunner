@@ -17,6 +17,20 @@ from dagrunner.utils.logger import client_attach_socket_handler
 
 
 @pytest.fixture
+def cleanup_logging_handlers(request):
+    """Fixture to clean up logging handlers for a specific logger."""
+    logger = logging.getLogger(request.param)
+    original_handlers = set(logger.handlers)
+
+    yield
+
+    for handler in list(logger.handlers):
+        if handler not in original_handlers:
+            logger.removeHandler(handler)
+            handler.close()
+
+
+@pytest.fixture
 def sqlite_filepath(tmp_path):
     return tmp_path / "test_logs.sqlite"
 
@@ -50,7 +64,8 @@ def server(sqlite_filepath):
     server_proc.wait()
 
 
-def test_sqlitedb(server, caplog):
+@pytest.mark.parametrize("cleanup_logging_handlers", [None], indirect=True)
+def test_sqlitedb(server, caplog, cleanup_logging_handlers):
     test_inputs = (
         ["Python is versatile and powerful.", "root", "info"],
         ["Lists store collections of items.", "myapp.area1", "debug"],
@@ -75,6 +90,7 @@ def test_sqlitedb(server, caplog):
     server_proc, sqlite_filepath = server
     time.sleep(1)  # wait for db write to complete
     server_proc.terminate()
+    server_proc.wait()
 
     # Check there are any records in the database
     conn = sqlite3.connect(str(sqlite_filepath))
@@ -113,7 +129,8 @@ def test_sqlitedb(server, caplog):
     conn.close()
 
 
-def test_named_logger(server, caplog):
+@pytest.mark.parametrize("cleanup_logging_handlers", ["bla"], indirect=True)
+def test_named_logger(server, caplog, cleanup_logging_handlers):
     test_inputs = (
         [False, "Python is versatile and powerful.", "root", "info"],
         [True, "Lists store collections of items.", "bla", "info"],
@@ -137,6 +154,7 @@ def test_named_logger(server, caplog):
     server_proc, sqlite_filepath = server
     time.sleep(1)  # wait for db write to complete
     server_proc.terminate()
+    server_proc.wait()
 
     # Check there are any records in the database
     conn = sqlite3.connect(str(sqlite_filepath))

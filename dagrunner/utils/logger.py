@@ -258,7 +258,9 @@ def start_logging_server(
         datefmt=DATEFMT,
     )
 
+    sqlite_handler = None
     tcpserver = LogRecordSocketReceiver(host=host, port=port)
+
     if sqlite_filepath:
         sqlite_handler = SQLiteHandler(sqlite_filepath)
         logging.getLogger("").addHandler(sqlite_handler)
@@ -276,7 +278,7 @@ def main():
     Parses command line arguments and executes the logging server
     """
     args, kwargs = function_to_argparse_parse_args(start_logging_server)
-    start_logging_server(**args, **kwargs)()
+    start_logging_server(**args, **kwargs)
 
 
 if __name__ == "__main__":
