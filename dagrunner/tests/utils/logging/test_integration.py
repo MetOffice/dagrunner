@@ -8,12 +8,27 @@ import os
 import sqlite3
 import subprocess
 import sys
-import time
 
 import pytest
 
 import dagrunner
 from dagrunner.utils.logger import client_attach_socket_handler
+
+from ._logging_test_helpers import wait_for_logging_server_port
+
+
+@pytest.fixture
+def cleanup_logging_handlers(request):
+    """Fixture to clean up logging handlers for a specific logger."""
+    logger = logging.getLogger(request.param)
+    original_handlers = set(logger.handlers)
+
+    yield
+
+    for handler in list(logger.handlers):
+        if handler not in original_handlers:
+            logger.removeHandler(handler)
+            handler.close()
 
 
 @pytest.fixture
@@ -33,26 +48,34 @@ def server(sqlite_filepath):
             sys.executable,
             "-m",
             "logger",
+            "--port",
+            "0",
             "--sqlite-filepath",
             str(sqlite_filepath),
-            "--port",
-            "12345",
-            "--verbose",
         ],
         env=env,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        bufsize=0,
     )
 
-    # Wait for the server to start (adjust as needed)
-    time.sleep(1)  # Can use a more robust method to check server readiness
+    try:
+        port = wait_for_logging_server_port(server_proc)
+        assert sqlite_filepath.exists(), "Logging server did not initialise SQLite"
 
-    yield server_proc, sqlite_filepath
+        yield server_proc, sqlite_filepath, port
+    finally:
+        if server_proc.poll() is None:
+            server_proc.terminate()
+        try:
+            server_proc.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            server_proc.kill()
+            server_proc.wait(timeout=5)
 
-    # Teardown: Kill the server after tests are done
-    server_proc.terminate()
-    server_proc.wait()
 
-
-def test_sqlitedb(server, caplog):
+@pytest.mark.parametrize("cleanup_logging_handlers", [None], indirect=True)
+def test_sqlitedb(server, caplog, cleanup_logging_handlers):
     test_inputs = (
         ["Python is versatile and powerful.", "root", "info"],
         ["Lists store collections of items.", "myapp.area1", "debug"],
@@ -60,9 +83,10 @@ def test_sqlitedb(server, caplog):
         ["Indentation defines code blocks.", "myapp.area2", "warning"],
         ["Libraries extend Pythons capabilities.", "myapp.area2", "error"],
     )
-    client_attach_socket_handler(port=12345)
-    for msg, lvlname, name in test_inputs:
-        getattr(logging.getLogger(lvlname), name)(msg)
+    _, _, port = server
+    client_attach_socket_handler(port=port)
+    for msg, tgt_name, level in test_inputs:
+        getattr(logging.getLogger(tgt_name), level)(msg)
 
     # Check log messages
     assert len(caplog.record_tuples) == len(test_inputs)
@@ -74,9 +98,10 @@ def test_sqlitedb(server, caplog):
             == record
         )
 
-    server_proc, sqlite_filepath = server
-    time.sleep(1)  # wait for db write to complete
+    server_proc, sqlite_filepath, _ = server
     server_proc.terminate()
+    server_proc.wait(timeout=5)
+    assert server_proc.returncode == 0, "Server process did not exit normally"
 
     # Check there are any records in the database
     conn = sqlite3.connect(str(sqlite_filepath))
@@ -91,12 +116,80 @@ def test_sqlitedb(server, caplog):
     # Verify against expected values and ensure dynamic values are of the expected
     # type.
     records = cursor.execute("SELECT * FROM logs").fetchall()
+    assert len(records) == len(test_inputs), (
+        "Mismatch between expected and actual records"
+    )
     for test_input, record in zip(test_inputs, records):
         tar_format = (
             str,
             test_input[1],
             test_input[2].upper(),
             test_input[0],
+            os.uname().nodename,
+            int,
+            int,
+        )
+
+        assert len(record) == len(tar_format)
+        for tar, rec in zip(tar_format, record):
+            if isinstance(tar, type):
+                # simply check it is the correct type
+                try:
+                    assert type(eval(rec)) is tar
+                except SyntaxError:
+                    continue
+            else:
+                assert rec == tar
+    conn.close()
+
+
+@pytest.mark.parametrize("cleanup_logging_handlers", ["bla"], indirect=True)
+def test_named_logger(server, caplog, cleanup_logging_handlers):
+    test_inputs = (
+        [False, "Python is versatile and powerful.", "root", "info"],
+        [True, "Lists store collections of items.", "bla", "info"],
+        [True, "Functions encapsulate reusable code.", "bla.myapp.area1", "info"],
+        [False, "Indentation defines code blocks.", "aba.myapp.area2", "info"],
+    )
+    _, _, port = server
+    client_attach_socket_handler(port=port, name="bla")
+    for _, msg, tgt_name, level in test_inputs:
+        getattr(logging.getLogger(tgt_name), level)(msg)
+
+    # Check log messages
+    assert len(caplog.record_tuples) == len(test_inputs)
+    for test_input, record in zip(test_inputs, caplog.record_tuples):
+        assert (
+            tuple(
+                [test_input[2], getattr(logging, test_input[3].upper()), test_input[1]]
+            )
+            == record
+        )
+
+    server_proc, sqlite_filepath, _ = server
+    server_proc.terminate()
+    server_proc.wait(timeout=5)
+    assert server_proc.returncode == 0, "Server process did not exit normally"
+
+    # Check there are any records in the database
+    conn = sqlite3.connect(str(sqlite_filepath))
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM logs")
+    count = cursor.fetchone()[0]
+    assert count > 0, "At least one log record should be stored in the database"
+
+    # Verify database records
+    records = cursor.execute("SELECT * FROM logs").fetchall()
+    test_inputs = list(filter(lambda x: x[0], test_inputs))
+    assert len(test_inputs) == len(records), (
+        "Mismatch between expected and actual records"
+    )
+    for test_input, record in zip(test_inputs, records):
+        tar_format = (
+            str,
+            test_input[2],
+            test_input[3].upper(),
+            test_input[1],
             os.uname().nodename,
             int,
             int,
