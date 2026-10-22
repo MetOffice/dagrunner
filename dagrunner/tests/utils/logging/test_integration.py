@@ -8,12 +8,13 @@ import os
 import sqlite3
 import subprocess
 import sys
-import time
 
 import pytest
 
 import dagrunner
 from dagrunner.utils.logger import client_attach_socket_handler
+
+from ._logging_test_helpers import wait_for_logging_server_port
 
 
 @pytest.fixture
@@ -47,24 +48,28 @@ def server(sqlite_filepath):
             sys.executable,
             "-m",
             "logger",
+            "--port",
+            "0",
             "--sqlite-filepath",
             str(sqlite_filepath),
-            "--verbose",
         ],
         env=env,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        bufsize=0,
     )
 
-    # Wait for the server to start (adjust as needed)
-    time.sleep(1)  # Can use a more robust method to check server readiness
-
-    yield server_proc, sqlite_filepath
-
-    # Teardown: Kill the server after tests are done
-    server_proc.terminate()
     try:
-        server_proc.wait(timeout=5)
+        port = wait_for_logging_server_port(server_proc)
+        assert sqlite_filepath.exists(), "Logging server did not initialise SQLite"
+
+        yield server_proc, sqlite_filepath, port
     finally:
         if server_proc.poll() is None:
+            server_proc.terminate()
+        try:
+            server_proc.wait(timeout=5)
+        except subprocess.TimeoutExpired:
             server_proc.kill()
             server_proc.wait(timeout=5)
 
@@ -78,7 +83,8 @@ def test_sqlitedb(server, caplog, cleanup_logging_handlers):
         ["Indentation defines code blocks.", "myapp.area2", "warning"],
         ["Libraries extend Pythons capabilities.", "myapp.area2", "error"],
     )
-    client_attach_socket_handler()
+    _, _, port = server
+    client_attach_socket_handler(port=port)
     for msg, tgt_name, level in test_inputs:
         getattr(logging.getLogger(tgt_name), level)(msg)
 
@@ -92,7 +98,7 @@ def test_sqlitedb(server, caplog, cleanup_logging_handlers):
             == record
         )
 
-    server_proc, sqlite_filepath = server
+    server_proc, sqlite_filepath, _ = server
     server_proc.terminate()
     server_proc.wait(timeout=5)
     assert server_proc.returncode == 0, "Server process did not exit normally"
@@ -145,7 +151,8 @@ def test_named_logger(server, caplog, cleanup_logging_handlers):
         [True, "Functions encapsulate reusable code.", "bla.myapp.area1", "info"],
         [False, "Indentation defines code blocks.", "aba.myapp.area2", "info"],
     )
-    client_attach_socket_handler(name="bla")
+    _, _, port = server
+    client_attach_socket_handler(port=port, name="bla")
     for _, msg, tgt_name, level in test_inputs:
         getattr(logging.getLogger(tgt_name), level)(msg)
 
@@ -159,7 +166,7 @@ def test_named_logger(server, caplog, cleanup_logging_handlers):
             == record
         )
 
-    server_proc, sqlite_filepath = server
+    server_proc, sqlite_filepath, _ = server
     server_proc.terminate()
     server_proc.wait(timeout=5)
     assert server_proc.returncode == 0, "Server process did not exit normally"

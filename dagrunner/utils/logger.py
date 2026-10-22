@@ -262,7 +262,6 @@ def start_logging_server(
     sqlite_filepath: str = None,
     host: str = "localhost",
     port: int = logging.handlers.DEFAULT_TCP_LOGGING_PORT,
-    verbose: bool = False,
 ):
     """
     Start the logging server.
@@ -285,7 +284,6 @@ def start_logging_server(
     - `sqlite_filepath`: The file path to the SQLite database.  Optional.
     - `host`: The host name of the server.  Optional.
     - `port`: The port number the server is listening on.  Optional.
-    - `verbose`: Whether to print verbose output.  Optional.
 
     """
     logging.basicConfig(
@@ -310,10 +308,15 @@ def start_logging_server(
             if sqlite_filepath:
                 sqlite_handler = SQLiteHandler(sqlite_filepath)
                 logging.getLogger("").addHandler(sqlite_handler)
+            bound_port = tcpserver.server_address[1]
+            sqlite_info = (
+                f"; SQLITE: {sqlite_filepath}" if sqlite_handler is not None else ""
+            )
             print(
-                "About to start TCP server...\n",
-                f"HOST: {host}; PORT: {port}; PID: {os.getpid()}; "
-                f"SQLITE: {sqlite_filepath}\n",
+                "About to start TCP server...\n"
+                f"HOST: {host}; PORT: {bound_port}; PID: {os.getpid()}{sqlite_info}\n"
+                f"LOG_SERVER_READY port={bound_port}\n",
+                flush=True,
             )
             try:
                 tcpserver.serve_until_stopped()

@@ -17,12 +17,13 @@ import sqlite3
 import struct
 import subprocess
 import sys
-import time
 from unittest.mock import Mock, patch
 
 import pytest
 
 from dagrunner.utils.logger import start_logging_server
+
+from ._logging_test_helpers import wait_for_logging_server_port
 
 
 @pytest.mark.parametrize("signum", [signal.SIGINT, signal.SIGTERM])
@@ -134,11 +135,6 @@ def test_process_termination(tmp_path, signum, payload):
     connected until after server exit, proving shutdown does not depend on client
     cleanup. An incomplete trailing record cannot be stored and is discarded.
     """
-    # Ask the OS for an available port rather than using the shared default port.
-    with socket.socket() as listener:
-        listener.bind(("localhost", 0))
-        port = listener.getsockname()[1]
-
     database = tmp_path / "logs.sqlite"
     process = subprocess.Popen(
         [
@@ -146,7 +142,7 @@ def test_process_termination(tmp_path, signum, payload):
             "-m",
             "dagrunner.utils.logger",
             "--port",
-            str(port),
+            "0",
             "--sqlite-filepath",
             str(database),
         ],
@@ -155,19 +151,8 @@ def test_process_termination(tmp_path, signum, payload):
     )
     client = None
     try:
-        deadline = time.monotonic() + 5
-        while time.monotonic() < deadline:
-            assert process.poll() is None, process.communicate()[0].decode()
-            try:
-                client = socket.create_connection(("localhost", port), timeout=0.1)
-            except OSError:
-                time.sleep(0.05)
-                continue
-            break
-        assert client is not None, "Logging server did not start"
-        # The listening socket is bound before the signal handlers are installed.
-        while not database.exists() and time.monotonic() < deadline:
-            time.sleep(0.05)
+        port = wait_for_logging_server_port(process)
+        client = socket.create_connection(("localhost", port), timeout=5)
         assert database.exists(), "SQLite handler did not initialise"
         encoder = logging.handlers.SocketHandler("localhost", port)
         messages = [f"Record {index}" for index in range(5)]
