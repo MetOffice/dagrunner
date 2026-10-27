@@ -24,7 +24,7 @@ see [function: dagrunner.utils.function_to_argparse_parse_args](dagrunner.utils.
 
 ## class: `CustomFormatter`
 
-[Source](../../dagrunner/utils/logger.py#L217)
+[Source](../../dagrunner/utils/logger.py#L247)
 
 ### Call Signature:
 
@@ -76,7 +76,7 @@ attributes in a LogRecord are described by:
 
 ### function: `__init__`
 
-[Source](../../dagrunner/utils/logger.py#L218)
+[Source](../../dagrunner/utils/logger.py#L248)
 
 #### Call Signature:
 
@@ -100,7 +100,7 @@ use one of %-formatting, :meth:`str.format` (``{}``) formatting or
 
 ### function: `format`
 
-[Source](../../dagrunner/utils/logger.py#L221)
+[Source](../../dagrunner/utils/logger.py#L251)
 
 #### Call Signature:
 
@@ -123,7 +123,7 @@ it is formatted using formatException() and appended to the message.
 
 ## class: `LogRecordSocketReceiver`
 
-[Source](../../dagrunner/utils/logger.py#L121)
+[Source](../../dagrunner/utils/logger.py#L151)
 
 ### Call Signature:
 
@@ -138,7 +138,7 @@ log records.
 
 ### function: `__init__`
 
-[Source](../../dagrunner/utils/logger.py#L131)
+[Source](../../dagrunner/utils/logger.py#L161)
 
 #### Call Signature:
 
@@ -150,7 +150,7 @@ Constructor.  May be extended, do not override.
 
 ### function: `serve_until_stopped`
 
-[Source](../../dagrunner/utils/logger.py#L142)
+[Source](../../dagrunner/utils/logger.py#L172)
 
 #### Call Signature:
 
@@ -158,9 +158,11 @@ Constructor.  May be extended, do not override.
 serve_until_stopped(self)
 ```
 
+Accept requests until stopped, including connections already queued.
+
 ## class: `LogRecordStreamHandler`
 
-[Source](../../dagrunner/utils/logger.py#L76)
+[Source](../../dagrunner/utils/logger.py#L84)
 
 ### Call Signature:
 
@@ -175,7 +177,7 @@ records and customise logging events.
 
 ### function: `handle`
 
-[Source](../../dagrunner/utils/logger.py#L84)
+[Source](../../dagrunner/utils/logger.py#L114)
 
 #### Call Signature:
 
@@ -189,7 +191,7 @@ according to whatever policy is configured locally.
 
 ### function: `handle_log_record`
 
-[Source](../../dagrunner/utils/logger.py#L106)
+[Source](../../dagrunner/utils/logger.py#L136)
 
 #### Call Signature:
 
@@ -199,7 +201,7 @@ handle_log_record(self, record)
 
 ### function: `unpickle`
 
-[Source](../../dagrunner/utils/logger.py#L103)
+[Source](../../dagrunner/utils/logger.py#L133)
 
 #### Call Signature:
 
@@ -209,7 +211,7 @@ unpickle(self, data)
 
 ## class: `SQLiteHandler`
 
-[Source](../../dagrunner/utils/logger.py#L153)
+[Source](../../dagrunner/utils/logger.py#L183)
 
 ### Call Signature:
 
@@ -221,7 +223,7 @@ Custom logging handler to write log messages to an SQLite database.
 
 ### function: `__init__`
 
-[Source](../../dagrunner/utils/logger.py#L158)
+[Source](../../dagrunner/utils/logger.py#L188)
 
 #### Call Signature:
 
@@ -234,7 +236,7 @@ and the filter list to empty.
 
 ### function: `close`
 
-[Source](../../dagrunner/utils/logger.py#L212)
+[Source](../../dagrunner/utils/logger.py#L242)
 
 #### Call Signature:
 
@@ -246,7 +248,7 @@ Ensure the database connection is closed cleanly.
 
 ### function: `emit`
 
-[Source](../../dagrunner/utils/logger.py#L185)
+[Source](../../dagrunner/utils/logger.py#L215)
 
 #### Call Signature:
 
@@ -258,17 +260,17 @@ Emit a log record, and insert it into the database.
 
 ## function: `client_attach_socket_handler`
 
-[Source](../../dagrunner/utils/logger.py#L43)
+[Source](../../dagrunner/utils/logger.py#L46)
 
 ### Call Signature:
 
 ```python
-client_attach_socket_handler(host: str = 'localhost', port: int = 9020)
+client_attach_socket_handler(host: str = 'localhost', port: int = 9020, name: str = '')
 ```
 
-Attach a SocketHandler instance to the root logger at the sending end.
+Attach a SocketHandler instance to the named logger at the sending end.
 
-Now, we can log to the root logger, or any other logger. First the root...
+Now, we can log to the named logger, or any other logger. First the root...
     logging.info('Jackdaws love my big sphinx of quartz.')
 
 Now, define a couple of other loggers which might represent areas in your
@@ -285,10 +287,13 @@ application:
 Args:
 - `host`: The host name of the server.  Optional.
 - `port`: The port number the server is listening on.  Optional.
+- `name`: The name of the logger to attach the socket handler to.  Optional.
+          If `name` is not specified, the socket handler is attached to the
+          root logger as per `logging.getLogger("")`
 
 ## function: `main`
 
-[Source](../../dagrunner/utils/logger.py#L265)
+[Source](../../dagrunner/utils/logger.py#L335)
 
 ### Call Signature:
 
@@ -302,19 +307,32 @@ Parses command line arguments and executes the logging server
 
 ## function: `start_logging_server`
 
-[Source](../../dagrunner/utils/logger.py#L231)
+[Source](../../dagrunner/utils/logger.py#L261)
 
 ### Call Signature:
 
 ```python
-start_logging_server(sqlite_filepath: str = None, host: str = 'localhost', port: int = 9020, verbose: bool = False)
+start_logging_server(sqlite_filepath: str = None, host: str = 'localhost', port: int = 9020)
 ```
 
 Start the logging server.
+
+SIGINT (Ctrl-C) and SIGTERM drain pending connections and complete records
+already available on their sockets, without waiting for clients to send
+more data or disconnect. Records still missing bytes when no more data is
+available are discarded. In-progress record handling, including SQLite
+writes, finishes before the SQLite handler is closed and detached.
+Must run in the main thread.
+
+Request handlers are server-side threads receiving records from clients,
+which normally run in separate processes. Shutdown closes the server's
+connections; it does not close client-side SocketHandlers or stop client
+processes. Only the SQLite handler created here is detached and closed.
+The function then returns rather than explicitly exiting Python, so other
+handlers and threads in this process are not stopped by this function.
 
 Args:
 - `sqlite_filepath`: The file path to the SQLite database.  Optional.
 - `host`: The host name of the server.  Optional.
 - `port`: The port number the server is listening on.  Optional.
-- `verbose`: Whether to print verbose output.  Optional.
 
