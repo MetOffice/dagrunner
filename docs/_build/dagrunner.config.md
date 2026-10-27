@@ -57,13 +57,18 @@ options::
 
     # Logging
     [dagrunner_logging]
+    # Enabled flag for logging, should be set to True or False (default is False).
     enabled
+    # Hostname of the logging server (default is 'localhost').
     host
+    # Port number of the logging server (default is 9020).
     port
+    # Name of the logger to attach the socket handler to (root if not specified).
+    name
 
 ### function: `__getitem__`
 
-[Source](../../dagrunner/config.py#L172)
+[Source](../../dagrunner/config.py#L182)
 
 #### Call Signature:
 
@@ -73,7 +78,7 @@ __getitem__(self, key)
 
 ### function: `__init__`
 
-[Source](../../dagrunner/config.py#L83)
+[Source](../../dagrunner/config.py#L93)
 
 #### Call Signature:
 
@@ -85,7 +90,7 @@ Initialize self.  See help(type(self)) for accurate signature.
 
 ### function: `__repr__`
 
-[Source](../../dagrunner/config.py#L90)
+[Source](../../dagrunner/config.py#L100)
 
 #### Call Signature:
 
@@ -97,7 +102,7 @@ Return repr(self).
 
 ### function: `__setitem__`
 
-[Source](../../dagrunner/config.py#L175)
+[Source](../../dagrunner/config.py#L185)
 
 #### Call Signature:
 
@@ -107,7 +112,7 @@ __setitem__(self, key, value)
 
 ### function: `__str__`
 
-[Source](../../dagrunner/config.py#L87)
+[Source](../../dagrunner/config.py#L97)
 
 #### Call Signature:
 
@@ -119,7 +124,7 @@ Return str(self).
 
 ### function: `parse_configuration`
 
-[Source](../../dagrunner/config.py#L146)
+[Source](../../dagrunner/config.py#L156)
 
 #### Call Signature:
 
