@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # (C) Crown Copyright, Met Office. All rights reserved.
 #
 # This file is part of 'dagrunner' and is released under the BSD 3-Clause license.
@@ -27,6 +28,8 @@ import logging
 import logging.handlers
 import os
 import pickle
+import select
+import signal
 import socket
 import socketserver
 import sqlite3
@@ -41,12 +44,14 @@ DATEFMT = "%Y-%m-%dT%H:%M:%S"  # Date in ISO 8601 format
 
 
 def client_attach_socket_handler(
-    host: str = "localhost", port: int = logging.handlers.DEFAULT_TCP_LOGGING_PORT
+    host: str = "localhost",
+    port: int = logging.handlers.DEFAULT_TCP_LOGGING_PORT,
+    name: str = "",
 ):
     """
-    Attach a SocketHandler instance to the root logger at the sending end.
+    Attach a SocketHandler instance to the named logger at the sending end.
 
-    Now, we can log to the root logger, or any other logger. First the root...
+    Now, we can log to the named logger, or any other logger. First the root...
         logging.info('Jackdaws love my big sphinx of quartz.')
 
     Now, define a couple of other loggers which might represent areas in your
@@ -63,9 +68,12 @@ def client_attach_socket_handler(
     Args:
     - `host`: The host name of the server.  Optional.
     - `port`: The port number the server is listening on.  Optional.
+    - `name`: The name of the logger to attach the socket handler to.  Optional.
+              If `name` is not specified, the socket handler is attached to the
+              root logger as per `logging.getLogger("")`
 
     """
-    rootLogger = logging.getLogger("")
+    rootLogger = logging.getLogger(name)
     rootLogger.setLevel(logging.DEBUG)
     socketHandler = logging.handlers.SocketHandler(host, port)
     # don't bother with a formatter, since a socket handler sends the event as
@@ -81,6 +89,28 @@ class LogRecordStreamHandler(socketserver.StreamRequestHandler):
     records and customise logging events.
     """
 
+    def _recv(self, size):
+        """Receive exactly ``size`` bytes, draining available data on shutdown.
+
+        Poll during normal operation so idle clients cannot block shutdown.
+        Once stopping, read only immediately available bytes instead of waiting
+        for clients to send more or disconnect. Return ``b""`` on disconnect
+        or when shutdown leaves an incomplete record.
+        """
+        chunks = bytearray()
+        while len(chunks) < size:
+            timeout = 0 if self.server.abort else self.server.timeout
+            readable, _, _ = select.select([self.connection], [], [], timeout)
+            if not readable:
+                if self.server.abort:
+                    return b""
+                continue
+            chunk = self.connection.recv(size - len(chunks))
+            if not chunk:
+                return b""
+            chunks.extend(chunk)
+        return bytes(chunks)
+
     def handle(self):
         """
         Handle multiple requests - each expected to be a 4-byte length,
@@ -88,13 +118,13 @@ class LogRecordStreamHandler(socketserver.StreamRequestHandler):
         according to whatever policy is configured locally.
         """
         while True:
-            chunk = self.connection.recv(4)
+            chunk = self._recv(4)
             if len(chunk) < 4:
                 break
             slen = struct.unpack(">L", chunk)[0]
-            chunk = self.connection.recv(slen)
-            while len(chunk) < slen:
-                chunk = chunk + self.connection.recv(slen - len(chunk))
+            chunk = self._recv(slen)
+            if not chunk:
+                break
             obj = self.unpickle(chunk)
             record = logging.makeLogRecord(obj)
             record.hostname = socket.gethostname()
@@ -140,14 +170,14 @@ class LogRecordSocketReceiver(socketserver.ThreadingTCPServer):
         self.logname = None
 
     def serve_until_stopped(self):
-        import select
-
-        abort = 0
-        while not abort:
-            rd, wr, ex = select.select([self.socket.fileno()], [], [], self.timeout)
+        """Accept requests until stopped, including connections already queued."""
+        while True:
+            timeout = 0 if self.abort else self.timeout
+            rd, wr, ex = select.select([self.socket.fileno()], [], [], timeout)
             if rd:
                 self.handle_request()
-            abort = self.abort
+            elif self.abort:
+                break
 
 
 class SQLiteHandler(logging.Handler):
@@ -232,16 +262,29 @@ def start_logging_server(
     sqlite_filepath: str = None,
     host: str = "localhost",
     port: int = logging.handlers.DEFAULT_TCP_LOGGING_PORT,
-    verbose: bool = False,
 ):
     """
     Start the logging server.
+
+    SIGINT (Ctrl-C) and SIGTERM drain pending connections and complete records
+    already available on their sockets, without waiting for clients to send
+    more data or disconnect. Records still missing bytes when no more data is
+    available are discarded. In-progress record handling, including SQLite
+    writes, finishes before the SQLite handler is closed and detached.
+    Must run in the main thread.
+
+    Request handlers are server-side threads receiving records from clients,
+    which normally run in separate processes. Shutdown closes the server's
+    connections; it does not close client-side SocketHandlers or stop client
+    processes. Only the SQLite handler created here is detached and closed.
+    The function then returns rather than explicitly exiting Python, so other
+    handlers and threads in this process are not stopped by this function.
 
     Args:
     - `sqlite_filepath`: The file path to the SQLite database.  Optional.
     - `host`: The host name of the server.  Optional.
     - `port`: The port number the server is listening on.  Optional.
-    - `verbose`: Whether to print verbose output.  Optional.
+
     """
     logging.basicConfig(
         format=(
@@ -251,15 +294,42 @@ def start_logging_server(
         datefmt=DATEFMT,
     )
 
-    tcpserver = LogRecordSocketReceiver(host=host, port=port)
-    if sqlite_filepath:
-        sqlite_handler = SQLiteHandler(sqlite_filepath)
-        logging.getLogger("").addHandler(sqlite_handler)
-    print(
-        "About to start TCP server...\n",
-        f"HOST: {host}; PORT: {port}; PID: {os.getpid()}; SQLITE: {sqlite_filepath}\n",
-    )
-    tcpserver.serve_until_stopped()
+    sqlite_handler = None
+    original_signal_handlers = {}
+    try:
+        with LogRecordSocketReceiver(host=host, port=port) as tcpserver:
+
+            def stop_server(signum, frame):
+                tcpserver.abort = 1
+
+            for signum in (signal.SIGINT, signal.SIGTERM):
+                original_signal_handlers[signum] = signal.signal(signum, stop_server)
+
+            if sqlite_filepath:
+                sqlite_handler = SQLiteHandler(sqlite_filepath)
+                logging.getLogger("").addHandler(sqlite_handler)
+            bound_port = tcpserver.server_address[1]
+            sqlite_info = (
+                f"; SQLITE: {sqlite_filepath}" if sqlite_handler is not None else ""
+            )
+            print(
+                "About to start TCP server...\n"
+                f"HOST: {host}; PORT: {bound_port}; PID: {os.getpid()}{sqlite_info}\n"
+                f"LOG_SERVER_READY port={bound_port}\n",
+                flush=True,
+            )
+            try:
+                tcpserver.serve_until_stopped()
+            finally:
+                tcpserver.abort = 1
+    finally:
+        try:
+            if sqlite_handler is not None:
+                logging.getLogger("").removeHandler(sqlite_handler)
+                sqlite_handler.close()
+        finally:
+            for signum, handler in original_signal_handlers.items():
+                signal.signal(signum, handler)
 
 
 def main():
@@ -269,7 +339,7 @@ def main():
     Parses command line arguments and executes the logging server
     """
     args, kwargs = function_to_argparse_parse_args(start_logging_server)
-    start_logging_server(**args, **kwargs)()
+    start_logging_server(**args, **kwargs)
 
 
 if __name__ == "__main__":
