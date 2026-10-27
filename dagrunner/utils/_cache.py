@@ -8,14 +8,14 @@ import tempfile
 import warnings
 from pathlib import Path
 
-from dagrunner.config import CONFIG
+from ..config import CONFIG
 
 
 class _PickleCache:
     def __init__(self, node_id, verbose=False):
         self._node_id = str(node_id).replace(os.sep, "_")
         self._verbose = verbose
-        cache_dir = CONFIG["dagrunner_runtime"].get("cache_dir", None)
+        cache_dir = CONFIG["dagrunner_cache"].get("dir", None)
         if cache_dir is None:
             self._pickle_filepath = Path(tempfile.gettempdir()) / "dagrunner_cache"
         else:

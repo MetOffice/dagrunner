@@ -37,7 +37,6 @@ class GlobalConfiguration(object, metaclass=Singleton):
     The following represents a description of the runtime configuration
     options::
 
-        # Graph visualisation
         [dagrunner_visualisation]
         enabled
         title
@@ -47,22 +46,32 @@ class GlobalConfiguration(object, metaclass=Singleton):
         group_by
         label_by
 
-        [dagrunner_runtime]
-        # cache disable/enable: None/False/True.
-        # None implies enabled only if cache_dir is set.
-        cache_enabled
-        # if not specified and cache enabled, uses temp directory 'dagrunner_cache'
-        # in temp folder
-        cache_dir
 
-        # Logging
+        [dagrunner_cache]
+
+        # Cache node execution results: all nodes 'all', nodes explicitly marked for caching 'explicit', or none 'none' (default is explicit).
+        policy
+
+        # Record graph execution state in the case of failure to allow resuming
+        # Valid values are True or False (default is True, but currently only applicable for the 'multiprocessing' scheduler).
+        checkpoint
+
+        # Directory for cached results (default is $TMPDIR).
+        # It is suggested that you configure the cache directory so that you manage the lifecycle of cached results and ensure proper isolation.
+        dir
+
+
         [dagrunner_logging]
+
         # Enabled flag for logging, should be set to True or False (default is False).
         enabled
+
         # Hostname of the logging server (default is 'localhost').
         host
+
         # Port number of the logging server (default is 9020).
         port
+
         # Name of the logger to attach the socket handler to (root if not specified).
         name
 
@@ -87,7 +96,12 @@ class GlobalConfiguration(object, metaclass=Singleton):
             "group_by": None,
             "label_by": None,
         },
-        "dagrunner_runtime": {"cache_enabled": None, "cache_dir": None},
+        "dagrunner_cache": {
+            "enabled": None,
+            "policy": None,
+            "checkpoint": None,
+            "dir": None,
+        },
     }
 
     def __init__(self):
