@@ -305,7 +305,11 @@ def _get_networkx(networkx_graph):
     else:
         try:
             edges, nodes = networkx_graph
-            nodes = {k: _process_nodes(k) | nodes[k] for k in nodes.keys()}.items()
+            try:
+                nodes = {k: _process_nodes(k) | nodes[k] for k in nodes.keys()}.items()
+            except TypeError:
+                # fallback as vars() isn't supported, just use the items as they are
+                nodes = nodes.items()
             nxgraph = nx.DiGraph()
             nxgraph.add_edges_from(edges)
             nxgraph.add_nodes_from(nodes)
