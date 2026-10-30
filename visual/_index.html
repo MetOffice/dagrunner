@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        :root {
+            color-scheme: light dark;
+        }
+
+        body {
+            color: CanvasText;
+            background-color: Canvas;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        header {
+            padding: 5px 5px;
+            display: flex;
+            align-items: center;
+        }
+        select {
+            font-size: 16px;
+            margin-left: 0px;
+            margin-right: 5px;
+        }
+        #toggle-theme {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            padding: 3px;
+            margin-left: auto;
+            color: CanvasText;
+            background: Canvas;
+            border: 1px solid GrayText;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        iframe {
+            flex-grow: 1;
+            width: 100%;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <select id="configSelector" onchange="updateFrameSrc()">
+        <option value="" selected disabled>Select config</option>
+        <!-- Options will be populated by create_suite_plots.py --- IGNORE --- -->
+    </select>
+    <button id="toggle-theme" type="button" title="Switch theme" aria-label="Switch theme">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
+            <circle r="10" cx="12" cy="12" stroke-width="2" stroke="currentColor" fill="none" />
+            <path fill="currentColor" d="M12 22A1 1 0 0 0 12 2" />
+        </svg>
+    </button>
+</header>
+
+<iframe id="contentFrame"></iframe>
+
+<script>
+    const indexTitle = "__INDEX_TITLE__";
+    const contentFrame = document.getElementById('contentFrame');
+    const themeButton = document.getElementById('toggle-theme');
+    const storageKey = 'mermaid-table-standard-theme';
+    let theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    try {
+        const stored = localStorage.getItem(storageKey);
+        if (stored === 'light' || stored === 'dark') theme = stored;
+    } catch (error) {}
+
+    function sendTheme() {
+        contentFrame.contentWindow?.postMessage(
+            { type: 'dagrunner:set-theme', theme },
+            location.origin === 'null' ? '*' : location.origin
+        );
+    }
+
+    function applyTheme() {
+        document.documentElement.style.colorScheme = theme;
+        const label = `Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`;
+        themeButton.title = label;
+        themeButton.setAttribute('aria-label', label);
+        themeButton.setAttribute('aria-pressed', String(theme === 'dark'));
+        try {
+            localStorage.setItem(storageKey, theme);
+        } catch (error) {}
+        sendTheme();
+    }
+
+    themeButton.addEventListener('click', () => {
+        theme = theme === 'light' ? 'dark' : 'light';
+        applyTheme();
+    });
+    contentFrame.addEventListener('load', sendTheme);
+    window.addEventListener('message', (event) => {
+        if (event.source !== contentFrame.contentWindow || event.origin !== location.origin) return;
+        if (event.data?.type === 'dagrunner:theme-ready') sendTheme();
+    });
+    applyTheme();
+
+    function updateFrameSrc() {
+        const currentConfig = document.getElementById('configSelector').value;
+        const contentFrame = document.getElementById('contentFrame');
+
+        if (currentConfig) {
+            contentFrame.removeAttribute('srcdoc');
+            contentFrame.src = currentConfig;
+        } else {
+            contentFrame.src = "about:blank";
+            contentFrame.srcdoc = `
+                <style>
+                    :root { color-scheme: light dark; }
+                    body { margin: 0; padding: 16px; background: Canvas; color: CanvasText; }
+                </style>
+                <h1>${indexTitle}</h1>
+            `;
+        }
+    }
+    updateFrameSrc();
+</script>
+
+</body>
+</html>

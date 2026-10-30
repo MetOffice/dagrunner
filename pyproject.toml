@@ -20,8 +20,18 @@ dependencies = [
   'dask[distributed] >= 2026.3.0',
 ]
 
+[tool.setuptools]
+script-files = ["bin/dagrunner-plot"]
+
 [tool.setuptools.packages.find]
-exclude = ["visual"]
+include = ["dagrunner*"]
+
+[tool.setuptools.data-files]
+"share/dagrunner/visual" = [
+  "visual/create_plots.py",
+  "visual/_index.html",
+  "visual/mermaid-table-standard.js",
+]
 
 [project.optional-dependencies]
 visualisation = [

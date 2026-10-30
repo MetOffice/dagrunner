@@ -1,5 +1,53 @@
 # Visualisation
 
+## Generating Workflow Plots
+
+[create_plots.py](create_plots.py) generates linked HTML visualisations from a
+NetworkX graph: a collapsed overview, detail pages for each value of a chosen node
+attribute, and an index page for selecting configurations. Installing DAGrunner
+installs this utility as the `dagrunner-plot` command.
+The plotting script and browser assets are deployed as shared data, not as a
+separate importable `visual` package; `dagrunner` remains the only top-level package.
+
+Pass the importable dotted path to your graph or graph-building function, plus a
+JSON file defining how the two plot levels should be displayed:
+
+```sh
+dagrunner-plot my_workflow.build_graph \
+		--networkx-graph-kwargs suite_name example \
+		--plot-config-filepath plots.json --output-root graphs
+```
+
+Replace `my_workflow.build_graph` with your own importable graph factory. Repeat
+`--networkx-graph-kwargs key value` for additional keyword arguments; CLI values
+are strings. A factory can return a graph or a `(graph, metadata)` tuple.
+For nodes with `chain`, `leadtime`, `system`, and `step` attributes, `plots.json`
+could contain:
+
+```json
+{
+	"index_title": "Workflow visualisation",
+	"detail_by": "chain",
+	"level1": {
+		"collapse_properties": ["leadtime", "system", "step"],
+		"label_by": ["chain"]
+	},
+	"level2": {
+		"collapse_properties": ["leadtime"],
+		"label_by": ["system", "step"],
+		"group_by": ["chain"]
+	}
+}
+```
+
+Choose attribute names to match your graph's nodes. Open the generated
+`graphs/index.html` in a browser. Use `--override-existing` to replace existing
+plots, `--webcomponent /path/to/mermaid-table-standard.js` to bundle a local
+component instead of the default CDN version, and `dagrunner-plot --help` for
+all options.
+
+## Web Component
+
 [mermaid-table-standard.js](mermaid-table-standard.js) provides a
 `<mermaid-table-standard>` web component combining a Mermaid diagram with a lookup
 table. Load it as a classic script with `defer`; Mermaid 9 is downloaded from
