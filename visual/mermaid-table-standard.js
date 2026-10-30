@@ -1,3 +1,87 @@
+/**
+ * @file Mermaid diagram and lookup-table web component.
+ *
+ * Loading and markup
+ * ------------------
+ * Load once per document as a classic script, normally with `defer`. Registers
+ * <mermaid-table-standard> and the global bindSubgraphClicks helper. See README.md
+ * for a complete HTML example. Requires a browser with custom elements, Shadow
+ * DOM, slots, CSS light-dark(), and color-scheme support.
+ *
+ * Supply a <pre class="mermaid" slot="mermaid"> containing Mermaid source and a
+ * <table slot="table"> with <thead>, <tbody>, and rows identified as row<ID>.
+ * Use numeric Mermaid node IDs and begin visible node labels with the same ID
+ * for diagram/table selection. `click <ID> callback "Tooltip"` declarations use
+ * a default window.callback, installed only when no callback already exists.
+ * A row click highlights the row and centres its node; a diagram click highlights
+ * the matching row. Sorting compares cell HTML lexicographically, not numerically.
+ *
+ * The component uses an open shadow root for controls and layout, with diagram
+ * and table content remaining in light DOM. This script also injects global
+ * html/body, table, and tooltip styles; it is intended for a dedicated diagram
+ * page and disables page scrolling. The diagram is vertically resizable.
+ *
+ * Rendering and dependencies
+ * --------------------------
+ * Mermaid is loaded asynchronously from jsDelivr (mermaid@9) unless window.mermaid
+ * already exists. Network/CSP rules must permit that script; the banner also
+ * loads a GitHub-hosted logo. Mermaid is configured with securityLevel: 'loose'
+ * for callbacks/tooltips: accept only trusted diagram and table HTML.
+ *
+ * DOMContentLoaded/customElements.whenDefined do not guarantee SVG readiness.
+ * Listen on the component for `mermaidRendered`, a bubbling CustomEvent without
+ * detail, after a completed render. Rendering is also triggered by theme changes
+ * and replaces SVG nodes while retaining pan/zoom state. Do not retain SVG node
+ * references across renders. bindSubgraphClicks handles rebinding automatically.
+ *
+ * Public integration helpers
+ * --------------------------
+ * - component.upsertTopLeftLink({ id, href, textContent, target }): creates or
+ *   updates an anchor by a required non-empty id. Optional fields update only
+ *   when supplied. Returns the anchor, or null if controls are not available.
+ *   Relative hrefs resolve against the graph document; navigation stays in the
+ *   iframe unless target is supplied (for example, '_top' or '_blank').
+ * - component.getTopLeftControlsContainer(): returns the shadow controls element
+ *   or null; prefer upsertTopLeftLink for navigation links.
+ * - component.highlightRow(rowID, centrerNode = false): highlights an existing
+ *   table row; true also pans to its diagram node. The parameter spelling is
+ *   retained for compatibility; centring requires a rendered diagram.
+ * - bindSubgraphClicks(callback, pattern = null, { component } = {}): binds node
+ *   and cluster-label clicks. With a RegExp, callback receives capture group 1
+ *   when present, otherwise the full match; without one, the trimmed label.
+ *   The default component is the first body-level component, then the first
+ *   component anywhere in the document. Call once per component; the helper
+ *   binds existing labels and listens for subsequent mermaidRendered events.
+ *
+ * Example, after the component has connected:
+ *   const component = document.querySelector('mermaid-table-standard');
+ *   component.upsertTopLeftLink({
+ *       id: 'overview', href: 'index.html', textContent: 'Overview'
+ *   });
+ *   bindSubgraphClicks(name => {
+ *       component.upsertTopLeftLink({
+ *           id: 'detail', href: `${encodeURIComponent(name)}.html`, textContent: name
+ *       });
+ *   }, /chain:\s*([\w-]+)/i, { component });
+ *
+ * Theme ownership and iframe protocol
+ * -----------------------------------
+ * Standalone mode initializes from localStorage['mermaid-table-standard-theme']
+ * or the OS preference, then stores button selections when storage is available.
+ * data-theme reflects the applied value; setting that attribute directly changes
+ * CSS but does not request a Mermaid re-render.
+ *
+ * Embedded components send { type: 'dagrunner:theme-ready' } to window.parent.
+ * The parent should listen before loading the iframe, validate event.source and
+ * event.origin, and reply using iframe.contentWindow.postMessage with:
+ *   { type: 'dagrunner:set-theme', theme: 'light' } // or 'dark'
+ * Use an explicit target origin for hosted pages; opaque file: origins require
+ * '*'. Messages carry no secrets. The component accepts only its parent's
+ * messages with the exact type and a valid theme, hides its local theme button,
+ * updates the document color scheme, and re-renders if the theme changed.
+ * The parent owns its own controls/storage and must resend the selection after
+ * iframe navigation; readiness is announced again by each new graph document.
+ */
 class TableStandardFmt extends HTMLElement {
     constructor() {
         super();
@@ -321,8 +405,8 @@ class TableStandardFmt extends HTMLElement {
 
                 #diag-top-left-controls {
                     position: absolute;
-                    left: 0px;
-                    top: 0px;
+                    left: 10px;
+                    top: 10px;
                     display: flex;
                     flex-direction: row;
                     align-items: center;
