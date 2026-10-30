@@ -504,14 +504,31 @@ class TableStandardFmt extends HTMLElement {
         let theme = getStoredTheme() || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
         this.setAttribute("data-theme", theme);
 
-        const updateTheme = async () => {
-            theme = theme === "light" ? "dark" : "light";
+        // Apply the theme to the component and store it
+        const applyTheme = async (value) => {
+            if (value === theme) return;
+            theme = value;
             this.setAttribute("data-theme", theme);
             setStoredTheme(theme);
             await this.renderMermaidDiagram(theme, { force: true });
         };
 
-        themeToggleButton.addEventListener("click", updateTheme);
+        // Set up the click handler for the theme toggle button
+        themeToggleButton.addEventListener("click", () => {
+            applyTheme(theme === "light" ? "dark" : "light");
+        });
+
+        // Apply the initial theme
+        if (window.parent !== window) {
+            window.addEventListener("message", (event) => {
+                if (event.source !== window.parent || event.data?.type !== "dagrunner:set-theme") return;
+                if (event.data.theme !== "light" && event.data.theme !== "dark") return;
+                themeToggleButton.hidden = true;
+                document.documentElement.style.colorScheme = event.data.theme;
+                applyTheme(event.data.theme);
+            });
+            window.parent.postMessage({ type: "dagrunner:theme-ready" }, "*");
+        }
     }
 
     setupRowClickHandling() {
