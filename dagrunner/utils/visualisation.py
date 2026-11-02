@@ -370,8 +370,10 @@ def visualise_graph_mermaid(
     else:
         table = HTMLTable(["id", "node", "info"])
 
-    label_by = as_iterable(label_by)
-    group_by = as_iterable(group_by)
+    if label_by:
+        label_by = as_iterable(label_by)
+    if group_by:
+        group_by = as_iterable(group_by)
 
     node_target_id_map = {}
     node_id = 0

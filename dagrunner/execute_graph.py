@@ -278,7 +278,7 @@ def _process_nodes(node):
     return {k: v for k, v in vars(node).items() if v is not None}
 
 
-def _get_networkx(networkx_graph):
+def get_networkx(networkx_graph):
     """
     Converts the input `networkx_graph` into a NetworkX DiGraph object.
 
@@ -381,7 +381,7 @@ class ExecuteGraph:
         if config_filepath:
             CONFIG.parse_configuration(config_filepath)
 
-        self._nxgraph = _get_networkx(networkx_graph)
+        self._nxgraph = get_networkx(networkx_graph)
         self._nxgraph_kwargs = networkx_graph_kwargs or {}
         self._plugin_executor = plugin_executor
         if scheduler not in SCHEDULERS:
