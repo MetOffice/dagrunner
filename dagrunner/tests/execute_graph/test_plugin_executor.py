@@ -2,9 +2,11 @@
 #
 # This file is part of 'dagrunner' and is released under the BSD 3-Clause license.
 # See LICENSE in the root of the repository for full licensing details.
+import copy
 from unittest import mock
 
 import pytest
+from dask.base import normalize_token
 
 from dagrunner.config import GlobalConfiguration
 from dagrunner.events import IGNORE_EVENT, SKIP_EVENT
@@ -13,7 +15,7 @@ from dagrunner.execute_graph import plugin_executor
 
 @pytest.fixture(autouse=True)
 def patch_config():
-    DummyConfig = GlobalConfiguration._INI_PARAMETERS.copy()
+    DummyConfig = copy.deepcopy(GlobalConfiguration._INI_PARAMETERS)
     """Stop picking up any configuration from the environment."""
     with mock.patch("dagrunner.execute_graph.CONFIG", new=DummyConfig):
         yield
@@ -266,8 +268,27 @@ def test_cached_execution_disabled():
 
 
 @pytest.fixture
+def mock_normalize_token():
+    """
+    Register mock.Mock normalization for token generation, isolated to
+    specific tests.
+    """
+
+    @normalize_token.register(mock.Mock)
+    def normalize_mock(m):
+        return ("mock", m.side_effect.__name__)
+
+    yield
+
+    # Clean up: remove the mock.Mock handler from the registry
+    # no way to do this via the public API, so we have to manipulate the private _lookup
+    # dict directly.
+    normalize_token._lookup.pop(mock.Mock, None)
+
+
+@pytest.fixture
 def mock_config(tmp_path):
-    DummyConfig = GlobalConfiguration._INI_PARAMETERS.copy()
+    DummyConfig = copy.deepcopy(GlobalConfiguration._INI_PARAMETERS)
     DummyConfig.update(
         {"dagrunner_runtime": {"cache_enabled": True, "cache_dir": str(tmp_path)}}
     )
@@ -285,17 +306,20 @@ def mock_config(tmp_path):
         [lambda x: None, None, 1],  # check None return caching
     ],
 )
-def test_cached_execution_enabled(mock_config, side_effect, res, final_call_count):
+def test_global_cached_execution_enabled(
+    mock_config, mock_normalize_token, side_effect, res, final_call_count
+):
     """Test that execution is utilising cache."""
     args = (5,)
 
     mock_callable = mock.Mock(side_effect=side_effect)
+
     call = tuple([mock_callable])
     with pytest.warns(
         DeprecationWarning, match="This class is experimental and untested"
     ):
-        res = plugin_executor(*args, call=call)
-    assert res == res
+        pres = plugin_executor(*args, call=call)
+    assert pres == res
     assert mock_callable.call_count == 1
 
     with pytest.warns(
@@ -305,6 +329,60 @@ def test_cached_execution_enabled(mock_config, side_effect, res, final_call_coun
 
     assert res == res
     assert mock_callable.call_count == final_call_count
+
+
+@pytest.fixture
+def mock_config_single(tmp_path):
+    DummyConfig = copy.deepcopy(GlobalConfiguration._INI_PARAMETERS)
+    DummyConfig.update(
+        {"dagrunner_runtime": {"cache_enabled": False, "cache_dir": str(tmp_path)}}
+    )
+    patch_config1 = mock.patch("dagrunner.execute_graph.CONFIG", new=DummyConfig)
+    patch_config2 = mock.patch("dagrunner.utils._cache.CONFIG", new=DummyConfig)
+
+    with patch_config1 as p1, patch_config2 as p2:
+        yield (p1, p2)
+
+
+def test_single_node_cache(mock_config_single, mock_normalize_token):
+    """Test that execution is utilising cache for a single node."""
+    args = (5,)
+    mock_callable = mock.Mock(side_effect=lambda x: x + 5)
+    call = tuple([mock_callable])
+    _ = plugin_executor(*args, call=call)
+    assert mock_callable.call_count == 1
+    _ = plugin_executor(*args, cache_result=True, call=call)
+    assert mock_callable.call_count == 2
+    _ = plugin_executor(*args, cache_result=True, call=call)
+    assert mock_callable.call_count == 2
+
+
+class CallableWithNonDeterministicToken:
+    def __getstate__(self):
+        raise RuntimeError("cannot pickle this")
+
+    def __call__(self, *args, **kwargs):
+        return False
+
+
+def test_non_deterministic_token(mock_config_single):
+    """
+    Ensure a warning is raised when a non-deterministic token is generated for
+    a node_id and that caching is disabled for that node.
+    """
+    args = (5,)
+    mock_callable = mock.Mock(CallableWithNonDeterministicToken())
+
+    call = tuple([mock_callable])
+    with pytest.warns(UserWarning, match="Failed to generate deterministic token"):
+        _ = plugin_executor(*args, call=call, cache_result=True)
+    assert mock_callable.call_count == 1
+    with pytest.warns(UserWarning, match="Failed to generate deterministic token"):
+        _ = plugin_executor(*args, call=call, cache_result=True)
+    assert mock_callable.call_count == 2
+    with pytest.warns(UserWarning, match="Failed to generate deterministic token"):
+        _ = plugin_executor(*args, call=call, cache_result=True)
+    assert mock_callable.call_count == 3
 
 
 def test_extended_init_failure_context():
