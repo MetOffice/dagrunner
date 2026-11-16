@@ -50,7 +50,12 @@ all options.
 
 [mermaid-table-standard.js](mermaid-table-standard.js) provides a
 `<mermaid-table-standard>` web component combining a Mermaid diagram with a lookup
-table. Load it as a classic script with `defer`; Mermaid 9 is downloaded from
+table. It enables standardising capability to visualise graphs alongside their supporting
+data table, with interactive controls for navigation, highlighting, sorting, and SVG export.
+A reusable web component can be embedded in a page with a simple HTML tag, without requiring
+each user to build or bundle the visualisation code.
+
+Load it as a classic script with `defer`; Mermaid 9 is downloaded from
 jsDelivr automatically unless already loaded.
 
 ## Minimal Example
