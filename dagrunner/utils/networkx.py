@@ -109,6 +109,32 @@ def get_subset_with_dependencies(
     return graph.subgraph(dependencies)
 
 
+def partition_graph_by_target(
+    graph: nx.DiGraph,
+    decouple_properties: Union[str, Iterable[str]] = None,
+):
+    """
+    Partition a DAG by matching targets and property-based dependency boundaries.
+
+    Args:
+    - `graph`: A directed acyclic graph. Nodes must expose the named properties.
+    - `decouple_properties`: One or more node properties. An edge crossing a change
+      in any of these properties is a boundary. With no properties, each partition
+      contains all ancestors of its target.
+    """
+    if not nx.is_directed_acyclic_graph(graph):
+        raise ValueError("Target partitioning requires a directed acyclic graph.")
+    if graph.is_multigraph():
+        raise TypeError("Target partitioning does not support parallel edges.")
+
+    targets = [node for node, degree in graph.out_degree if degree == 0]
+
+    subgraphs = {}
+    for target in targets:
+        subgraphs[target] = graph.subgraph(nx.ancestors(graph, target) | {target})
+    return subgraphs
+
+
 def collapse_graph(
     graph: nx.DiGraph,
     collapse_properties: Union[str, Iterable[str]],
