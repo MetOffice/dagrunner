@@ -86,5 +86,31 @@ def test_default_targets(graph):
     assert decouple_lookup == {
         c1: None,
         c2: None,
-        f2: [b1],
+        f2: {b1: (c1,)},
     }
+
+
+def test_multiple_suppliers():
+    shared = Node("s", 1, 1)
+    target_a, target_b, consumer = Node("a", 1, 3), Node("b", 1, 3), Node("c", 2, 1)
+    graph = nx.DiGraph([(shared, target_a), (shared, target_b), (shared, consumer)])
+
+    _, decouple_lookup = partition_graph_by_target(graph, decouple_properties="l")
+
+    assert decouple_lookup[consumer] == {shared: (target_a, target_b)}
+
+
+def test_unowned_boundary_node():
+    graph = nx.DiGraph([(Node("s", 1, 1), Node("d", 2, 1))])
+
+    with pytest.raises(ValueError, match="no supplying target"):
+        partition_graph_by_target(graph, decouple_properties="l")
+
+
+def test_cyclic_subgraph_dependencies():
+    a1, a2, t1 = Node("a", 1, 1), Node("a", 1, 2), Node("a", 1, 3)
+    b1, b2, t2 = Node("b", 2, 1), Node("b", 2, 2), Node("b", 2, 3)
+    graph = nx.DiGraph([(a1, a2), (a2, t1), (b1, b2), (b2, t2), (a1, b2), (b1, a2)])
+
+    with pytest.raises(ValueError, match="cyclic"):
+        partition_graph_by_target(graph, decouple_properties="l")

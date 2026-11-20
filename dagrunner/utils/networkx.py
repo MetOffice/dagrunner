@@ -114,7 +114,7 @@ def partition_graph_by_target(
     decouple_properties: Union[str, Iterable[str]] = None,
 ) -> tuple[
     dict[Hashable, nx.DiGraph],
-    dict[Hashable, Union[list[Hashable], None]],
+    dict[Hashable, Union[dict[Hashable, tuple[Hashable, ...]], None]],
 ]:
     """
     Partition a DAG by matching targets and property-based dependency boundaries.
@@ -129,14 +129,16 @@ def partition_graph_by_target(
         Two dictionaries keyed by target node: independent subgraph copies and a
         decoupled-node lookup. Each subgraph retains incoming boundary edges and their
         upstream nodes, but does not traverse beyond those boundaries. The lookup maps
-        each target to the distinct upstream boundary nodes included in its subgraph,
-        or None if it has no such nodes. Nodes are listed in graph edge iteration order.
+        each target to None or to a dictionary of its decoupled (upstream boundary)
+        nodes, each mapped to the tuple of other targets whose subgraphs supply it,
+        i.e. those that must complete first.  Both are in graph iteration order.
         Graph, node and edge attributes are preserved with NetworkX shallow-copy
         semantics; the input graph is not modified.
 
     Raises:
-        ValueError: If the graph is not directed and acyclic, or an upstream
-            boundary node has no supplying target.
+        ValueError: If the graph is not directed and acyclic, an upstream boundary
+            node has no supplying target, or the resulting subgraph dependencies
+            are cyclic.
         TypeError: If the graph has parallel edges.
         AttributeError: If a node does not expose a decoupling property.
     """
@@ -162,20 +164,40 @@ def partition_graph_by_target(
     partition_nodes = {
         target: nx.ancestors(decoupled, target) | {target} for target in targets
     }
+    owners = {}
+    for target, nodes in partition_nodes.items():
+        for node in nodes:
+            owners.setdefault(node, []).append(target)
+
     subgraphs = {}
     decoupled_nodes = {}
+    execution_order = nx.DiGraph()
+    execution_order.add_nodes_from(targets)
     for target, nodes in partition_nodes.items():
         subgraph = decoupled.subgraph(nodes).copy()
-        boundary_sources = dict.fromkeys(
-            source for source, destination in boundary_edges if destination in nodes
-        )
+        suppliers_by_node = {}
         for source, destination in boundary_edges:
             if destination not in nodes:
                 continue
+            suppliers = owners.get(source)
+            if not suppliers:
+                raise ValueError(f"Boundary node {source!r} has no supplying target.")
             subgraph.add_node(source, **graph.nodes[source])
             subgraph.add_edge(source, destination, **graph.edges[source, destination])
+            external = [supplier for supplier in suppliers if supplier != target]
+            if external:
+                suppliers_by_node.setdefault(source, {}).update(dict.fromkeys(external))
         subgraphs[target] = subgraph
-        decoupled_nodes[target] = list(boundary_sources) or None
+        decoupled_nodes[target] = {
+            node: tuple(suppliers) for node, suppliers in suppliers_by_node.items()
+        } or None
+        execution_order.add_edges_from(
+            (supplier, target)
+            for suppliers in suppliers_by_node.values()
+            for supplier in suppliers
+        )
+    if not nx.is_directed_acyclic_graph(execution_order):
+        raise ValueError("Subgraph dependencies are cyclic.")
     return subgraphs, decoupled_nodes
 
 
