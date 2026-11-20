@@ -112,7 +112,10 @@ def get_subset_with_dependencies(
 def partition_graph_by_target(
     graph: nx.DiGraph,
     decouple_properties: Union[str, Iterable[str]] = None,
-):
+) -> tuple[
+    dict[Hashable, nx.DiGraph],
+    dict[Hashable, Union[list[Hashable], None]],
+]:
     """
     Partition a DAG by matching targets and property-based dependency boundaries.
 
@@ -121,18 +124,59 @@ def partition_graph_by_target(
     - `decouple_properties`: One or more node properties. An edge crossing a change
       in any of these properties is a boundary. With no properties, each partition
       contains all ancestors of its target.
+
+    Returns:
+        Two dictionaries keyed by target node: independent subgraph copies and a
+        decoupled-node lookup. Each subgraph retains incoming boundary edges and their
+        upstream nodes, but does not traverse beyond those boundaries. The lookup maps
+        each target to the distinct upstream boundary nodes included in its subgraph,
+        or None if it has no such nodes. Nodes are listed in graph edge iteration order.
+        Graph, node and edge attributes are preserved with NetworkX shallow-copy
+        semantics; the input graph is not modified.
+
+    Raises:
+        ValueError: If the graph is not directed and acyclic, or an upstream
+            boundary node has no supplying target.
+        TypeError: If the graph has parallel edges.
+        AttributeError: If a node does not expose a decoupling property.
     """
     if not nx.is_directed_acyclic_graph(graph):
         raise ValueError("Target partitioning requires a directed acyclic graph.")
     if graph.is_multigraph():
         raise TypeError("Target partitioning does not support parallel edges.")
 
+    properties = tuple(as_iterable(decouple_properties))
+    property_values = {
+        node: tuple(getattr(node, name) for name in properties) for node in graph
+    }
+
     targets = [node for node, degree in graph.out_degree if degree == 0]
 
+    boundary_edges = [
+        (source, destination)
+        for source, destination in graph.edges
+        if property_values[source] != property_values[destination]
+    ]
+    decoupled = graph.copy()
+    decoupled.remove_edges_from(boundary_edges)
+    partition_nodes = {
+        target: nx.ancestors(decoupled, target) | {target} for target in targets
+    }
     subgraphs = {}
-    for target in targets:
-        subgraphs[target] = graph.subgraph(nx.ancestors(graph, target) | {target})
-    return subgraphs
+    decoupled_nodes = {}
+    for target, nodes in partition_nodes.items():
+        subgraph = decoupled.subgraph(nodes).copy()
+        boundary_sources = dict.fromkeys(
+            source for source, destination in boundary_edges if destination in nodes
+        )
+        for source, destination in boundary_edges:
+            if destination not in nodes:
+                continue
+            subgraph.add_node(source, **graph.nodes[source])
+            subgraph.add_edge(source, destination, **graph.edges[source, destination])
+        subgraphs[target] = subgraph
+        decoupled_nodes[target] = list(boundary_sources) or None
+    return subgraphs, decoupled_nodes
 
 
 def collapse_graph(
