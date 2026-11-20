@@ -97,7 +97,9 @@ class GoogleStyle(DocstringParser):
             args = args[: args.index("")]
             args = self.remove_docstring_padding(args)
             self._var_lookup = {
-                line.split("(")[0].strip(): ":".join(line.split(":")[1:]).strip()
+                line.split(":", 1)[0].split("(", 1)[0].strip(): line.split(":", 1)[
+                    1
+                ].strip()
                 for line in self.infer_multiline(args)
             }
         return self._var_lookup

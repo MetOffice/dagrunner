@@ -1,0 +1,11 @@
+#!/usr/bin/env python3
+"""Run the deployed plotting script without exposing a visual Python package."""
+
+import runpy
+import sysconfig
+from pathlib import Path
+
+if __name__ == "__main__":
+    script = Path(sysconfig.get_path("data")) / "share/dagrunner/visual/create_plots.py"
+    namespace = runpy.run_path(str(script))
+    namespace["main"]()

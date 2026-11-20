@@ -61,6 +61,24 @@ def google_style(arg1, arg2=None):
     return True
 
 
+def google_style_without_types(arg1, arg2=None):
+    """
+    Summary line.
+
+    Extended description of function.
+
+    Args:
+        arg1: Description of arg1
+            further description.
+        arg2: Description of arg2, defaults to None
+
+    Returns:
+        bool: Description of return value
+
+    """
+    return True
+
+
 def numpy_style(arg1, arg2=None):
     """
     Summary line.
@@ -101,7 +119,10 @@ def non_style_v2():
     return True
 
 
-@pytest.mark.parametrize("func", [numpy_style, google_style, rst_style, markdown_style])
+@pytest.mark.parametrize(
+    "func",
+    [numpy_style, google_style, google_style_without_types, rst_style, markdown_style],
+)
 def test_docstring_parse(func):
     intro_lines, arg_mapping = docstring_parse(func)
     assert intro_lines == "Summary line.\n\nExtended description of function."
