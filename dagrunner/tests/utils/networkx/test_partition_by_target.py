@@ -114,3 +114,59 @@ def test_cyclic_subgraph_dependencies():
 
     with pytest.raises(ValueError, match="cyclic"):
         partition_graph_by_target(graph, decouple_properties="l")
+
+
+def test_none_property_transparent_to_decoupling():
+    """None values should not create boundaries; they are transparent to decoupling."""
+    # Node with None leadtime should not create a boundary
+    intermediate = Node("x", None, 1)  # No leadtime specified
+    target_a = Node("a", 1, 1)
+    target_b = Node("b", 2, 1)
+
+    graph = nx.DiGraph(
+        [
+            (target_a, intermediate),
+            (intermediate, target_b),
+        ]
+    )
+
+    subgraphs, decouple_lookup = partition_graph_by_target(
+        graph, decouple_properties="l"
+    )
+
+    # Both targets should be in the same partition since the None is transparent
+    assert set(subgraphs) == {target_b}
+    assert set(subgraphs[target_b].edges) == {
+        (target_a, intermediate),
+        (intermediate, target_b),
+    }
+    # No decoupling should occur since None doesn't create boundaries
+    assert decouple_lookup[target_b] is None
+
+
+def test_multiple_none_properties_transparent():
+    """Multiple None values across different property dimensions should be
+    transparent."""
+    # All nodes have same 'd' but different 'l' (leadtime)
+    # None leadtime should not create a boundary
+    a1 = Node("a", 1, None)
+    b_none = Node("b", None, None)  # Leadtime None - transparent to decoupling
+    c1 = Node("c", 1, None)
+    target = Node("d", 1, 1)
+
+    graph = nx.DiGraph(
+        [
+            (a1, b_none),
+            (b_none, c1),
+            (c1, target),
+        ]
+    )
+
+    subgraphs, decouple_lookup = partition_graph_by_target(
+        graph, decouple_properties=("l",)
+    )
+
+    # All should be in one partition; None values don't create boundaries
+    assert set(subgraphs) == {target}
+    assert len(subgraphs[target]) == 4
+    assert decouple_lookup[target] is None

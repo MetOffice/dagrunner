@@ -154,10 +154,21 @@ def partition_graph_by_target(
 
     targets = [node for node, degree in graph.out_degree if degree == 0]
 
+    def _is_boundary_edge(source_props, dest_props):
+        """Check if edge is a boundary, treating None values as transparent."""
+        for src_val, dst_val in zip(source_props, dest_props):
+            # If either value is None, it's transparent to decoupling
+            if src_val is None or dst_val is None:
+                continue
+            # Different non-None values create a boundary
+            if src_val != dst_val:
+                return True
+        return False
+
     boundary_edges = [
         (source, destination)
         for source, destination in graph.edges
-        if property_values[source] != property_values[destination]
+        if _is_boundary_edge(property_values[source], property_values[destination])
     ]
     decoupled = graph.copy()
     decoupled.remove_edges_from(boundary_edges)
