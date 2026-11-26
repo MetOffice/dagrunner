@@ -13,3 +13,11 @@ updates:
       - "bot"
     cooldown:
       default-days: 7
+  - package-ecosystem: "pre-commit"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "bot"
+    cooldown:
+      default-days: 7
