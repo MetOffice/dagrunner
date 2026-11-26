@@ -351,15 +351,25 @@ def visualise_graph_mermaid(
     """
     Visualise a networkx graph using mermaid.
 
+    Native ipython notebook integration is supported, though like with image format
+    output, this requires use of a 3rd-party service mermaid.ink to render the graphs.
+    Please choose either .html or .md for client side rendering.
+
     Args:
     - `graph`: The graph to visualise.
     - `node_info_lookup`: A dictionary mapping nodes to their information.
     - `title`: The title of the visualisation.
     - `output_filepath`: The output filepath to save the visualisation to.  Where not
-      provided, write a html file to a temporary location and open it with your default
-      browser.  Otherwise, supported extensions include ".html", ".png", ".jpg",
-      ".jpeg", ".svg" and ".md".  Note that not all formats support the full
-      set of visualisation features, so html is recommended.
+      provided, write a temporary ".html" file and open it in your default browser.
+      Supported extensions are:
+      - ".html" (recommended, supports the full feature set): rendered client-side
+        by JavaScript running in the viewer's browser.
+      - ".md": rendered client-side by the viewer's markdown renderer.
+        Neither sends graph content to a third party.
+      - ".png", ".jpg", ".jpeg" and ".svg": rendered by the third-party mermaid.ink
+        service, which receives the graph content.  Whether this is suitable for
+        your data's privacy and security is at your discretion.  These formats
+        support fewer visualisation features.
     - `group_by`: One or more property to group nodes by (i.e.
       [subgraph](https://mermaid-js.github.io/mermaid/#/subgraph)).
     - `label_by`: One or more property to label visualisation nodes by.
@@ -370,8 +380,10 @@ def visualise_graph_mermaid(
     else:
         table = HTMLTable(["id", "node", "info"])
 
-    label_by = as_iterable(label_by)
-    group_by = as_iterable(group_by)
+    if label_by:
+        label_by = as_iterable(label_by)
+    if group_by:
+        group_by = as_iterable(group_by)
 
     node_target_id_map = {}
     node_id = 0
