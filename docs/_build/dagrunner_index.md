@@ -10,6 +10,7 @@ version: {module.__version__}
       - [_SkipEvent: SKIP_EVENT](dagrunner.events.md#_skipevent-skip_event)
     - [module: execute_graph](dagrunner.execute_graph.md#module-dagrunnerexecute_graph)
       - [class: ExecuteGraph](dagrunner.execute_graph.md#class-executegraph)
+      - [function: get_networkx](dagrunner.execute_graph.md#function-get_networkx)
       - [function: main](dagrunner.execute_graph.md#function-main)
       - [function: plugin_executor](dagrunner.execute_graph.md#function-plugin_executor)
     - [module: plugin_framework](dagrunner.plugin_framework.md#module-dagrunnerplugin_framework)
