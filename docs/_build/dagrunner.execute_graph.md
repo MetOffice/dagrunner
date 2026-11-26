@@ -113,6 +113,30 @@ visualise(self, **kwargs)
 
 ## dict: `SCHEDULERS`
 
+## function: `get_networkx`
+
+[Source](../../dagrunner/execute_graph.py#L281)
+
+### Call Signature:
+
+```python
+get_networkx(networkx_graph)
+```
+
+Converts the input `networkx_graph` into a NetworkX DiGraph object.
+
+Args:
+    networkx_graph (networkx.DiGraph, callable or str):
+        A networkx graph; dot path to a networkx graph or callable that returns
+        one (str); tuple representing (edges, nodes) or callable object that
+        returns a networkx.
+
+Returns:
+    nxgraph (networkx.DiGraph): The NetworkX DiGraph object.
+
+Raises:
+    ValueError: If the `networkx_graph` parameter is not recognized.
+
 ## function: `main`
 
 [Source](../../dagrunner/execute_graph.py#L459)

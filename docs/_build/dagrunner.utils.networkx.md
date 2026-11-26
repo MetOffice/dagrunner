@@ -94,6 +94,8 @@ Plots each disconnected branch of nodes with their connected edges of its own
 distinct color.  Intended for plotting small graphs, whether filtered (e.g. a graph
 filtered for a specific leadtime or diagnostic) and or collapsed along specified
 dimensions (e.g. collapsing along the 'leadtime' property).
+This function serves as a wrapper to select the appropriate visualisation backend
+and handle node collapsing before rendering the graph.
 
 Args:
 - `graph`: The graph to visualise.
@@ -104,6 +106,10 @@ Args:
   supported for nodes represented by dataclasses right now.
 - `title`: The title of the visualisation.
 - `output_filepath`: The output filepath to save the visualisation to.
+  Note that the output format may affect how the visualisation is rendered, with
+  ".html" being the recommended format for full visualisation features.  Please
+  read the documentation for the visualisation backend for more details on
+  supported formats and their implications for visualisation.
 - `**kwargs`: Additional keyword arguments to pass to the visualisation backend.
   The default and only supported backend right now (mermaid) supports the following
   keyword arguments:
