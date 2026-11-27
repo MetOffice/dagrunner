@@ -9,6 +9,8 @@ from typing import Any, Iterable
 
 from dask.core import get_deps
 
+from ...utils import _cache as cache
+
 
 def _insert_results(args: Any, result_lookup: dict):
     """Insert results into arguments by using the provided lookup"""
@@ -182,3 +184,11 @@ class AsyncMP:
         self._pool.close()
         # Wait for the worker processes to exit.
         self._pool.join()
+
+        if self._failures_found and cache.CONFIG["dagrunner_cache"].get(
+            "checkpoint", None
+        ):
+            # dumpy all results we have to disk so as to support execution retry
+            for node_id, result in self._results.items():
+                cache_obj = cache._PickleCache(node_id)
+                cache_obj.dump(result)
